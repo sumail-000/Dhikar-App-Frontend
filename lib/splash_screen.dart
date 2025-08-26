@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'signup_screen.dart';
+import 'login_screen.dart';
+import 'home_screen.dart';
+import 'services/api_client.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -31,12 +35,31 @@ class _SplashScreenState extends State<SplashScreen>
     // Start fade animation
     _fadeController.forward();
 
-    // Navigate to signup screen after 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
+    // After splash, gate by auth token
+    Future.delayed(const Duration(seconds: 2), () async {
+      if (!mounted) return;
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      if (token == null) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const SignupScreen()),
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+        return;
+      }
+      // Validate token via /auth/me
+      final resp = await ApiClient.instance.me();
+      if (!mounted) return;
+      if (resp.ok) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        await ApiClient.instance.clearToken();
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
       }
     });

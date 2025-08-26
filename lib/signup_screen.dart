@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'login_screen.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
+import 'services/api_client.dart';
+import 'home_screen.dart';
 
 class SignupScreen extends StatelessWidget {
   const SignupScreen({super.key});
@@ -319,28 +321,118 @@ class SignupScreen extends StatelessWidget {
                                 // Sign Up button
                                 SizedBox(
                                   width: double.infinity,
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.07,
+                                  height: MediaQuery.of(context).size.height * 0.07,
                                   child: ElevatedButton(
-                                    onPressed: () {},
+                                    onPressed: () async {
+                                      FocusScope.of(context).unfocus();
+                                      final scaffold = ScaffoldMessenger.of(context);
+                                      // Prompt simple dialog to collect name, email, password
+                                      String? name;
+                                      String? email;
+                                      String? password;
+                                      await showDialog(
+                                        context: context,
+                                        barrierDismissible: true,
+                                        builder: (ctx) {
+                                          final nameController = TextEditingController();
+                                          final emailController = TextEditingController();
+                                          final passController = TextEditingController();
+                                          return AlertDialog(
+                                            title: Text(languageProvider.isArabic ? 'إنشاء حساب' : 'Sign Up'),
+                                            content: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                TextField(
+                                                  controller: nameController,
+                                                  decoration: InputDecoration(
+                                                    hintText: languageProvider.isArabic ? 'الاسم' : 'Name',
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                TextField(
+                                                  controller: emailController,
+                                                  keyboardType: TextInputType.emailAddress,
+                                                  decoration: InputDecoration(
+                                                    hintText: languageProvider.isArabic ? 'البريد الإلكتروني' : 'Email',
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                TextField(
+                                                  controller: passController,
+                                                  obscureText: true,
+                                                  decoration: InputDecoration(
+                                                    hintText: languageProvider.isArabic ? 'كلمة المرور (8 أحرف على الأقل)' : 'Password (min 8 chars)',
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.of(ctx).pop(),
+                                                child: Text(languageProvider.isArabic ? 'إلغاء' : 'Cancel'),
+                                              ),
+                                              ElevatedButton(
+                                                onPressed: () {
+                                                  name = nameController.text.trim();
+                                                  email = emailController.text.trim();
+                                                  password = passController.text.trim();
+                                                  Navigator.of(ctx).pop();
+                                                },
+                                                child: Text(languageProvider.isArabic ? 'إنشاء' : 'Create'),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+
+                                      if ((name ?? '').isEmpty || (email ?? '').isEmpty || (password ?? '').length < 8) {
+                                        scaffold.showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              languageProvider.isArabic
+                                                  ? 'يرجى إدخال اسم وبريد إلكتروني صحيح وكلمة مرور لا تقل عن 8 أحرف'
+                                                  : 'Please enter a valid name, email and a password of at least 8 characters',
+                                            ),
+                                          ),
+                                        );
+                                        return;
+                                      }
+                                      final resp = await ApiClient.instance.register(name: name!, email: email!, password: password!);
+                                      if (!resp.ok) {
+                                        scaffold.showSnackBar(
+                                          SnackBar(content: Text(resp.error ?? (languageProvider.isArabic ? 'فشل إنشاء الحساب' : 'Sign up failed'))),
+                                        );
+                                        return;
+                                      }
+                                      final token = resp.data['token'] as String?;
+                                      if (token == null) {
+                                        scaffold.showSnackBar(
+                                          SnackBar(content: Text(languageProvider.isArabic ? 'استجابة غير متوقعة من الخادم' : 'Unexpected server response')),
+                                        );
+                                        return;
+                                      }
+                                      await ApiClient.instance.saveToken(token);
+                                      scaffold.showSnackBar(
+                                        SnackBar(content: Text(languageProvider.isArabic ? 'تم إنشاء الحساب بنجاح' : 'Account created successfully')),
+                                      );
+                                      if (!mounted) return;
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => const HomeScreen()),
+                                      );
+                                    },
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          themeProvider.buttonBackgroundColor,
-                                      foregroundColor:
-                                          themeProvider.buttonTextColor,
+                                      backgroundColor: themeProvider.buttonBackgroundColor,
+                                      foregroundColor: themeProvider.buttonTextColor,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(30),
                                       ),
                                       elevation: 0,
                                     ),
                                     child: Text(
-                                      languageProvider.isArabic
-                                          ? 'إنشاء حساب'
-                                          : 'Sign Up',
+                                      languageProvider.isArabic ? 'إنشاء حساب' : 'Sign Up',
                                       style: TextStyle(
-                                        fontSize:
-                                            MediaQuery.of(context).size.width *
-                                            0.045,
+                                        fontSize: MediaQuery.of(context).size.width * 0.045,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
