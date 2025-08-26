@@ -6,8 +6,118 @@ import 'language_provider.dart';
 import 'services/api_client.dart';
 import 'home_screen.dart';
 
-class SignupScreen extends StatelessWidget {
+class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
+
+  @override
+  State<SignupScreen> createState() => _SignupScreenState();
+}
+
+class _SignupScreenState extends State<SignupScreen> {
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  bool _loading = false;
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSignup(LanguageProvider languageProvider) async {
+    FocusScope.of(context).unfocus();
+    final scaffold = ScaffoldMessenger.of(context);
+
+    final name = _usernameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    final usernameReg = RegExp(r'^[A-Za-z0-9_]+$');
+
+    if (name.isEmpty || !usernameReg.hasMatch(name)) {
+      scaffold.showSnackBar(
+        SnackBar(
+          content: Text(
+            languageProvider.isArabic
+                ? 'اسم المستخدم يجب أن يحتوي على حروف وأرقام وشرطة سفلية فقط'
+                : 'Username may contain only letters, numbers and underscores',
+          ),
+        ),
+      );
+      return;
+    }
+    if (email.isEmpty || password.length < 8) {
+      scaffold.showSnackBar(
+        SnackBar(
+          content: Text(
+            languageProvider.isArabic
+                ? 'يرجى إدخال بريد إلكتروني صحيح وكلمة مرور لا تقل عن 8 أحرف'
+                : 'Please enter a valid email and a password of at least 8 characters',
+          ),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _loading = true);
+    try {
+      final resp = await ApiClient.instance.register(name: name, email: email, password: password);
+      if (!resp.ok) {
+        scaffold.showSnackBar(
+          SnackBar(
+            content: Text(
+              resp.error ?? (languageProvider.isArabic ? 'فشل إنشاء الحساب' : 'Sign up failed'),
+            ),
+          ),
+        );
+        return;
+      }
+      final token = resp.data['token'] as String?;
+      if (token == null) {
+        scaffold.showSnackBar(
+          SnackBar(
+            content: Text(
+              languageProvider.isArabic
+                  ? 'استجابة غير متوقعة من الخادم'
+                  : 'Unexpected server response',
+            ),
+          ),
+        );
+        return;
+      }
+      await ApiClient.instance.saveToken(token);
+      scaffold.showSnackBar(
+        SnackBar(
+          content: Text(
+            languageProvider.isArabic
+                ? 'تم إنشاء الحساب بنجاح'
+                : 'Account created successfully',
+          ),
+        ),
+      );
+      if (!context.mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    } catch (_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            languageProvider.isArabic
+                ? 'خطأ في الشبكة. يرجى المحاولة لاحقًا.'
+                : 'Network error. Please try again later.',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,10 +128,7 @@ class SignupScreen extends StatelessWidget {
           child: Scaffold(
             resizeToAvoidBottomInset: false,
             body: GestureDetector(
-              onTap: () {
-                // Dismiss keyboard when tapping outside text fields
-                FocusScope.of(context).unfocus();
-              },
+              onTap: () => FocusScope.of(context).unfocus(),
               child: Container(
                 width: double.infinity,
                 height: double.infinity,
@@ -29,14 +136,13 @@ class SignupScreen extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: themeProvider.isDarkMode 
+                    colors: themeProvider.isDarkMode
                         ? themeProvider.gradientColors
                         : [const Color(0xFF163832), const Color(0xFF235347)],
                   ),
                 ),
                 child: Stack(
                   children: [
-                    // #051F20round image
                     Positioned.fill(
                       child: Opacity(
                         opacity: themeProvider.isDarkMode ? 0.5 : 1.0,
@@ -48,14 +154,9 @@ class SignupScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    // Color overlay based on theme
                     Positioned.fill(
-                      child: Container(
-                        color: themeProvider.backgroundImageOverlay,
-                      ),
+                      child: Container(color: themeProvider.backgroundImageOverlay),
                     ),
-
-                    // Top left decorative elements (lanterns)
                     Positioned(
                       top: 0,
                       left: 20,
@@ -67,8 +168,6 @@ class SignupScreen extends StatelessWidget {
                         filterQuality: FilterQuality.medium,
                       ),
                     ),
-
-                    // Bottom mosque silhouette
                     Positioned(
                       bottom: 0,
                       left: 0,
@@ -82,7 +181,6 @@ class SignupScreen extends StatelessWidget {
                       ),
                     ),
 
-                    // Main content
                     SafeArea(
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
@@ -94,81 +192,53 @@ class SignupScreen extends StatelessWidget {
                           physics: const ClampingScrollPhysics(),
                           child: Padding(
                             padding: EdgeInsets.symmetric(
-                              horizontal:
-                                  MediaQuery.of(context).size.width * 0.06,
+                              horizontal: MediaQuery.of(context).size.width * 0.06,
                             ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                SizedBox(
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.12,
-                                ),
-
-                                // Title
+                                SizedBox(height: MediaQuery.of(context).size.height * 0.12),
                                 Text(
-                                  languageProvider.isArabic
-                                      ? 'إنشاء حساب'
-                                      : 'Sign Up',
+                                  languageProvider.isArabic ? 'إنشاء حساب' : 'Sign Up',
                                   style: TextStyle(
-                                    fontSize:
-                                        MediaQuery.of(context).size.width *
-                                        0.08,
+                                    fontSize: MediaQuery.of(context).size.width * 0.08,
                                     fontWeight: FontWeight.bold,
                                     color: themeProvider.primaryTextColor,
                                   ),
                                 ),
-
-                                SizedBox(
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.02,
-                                ),
-
-                                // Subtitle
+                                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                                 Text(
                                   languageProvider.isArabic
                                       ? 'انضم لبدء رحلتك الروحية. تتبع ختمتك وذكرك والمزيد.'
                                       : 'Join to start your spiritual journey. Track your Khitma, Dhikr and more.',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    fontSize:
-                                        MediaQuery.of(context).size.width *
-                                        0.04,
+                                    fontSize: MediaQuery.of(context).size.width * 0.04,
                                     color: themeProvider.secondaryTextColor,
                                     height: 1.5,
                                   ),
                                 ),
+                                SizedBox(height: MediaQuery.of(context).size.height * 0.05),
 
-                                SizedBox(
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.05,
-                                ),
-
-                                // Username field
+                                // Username
                                 SizedBox(
                                   width: double.infinity,
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.07,
+                                  height: MediaQuery.of(context).size.height * 0.07,
                                   child: TextField(
+                                    controller: _usernameController,
                                     keyboardType: TextInputType.text,
                                     autofillHints: const [],
                                     enableSuggestions: false,
                                     autocorrect: false,
                                     style: TextStyle(
                                       color: themeProvider.primaryTextColor,
-                                      fontSize:
-                                          MediaQuery.of(context).size.width *
-                                          0.04,
+                                      fontSize: MediaQuery.of(context).size.width * 0.04,
                                     ),
                                     decoration: InputDecoration(
-                                      labelText: languageProvider.isArabic
-                                          ? 'اسم المستخدم'
-                                          : 'Username',
+                                      labelText: languageProvider.isArabic ? 'اسم المستخدم' : 'Username',
                                       labelStyle: TextStyle(
                                         color: themeProvider.secondaryTextColor,
-                                        fontSize:
-                                            MediaQuery.of(context).size.width *
-                                            0.04,
+                                        fontSize: MediaQuery.of(context).size.width * 0.04,
                                       ),
                                       enabledBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
@@ -185,47 +255,33 @@ class SignupScreen extends StatelessWidget {
                                         ),
                                       ),
                                       contentPadding: EdgeInsets.symmetric(
-                                        horizontal:
-                                            MediaQuery.of(context).size.width *
-                                            0.05,
-                                        vertical:
-                                            MediaQuery.of(context).size.height *
-                                            0.02,
+                                        horizontal: MediaQuery.of(context).size.width * 0.05,
+                                        vertical: MediaQuery.of(context).size.height * 0.02,
                                       ),
                                     ),
                                   ),
                                 ),
+                                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
 
-                                SizedBox(
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.02,
-                                ),
-
-                                // Email field
+                                // Email
                                 SizedBox(
                                   width: double.infinity,
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.07,
+                                  height: MediaQuery.of(context).size.height * 0.07,
                                   child: TextField(
+                                    controller: _emailController,
                                     keyboardType: TextInputType.emailAddress,
                                     autofillHints: const [AutofillHints.email],
                                     enableSuggestions: true,
                                     autocorrect: false,
                                     style: TextStyle(
                                       color: themeProvider.primaryTextColor,
-                                      fontSize:
-                                          MediaQuery.of(context).size.width *
-                                          0.04,
+                                      fontSize: MediaQuery.of(context).size.width * 0.04,
                                     ),
                                     decoration: InputDecoration(
-                                      labelText: languageProvider.isArabic
-                                          ? 'البريد الإلكتروني'
-                                          : 'Email',
+                                      labelText: languageProvider.isArabic ? 'البريد الإلكتروني' : 'Email',
                                       labelStyle: TextStyle(
                                         color: themeProvider.secondaryTextColor,
-                                        fontSize:
-                                            MediaQuery.of(context).size.width *
-                                            0.04,
+                                        fontSize: MediaQuery.of(context).size.width * 0.04,
                                       ),
                                       enabledBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
@@ -242,50 +298,34 @@ class SignupScreen extends StatelessWidget {
                                         ),
                                       ),
                                       contentPadding: EdgeInsets.symmetric(
-                                        horizontal:
-                                            MediaQuery.of(context).size.width *
-                                            0.05,
-                                        vertical:
-                                            MediaQuery.of(context).size.height *
-                                            0.02,
+                                        horizontal: MediaQuery.of(context).size.width * 0.05,
+                                        vertical: MediaQuery.of(context).size.height * 0.02,
                                       ),
                                     ),
                                   ),
                                 ),
+                                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
 
-                                SizedBox(
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.02,
-                                ),
-
-                                // Password field
+                                // Password
                                 SizedBox(
                                   width: double.infinity,
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.07,
+                                  height: MediaQuery.of(context).size.height * 0.07,
                                   child: TextField(
+                                    controller: _passwordController,
                                     obscureText: true,
                                     keyboardType: TextInputType.visiblePassword,
-                                    autofillHints: const [
-                                      AutofillHints.newPassword,
-                                    ],
+                                    autofillHints: const [AutofillHints.newPassword],
                                     enableSuggestions: true,
                                     autocorrect: false,
                                     style: TextStyle(
                                       color: themeProvider.primaryTextColor,
-                                      fontSize:
-                                          MediaQuery.of(context).size.width *
-                                          0.04,
+                                      fontSize: MediaQuery.of(context).size.width * 0.04,
                                     ),
                                     decoration: InputDecoration(
-                                      labelText: languageProvider.isArabic
-                                          ? 'كلمة المرور'
-                                          : 'Password',
+                                      labelText: languageProvider.isArabic ? 'كلمة المرور' : 'Password',
                                       labelStyle: TextStyle(
                                         color: themeProvider.secondaryTextColor,
-                                        fontSize:
-                                            MediaQuery.of(context).size.width *
-                                            0.04,
+                                        fontSize: MediaQuery.of(context).size.width * 0.04,
                                       ),
                                       enabledBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
@@ -302,125 +342,20 @@ class SignupScreen extends StatelessWidget {
                                         ),
                                       ),
                                       contentPadding: EdgeInsets.symmetric(
-                                        horizontal:
-                                            MediaQuery.of(context).size.width *
-                                            0.05,
-                                        vertical:
-                                            MediaQuery.of(context).size.height *
-                                            0.02,
+                                        horizontal: MediaQuery.of(context).size.width * 0.05,
+                                        vertical: MediaQuery.of(context).size.height * 0.02,
                                       ),
                                     ),
                                   ),
                                 ),
-
-                                SizedBox(
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.04,
-                                ),
+                                SizedBox(height: MediaQuery.of(context).size.height * 0.04),
 
                                 // Sign Up button
                                 SizedBox(
                                   width: double.infinity,
                                   height: MediaQuery.of(context).size.height * 0.07,
                                   child: ElevatedButton(
-                                    onPressed: () async {
-                                      FocusScope.of(context).unfocus();
-                                      final scaffold = ScaffoldMessenger.of(context);
-                                      // Prompt simple dialog to collect name, email, password
-                                      String? name;
-                                      String? email;
-                                      String? password;
-                                      await showDialog(
-                                        context: context,
-                                        barrierDismissible: true,
-                                        builder: (ctx) {
-                                          final nameController = TextEditingController();
-                                          final emailController = TextEditingController();
-                                          final passController = TextEditingController();
-                                          return AlertDialog(
-                                            title: Text(languageProvider.isArabic ? 'إنشاء حساب' : 'Sign Up'),
-                                            content: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                TextField(
-                                                  controller: nameController,
-                                                  decoration: InputDecoration(
-                                                    hintText: languageProvider.isArabic ? 'الاسم' : 'Name',
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 8),
-                                                TextField(
-                                                  controller: emailController,
-                                                  keyboardType: TextInputType.emailAddress,
-                                                  decoration: InputDecoration(
-                                                    hintText: languageProvider.isArabic ? 'البريد الإلكتروني' : 'Email',
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 8),
-                                                TextField(
-                                                  controller: passController,
-                                                  obscureText: true,
-                                                  decoration: InputDecoration(
-                                                    hintText: languageProvider.isArabic ? 'كلمة المرور (8 أحرف على الأقل)' : 'Password (min 8 chars)',
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () => Navigator.of(ctx).pop(),
-                                                child: Text(languageProvider.isArabic ? 'إلغاء' : 'Cancel'),
-                                              ),
-                                              ElevatedButton(
-                                                onPressed: () {
-                                                  name = nameController.text.trim();
-                                                  email = emailController.text.trim();
-                                                  password = passController.text.trim();
-                                                  Navigator.of(ctx).pop();
-                                                },
-                                                child: Text(languageProvider.isArabic ? 'إنشاء' : 'Create'),
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      );
-
-                                      if ((name ?? '').isEmpty || (email ?? '').isEmpty || (password ?? '').length < 8) {
-                                        scaffold.showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              languageProvider.isArabic
-                                                  ? 'يرجى إدخال اسم وبريد إلكتروني صحيح وكلمة مرور لا تقل عن 8 أحرف'
-                                                  : 'Please enter a valid name, email and a password of at least 8 characters',
-                                            ),
-                                          ),
-                                        );
-                                        return;
-                                      }
-                                      final resp = await ApiClient.instance.register(name: name!, email: email!, password: password!);
-                                      if (!resp.ok) {
-                                        scaffold.showSnackBar(
-                                          SnackBar(content: Text(resp.error ?? (languageProvider.isArabic ? 'فشل إنشاء الحساب' : 'Sign up failed'))),
-                                        );
-                                        return;
-                                      }
-                                      final token = resp.data['token'] as String?;
-                                      if (token == null) {
-                                        scaffold.showSnackBar(
-                                          SnackBar(content: Text(languageProvider.isArabic ? 'استجابة غير متوقعة من الخادم' : 'Unexpected server response')),
-                                        );
-                                        return;
-                                      }
-                                      await ApiClient.instance.saveToken(token);
-                                      scaffold.showSnackBar(
-                                        SnackBar(content: Text(languageProvider.isArabic ? 'تم إنشاء الحساب بنجاح' : 'Account created successfully')),
-                                      );
-                                      if (!mounted) return;
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(builder: (context) => const HomeScreen()),
-                                      );
-                                    },
+                                    onPressed: _loading ? null : () => _handleSignup(languageProvider),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: themeProvider.buttonBackgroundColor,
                                       foregroundColor: themeProvider.buttonTextColor,
@@ -429,20 +364,22 @@ class SignupScreen extends StatelessWidget {
                                       ),
                                       elevation: 0,
                                     ),
-                                    child: Text(
-                                      languageProvider.isArabic ? 'إنشاء حساب' : 'Sign Up',
-                                      style: TextStyle(
-                                        fontSize: MediaQuery.of(context).size.width * 0.045,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
+                                    child: _loading
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(strokeWidth: 2),
+                                          )
+                                        : Text(
+                                            languageProvider.isArabic ? 'إنشاء حساب' : 'Sign Up',
+                                            style: TextStyle(
+                                              fontSize: MediaQuery.of(context).size.width * 0.045,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
                                   ),
                                 ),
-
-                                SizedBox(
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.03,
-                                ),
+                                SizedBox(height: MediaQuery.of(context).size.height * 0.03),
 
                                 // Login link
                                 Row(
@@ -454,9 +391,7 @@ class SignupScreen extends StatelessWidget {
                                           : 'Already have account? ',
                                       style: TextStyle(
                                         color: themeProvider.secondaryTextColor,
-                                        fontSize:
-                                            MediaQuery.of(context).size.width *
-                                            0.04,
+                                        fontSize: MediaQuery.of(context).size.width * 0.04,
                                       ),
                                     ),
                                     GestureDetector(
@@ -464,33 +399,22 @@ class SignupScreen extends StatelessWidget {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) =>
-                                                const LoginScreen(),
+                                            builder: (context) => const LoginScreen(),
                                           ),
                                         );
                                       },
                                       child: Text(
-                                        languageProvider.isArabic
-                                            ? 'تسجيل الدخول'
-                                            : 'Login',
+                                        languageProvider.isArabic ? 'تسجيل الدخول' : 'Login',
                                         style: TextStyle(
                                           color: themeProvider.primaryTextColor,
-                                          fontSize:
-                                              MediaQuery.of(
-                                                context,
-                                              ).size.width *
-                                              0.04,
+                                          fontSize: MediaQuery.of(context).size.width * 0.04,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                     ),
                                   ],
                                 ),
-
-                                SizedBox(
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.08,
-                                ),
+                                SizedBox(height: MediaQuery.of(context).size.height * 0.08),
                               ],
                             ),
                           ),
