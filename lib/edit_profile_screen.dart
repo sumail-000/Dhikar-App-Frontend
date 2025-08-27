@@ -4,7 +4,8 @@ import 'dart:io';
 import 'package:provider/provider.dart';
 import 'app_localizations.dart';
 import 'theme_provider.dart';
-  import 'services/api_client.dart';
+import 'services/api_client.dart';
+import 'profile_provider.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final String? name; // current username (server-side uses username)
@@ -20,11 +21,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _usernameController = TextEditingController();
   XFile? _picked;
   bool _saving = false;
+  String? _serverAvatarUrl; // live server avatar preview
 
   @override
   void initState() {
     super.initState();
     _usernameController.text = widget.name ?? '';
+    _serverAvatarUrl = widget.avatarUrl;
   }
 
   @override
@@ -126,6 +129,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       return;
     }
 
+    // Update local preview from server response if available
+    try {
+      final data = resp.data as Map<String, dynamic>;
+      final user = (data['user'] as Map<String, dynamic>?);
+      final newUrl = user?['avatar_url'] as String?;
+      if (newUrl != null && newUrl.isNotEmpty) {
+        setState(() => _serverAvatarUrl = newUrl);
+      }
+    } catch (_) {}
+
+    // Refresh shared profile state so other screens update
+    await context.read<ProfileProvider>().refresh();
+
     Navigator.pop(context, {
       'name': name,
       'avatarChanged': _picked != null,
@@ -151,6 +167,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       );
       return;
     }
+    // Update local preview and global state
+    setState(() => _serverAvatarUrl = null);
+    await context.read<ProfileProvider>().refresh();
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(app.avatarRemoved)),
     );
@@ -163,7 +183,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           Container(width: double.infinity, height: double.infinity, color: themeProvider.screenBackgroundColor),
@@ -176,162 +196,156 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           if (themeProvider.isDarkMode)
             Positioned.fill(child: Container(color: Colors.black.withOpacity(0.2))),
           SafeArea(
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: EdgeInsets.only(bottom: bottomInset),
-              child: SingleChildScrollView(
-                physics: const ClampingScrollPhysics(),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            child: SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              padding: EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 12 + bottomInset),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Row(
                     children: [
-                      // Header
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: Icon(Icons.arrow_back_ios, color: themeProvider.isDarkMode ? Colors.white : const Color(0xFF205C3B)),
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            app.editProfile,
-                            style: TextStyle(
-                              color: themeProvider.isDarkMode ? Colors.white : const Color(0xFF205C3B),
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                      IconButton(
+                        icon: Icon(Icons.arrow_back_ios, color: themeProvider.isDarkMode ? Colors.white : const Color(0xFF205C3B)),
+                        onPressed: () => Navigator.pop(context),
                       ),
-
-                      const SizedBox(height: 16),
-
-                      // Avatar
-                      Center(
-                        child: Stack(
-                          children: [
-                            Container(
-                              width: 120,
-                              height: 120,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: themeProvider.isDarkMode ? themeProvider.cardBackgroundColor : Colors.grey.shade100,
-                                border: Border.all(color: themeProvider.borderColor, width: 3),
-                              ),
-                              child: ClipOval(
-                                child: _picked != null
-                                    ? Image.file(File(_picked!.path), width: 120, height: 120, fit: BoxFit.cover)
-                                    : (widget.avatarUrl != null && widget.avatarUrl!.isNotEmpty
-                                        ? Image.network(widget.avatarUrl!, width: 120, height: 120, fit: BoxFit.cover)
-                                        : Icon(Icons.person, color: themeProvider.primaryTextColor, size: 46)),
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: GestureDetector(
-                                onTap: _bottomSheetPick,
-                                child: Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: themeProvider.isDarkMode ? Colors.white.withOpacity(0.15) : const Color(0xFF205C3B),
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: themeProvider.borderColor),
-                                  ),
-                                  child: const Icon(Icons.camera_alt, color: Colors.white, size: 18),
-                                ),
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Username
-                      Text(app.username, style: TextStyle(color: themeProvider.isDarkMode ? Colors.white70 : const Color(0xFF205C3B), fontSize: 12)),
-                      const SizedBox(height: 6),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: themeProvider.cardBackgroundColor,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: themeProvider.borderColor),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: TextField(
-                          controller: _usernameController,
-                          style: TextStyle(color: themeProvider.primaryTextColor),
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
+                      const SizedBox(width: 8),
                       Text(
-                        app.usernameRules,
-                        style: TextStyle(color: themeProvider.isDarkMode ? Colors.white70 : const Color(0xFF205C3B), fontSize: 12),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // Email (read-only)
-                      Text(app.email, style: TextStyle(color: themeProvider.isDarkMode ? Colors.white70 : const Color(0xFF205C3B), fontSize: 12)),
-                      const SizedBox(height: 6),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: themeProvider.cardBackgroundColor,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: themeProvider.borderColor),
-                        ),
-                        child: Text(
-                          widget.email ?? '-',
-                          style: TextStyle(color: themeProvider.primaryTextColor, fontSize: 16, fontWeight: FontWeight.w600),
+                        app.editProfile,
+                        style: TextStyle(
+                          color: themeProvider.isDarkMode ? Colors.white : const Color(0xFF205C3B),
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-
-                      const SizedBox(height: 24),
-
-                      // Save button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: _saving ? null : _handleSave,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: themeProvider.isDarkMode ? Colors.white.withOpacity(0.15) : const Color(0xFF205C3B),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: _saving
-                              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                              : Text(app.save),
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Remove photo button
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          onPressed: _handleRemovePhoto,
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: themeProvider.borderColor),
-                            foregroundColor: themeProvider.isDarkMode ? Colors.white : const Color(0xFF205C3B),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          icon: const Icon(Icons.delete_outline),
-                          label: Text(app.removePhoto),
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
                     ],
                   ),
-                ),
+
+                  const SizedBox(height: 16),
+
+                  // Avatar
+                  Center(
+                    child: Stack(
+                      children: [
+                        Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: themeProvider.isDarkMode ? themeProvider.cardBackgroundColor : Colors.grey.shade100,
+                            border: Border.all(color: themeProvider.borderColor, width: 3),
+                          ),
+                          child: ClipOval(
+                            child: _picked != null
+                                ? Image.file(File(_picked!.path), width: 120, height: 120, fit: BoxFit.cover)
+                                : (_serverAvatarUrl != null && _serverAvatarUrl!.isNotEmpty
+                                    ? Image.network(_serverAvatarUrl!, width: 120, height: 120, fit: BoxFit.cover)
+                                    : Icon(Icons.person, color: themeProvider.primaryTextColor, size: 46)),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: _bottomSheetPick,
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: themeProvider.isDarkMode ? Colors.white.withOpacity(0.15) : const Color(0xFF205C3B),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: themeProvider.borderColor),
+                              ),
+                              child: const Icon(Icons.camera_alt, color: Colors.white, size: 18),
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Username
+                  Text(app.username, style: TextStyle(color: themeProvider.isDarkMode ? Colors.white70 : const Color(0xFF205C3B), fontSize: 12)),
+                  const SizedBox(height: 6),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: themeProvider.cardBackgroundColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: themeProvider.borderColor),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: TextField(
+                      controller: _usernameController,
+                      style: TextStyle(color: themeProvider.primaryTextColor),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    app.usernameRules,
+                    style: TextStyle(color: themeProvider.isDarkMode ? Colors.white70 : const Color(0xFF205C3B), fontSize: 12),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Email (read-only)
+                  Text(app.email, style: TextStyle(color: themeProvider.isDarkMode ? Colors.white70 : const Color(0xFF205C3B), fontSize: 12)),
+                  const SizedBox(height: 6),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: themeProvider.cardBackgroundColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: themeProvider.borderColor),
+                    ),
+                    child: Text(
+                      widget.email ?? '-',
+                      style: TextStyle(color: themeProvider.primaryTextColor, fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Save button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: _saving ? null : _handleSave,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: themeProvider.isDarkMode ? Colors.white.withOpacity(0.15) : const Color(0xFF205C3B),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: _saving
+                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                          : Text(app.save),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Remove photo button
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _handleRemovePhoto,
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: themeProvider.borderColor),
+                        foregroundColor: themeProvider.isDarkMode ? Colors.white : const Color(0xFF205C3B),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      icon: const Icon(Icons.delete_outline),
+                      label: Text(app.removePhoto),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+                ],
               ),
             ),
           ),

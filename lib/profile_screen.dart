@@ -11,7 +11,7 @@ import 'dhikr_screen.dart';
 import 'services/api_client.dart';
 import 'account_details_screen.dart';
 import 'edit_profile_screen.dart';
-ername fucking on save also fucked not working import 'profile_provider.dart';
+import 'profile_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});

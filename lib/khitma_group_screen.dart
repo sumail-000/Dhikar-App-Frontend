@@ -97,11 +97,11 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
                 // Main content with SafeArea
                 SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                         Row(
                           children: [
                             IconButton(
@@ -118,7 +118,7 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
                                 isArabic ? ' مجموعة خاتمة' : 'Khitma Groups',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontSize: 24,
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: isLightMode ? greenColor : creamColor,
                                   fontFamily: amiriFont,
@@ -149,7 +149,7 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
                                   Text(
                                     isArabic ? 'إضافة جديد' : 'Add New',
                                     style: TextStyle(
-                                      fontSize: 14,
+                                      fontSize: 13,
                                       color: isLightMode
                                           ? greenColor
                                           : creamColor,
@@ -161,7 +161,7 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
                         // Tab buttons
                         Container(
                           padding: const EdgeInsets.all(4),
@@ -173,7 +173,7 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
                                 : const Color(
                                     0xFFE3D9F6,
                                   ), // Dark mode outer container color
-                            borderRadius: BorderRadius.circular(30),
+                            borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
                             children: [
@@ -186,8 +186,8 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
                                   },
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
-                                      vertical: 14,
-                                      horizontal: 16,
+                                      vertical: 10,
+                                      horizontal: 12,
                                     ),
                                     decoration: BoxDecoration(
                                       color: _selectedTab == 0
@@ -204,15 +204,15 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
                                                   ) // Light mode selected tab
                                                 : const Color(0xFFFFFFFF)),
                                       borderRadius: BorderRadius.only(
-                                        topLeft: const Radius.circular(26),
-                                        bottomLeft: const Radius.circular(26),
+                                        topLeft: const Radius.circular(18),
+                                        bottomLeft: const Radius.circular(18),
                                       ),
                                     ),
                                     child: Center(
                                       child: Text(
                                         isArabic ? 'منضم' : 'Joined',
                                         style: TextStyle(
-                                          fontSize: 16,
+                                          fontSize: 14,
                                           fontWeight: FontWeight.w600,
                                           color: _selectedTab == 0
                                               ? (isLightMode
@@ -252,8 +252,8 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
                                   },
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
-                                      vertical: 14,
-                                      horizontal: 16,
+                                      vertical: 10,
+                                      horizontal: 12,
                                     ),
                                     decoration: BoxDecoration(
                                       color: _selectedTab == 1
@@ -270,15 +270,15 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
                                                   ) // Light mode selected
                                                 : const Color(0xFFFFFFFF)),
                                       borderRadius: BorderRadius.only(
-                                        topRight: const Radius.circular(26),
-                                        bottomRight: const Radius.circular(26),
+                                        topRight: const Radius.circular(18),
+                                        bottomRight: const Radius.circular(18),
                                       ),
                                     ),
                                     child: Center(
                                       child: Text(
                                         isArabic ? 'استكشاف' : 'Explore',
                                         style: TextStyle(
-                                          fontSize: 16,
+                                          fontSize: 14,
                                           fontWeight: FontWeight.w600,
                                           color: _selectedTab == 1
                                               ? (isLightMode
@@ -312,7 +312,7 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
                         // Empty space for future content
                         Expanded(
                           child: Container(

@@ -19,7 +19,8 @@ class ProfileProvider extends ChangeNotifier {
   String get displayName {
     final n = (_name ?? '').trim();
     final u = (_username ?? '').trim();
-    return n.isNotEmpty ? n : u;
+    // Prefer username (handle) as the primary display to reflect edits immediately
+    return u.isNotEmpty ? u : n;
   }
 
   Future<void> refresh() async {
