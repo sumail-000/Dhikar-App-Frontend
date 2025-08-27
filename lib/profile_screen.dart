@@ -11,6 +11,7 @@ import 'dhikr_screen.dart';
 import 'services/api_client.dart';
 import 'account_details_screen.dart';
 import 'edit_profile_screen.dart';
+ername fucking on save also fucked not working import 'profile_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -573,28 +574,50 @@ class _ProfileHeader extends StatelessWidget {
                     width: 3,
                   ),
                 ),
-                child: ClipOval(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: themeProvider.cardBackgroundColor,
-                    ),
-                    child: Icon(
-                      Icons.person,
-                      color: themeProvider.primaryTextColor,
-                      size: 50,
-                    ),
-                  ),
+                child: Builder(
+                  builder: (context) {
+                    final profile = Provider.of<ProfileProvider>(context);
+                    final url = profile.avatarUrl;
+                    if (url != null && url.isNotEmpty) {
+                      return ClipOval(
+                        child: Image.network(
+                          url,
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.cover,
+                        ),
+                      );
+                    }
+                    return ClipOval(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: themeProvider.cardBackgroundColor,
+                        ),
+                        child: Icon(
+                          Icons.person,
+                          color: themeProvider.primaryTextColor,
+                          size: 50,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 16),
               // Name
-              Text(
-                languageProvider.isArabic ? 'علي شهوَيز' : 'Ali Shahwaiz',
-                style: TextStyle(
-                  color: nameColor,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+              Builder(
+                builder: (context) {
+                  final profile = Provider.of<ProfileProvider>(context);
+                  final displayName = profile.displayName;
+                  return Text(
+                    (displayName.isNotEmpty) ? displayName : (languageProvider.isArabic ? '—' : '—'),
+                    style: TextStyle(
+                      color: nameColor,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -648,10 +671,16 @@ class _ContentSections extends StatelessWidget {
                   icon: Icons.person,
                   title: appLocalizations.accountDetails,
                   onTap: () {
+                    final profile = Provider.of<ProfileProvider>(context, listen: false);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const AccountDetailsScreen(),
+                        builder: (context) => AccountDetailsScreen(
+                          name: profile.displayName,
+                          email: profile.email,
+                          avatarUrl: profile.avatarUrl,
+                          joinedAt: profile.joinedAt,
+                        ),
                       ),
                     );
                   },
@@ -662,15 +691,21 @@ class _ContentSections extends StatelessWidget {
                   icon: Icons.edit,
                   title: appLocalizations.editProfile,
                   onTap: () async {
+                    final profile = Provider.of<ProfileProvider>(context, listen: false);
                     final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const EditProfileScreen(),
+                        builder: (context) => EditProfileScreen(
+                          name: profile.username ?? profile.displayName,
+                          email: profile.email,
+                          avatarUrl: profile.avatarUrl,
+                        ),
                       ),
                     );
-                    if (result is Map && result['name'] is String) {
+                    if (result is Map) {
+                      await Provider.of<ProfileProvider>(context, listen: false).refresh();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Profile updated')),
+                        SnackBar(content: Text(appLocalizations.profileUpdated)),
                       );
                     }
                   },

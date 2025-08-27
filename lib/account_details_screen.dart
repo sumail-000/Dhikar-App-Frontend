@@ -3,12 +3,32 @@ import 'package:provider/provider.dart';
 import 'app_localizations.dart';
 import 'theme_provider.dart';
 
-class AccountDetailsScreen extends StatelessWidget {
+class AccountDetailsScreen extends StatefulWidget {
   final String? name; // treated as username in current backend
   final String? email;
   final String? avatarUrl;
+  final String? joinedAt;
 
-  const AccountDetailsScreen({super.key, this.name, this.email, this.avatarUrl});
+  const AccountDetailsScreen({super.key, this.name, this.email, this.avatarUrl, this.joinedAt});
+
+  @override
+  State<AccountDetailsScreen> createState() => _AccountDetailsScreenState();
+}
+
+class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
+  String? _name;
+  String? _email;
+  String? _avatarUrl;
+  String? _joinedAt; // ISO string
+
+  @override
+  void initState() {
+    super.initState();
+    _name = widget.name;
+    _email = widget.email;
+    _avatarUrl = widget.avatarUrl;
+    _joinedAt = widget.joinedAt;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,8 +36,11 @@ class AccountDetailsScreen extends StatelessWidget {
     final app = AppLocalizations.of(context)!;
 
     // Fallback demo data to ensure complete UI rendering if nothing is passed
-    final displayName = (name != null && name!.trim().isNotEmpty) ? name!.trim() : 'Ali Reahan';
-    final displayEmail = (email != null && email!.trim().isNotEmpty) ? email!.trim() : 'ali@example.com';
+    final displayName = (_name != null && _name!.trim().isNotEmpty) ? _name!.trim() : 'Ali Reahan';
+    final displayEmail = (_email != null && _email!.trim().isNotEmpty) ? _email!.trim() : 'ali@example.com';
+    final joinedDate = _joinedAt != null && _joinedAt!.isNotEmpty
+        ? _joinedAt!.substring(0, 10)
+        : '2025-01-01';
 
     return Scaffold(
       body: Stack(
@@ -73,8 +96,8 @@ class AccountDetailsScreen extends StatelessWidget {
                             border: Border.all(color: theme.borderColor, width: 3),
                           ),
                           child: ClipOval(
-                            child: (avatarUrl != null && avatarUrl!.isNotEmpty)
-                                ? Image.network(avatarUrl!, width: 110, height: 110, fit: BoxFit.cover)
+                            child: (_avatarUrl != null && _avatarUrl!.isNotEmpty)
+                                ? Image.network(_avatarUrl!, width: 110, height: 110, fit: BoxFit.cover)
                                 : Center(
                                     child: Text(
                                       (displayName.isNotEmpty ? displayName[0] : '?').toUpperCase(),
@@ -130,6 +153,16 @@ class AccountDetailsScreen extends StatelessWidget {
                     icon: Icons.email_outlined,
                     label: app.email,
                     value: displayEmail,
+                    theme: theme,
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Member since (joined at)
+                  _InfoTile(
+                    icon: Icons.event_available_outlined,
+                    label: app.memberSince,
+                    value: joinedDate,
                     theme: theme,
                   ),
 

@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'login_screen.dart';
 import 'home_screen.dart';
 import 'services/api_client.dart';
+import 'profile_provider.dart';
+import 'package:provider/provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -50,6 +52,9 @@ class _SplashScreenState extends State<SplashScreen>
       final resp = await ApiClient.instance.me();
       if (!mounted) return;
       if (resp.ok) {
+        if (mounted) {
+          context.read<ProfileProvider?>()?.setFromMap(resp.data as Map<String, dynamic>);
+        }
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomeScreen()),

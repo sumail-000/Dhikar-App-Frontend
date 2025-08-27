@@ -9,7 +9,7 @@ import 'khitma_screen.dart';
 import 'bottom_nav_bar.dart';
 import 'dhikr_screen.dart';
 import 'notification_screen.dart';
-import 'services/api_client.dart';
+import 'profile_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,28 +20,13 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  String? _name;
-  String? _avatarUrl;
-
+  
   @override
   void initState() {
     super.initState();
-    _loadUser();
   }
 
-  Future<void> _loadUser() async {
-    final resp = await ApiClient.instance.me();
-    if (!mounted) return;
-    if (resp.ok && resp.data is Map) {
-      final data = resp.data as Map<String, dynamic>;
-      setState(() {
-        _name = (data['name'] as String?)?.trim();
-        // TODO: set _avatarUrl when backend provides it
-        _avatarUrl = null;
-      });
-    }
-  }
-
+  
   void _onItemTapped(int index) {
     if (_selectedIndex != index) {
       setState(() {
@@ -132,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             const SizedBox(height: 25),
                             // Profile & Notification
-                            _ProfileSection(name: _name, avatarUrl: _avatarUrl),
+                            const _ProfileSection(),
                             const SizedBox(height: 20),
                             // Overall Progress
                             _ProgressSection(),
@@ -164,15 +149,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
 // Optimized Profile Section
 class _ProfileSection extends StatelessWidget {
-  final String? name;
-  final String? avatarUrl;
-  const _ProfileSection({super.key, this.name, this.avatarUrl});
+  const _ProfileSection({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
+    return Consumer2<ThemeProvider, ProfileProvider>(
+      builder: (context, themeProvider, profile, child) {
         final appLocalizations = AppLocalizations.of(context)!;
+        final name = profile.displayName;
+        final avatarUrl = profile.avatarUrl;
 
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -201,19 +186,19 @@ class _ProfileSection extends StatelessWidget {
                         width: 2,
                       ),
                     ),
-                    child: (avatarUrl != null && avatarUrl!.isNotEmpty)
+                    child: (avatarUrl != null && avatarUrl.isNotEmpty)
                         ? ClipOval(
                             child: Image.network(
-                              avatarUrl!,
+                              avatarUrl,
                               fit: BoxFit.cover,
                               width: 48,
                               height: 48,
                             ),
                           )
-                        : ((name != null && name!.trim().isNotEmpty)
+                        : (name.isNotEmpty
                             ? Center(
                                 child: Text(
-                                  name!.trim()[0].toUpperCase(),
+                                  name[0].toUpperCase(),
                                   style: TextStyle(
                                     color: themeProvider.primaryTextColor,
                                     fontSize: 20,
@@ -230,9 +215,9 @@ class _ProfileSection extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  (name != null && name!.trim().isNotEmpty)
+                  name.isNotEmpty
                       ? ((Localizations.localeOf(context).languageCode == 'ar' ? 'سلام، ' : 'Salaam, ') +
-                          ((name!.trim().contains(' ')) ? name!.trim().split(' ').first : name!.trim()))
+                          ((name.contains(' ')) ? name.split(' ').first : name))
                       : appLocalizations.salaamAli,
                   style: TextStyle(
                     color: themeProvider.homeUsernameColor,

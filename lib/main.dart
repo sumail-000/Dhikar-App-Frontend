@@ -7,6 +7,7 @@ import 'language_provider.dart';
 import 'dhikr_provider.dart';
 import 'app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'profile_provider.dart';
 
 void main() {
   runApp(
@@ -14,6 +15,7 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => DhikrProvider()),
+        ChangeNotifierProvider(create: (_) => ProfileProvider()),
         ChangeNotifierProxyProvider<ThemeProvider, LanguageProvider>(
           create: (_) => LanguageProvider(),
           update: (_, themeProvider, languageProvider) {

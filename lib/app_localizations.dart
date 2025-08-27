@@ -65,8 +65,12 @@ class AppLocalizations {
       'camera': 'Camera',
       'gallery': 'Gallery',
       'invalidUsername': 'Username may contain only letters, numbers and underscores',
-      'usernameRules': 'Allowed: letters, numbers, underscores (e.g., sumail_007)',
+      'usernameRules': 'Letters, numbers, and underscores only',
+      'invalidImageType': 'Invalid image type. Allowed: JPG, JPEG, PNG',
+      'imageTooLarge': 'Image is too large. Maximum size is 2 MB',
+      'avatarRemoved': 'Profile photo removed',
       'profileUpdated': 'Profile updated',
+      'memberSince': 'Member since',
     },
     'ar': {
       'salaamAli': 'السلام عليك يا علي!',
@@ -120,8 +124,12 @@ class AppLocalizations {
       'camera': 'الكاميرا',
       'gallery': 'المعرض',
       'invalidUsername': 'اسم المستخدم يجب أن يحتوي على حروف وأرقام وشرطة سفلية فقط',
-      'usernameRules': 'المسموح: حروف، أرقام، شرطة سفلية (مثال: sumail_007)',
+      'usernameRules': 'مسموح: حروف وأرقام وشرطة سفلية فقط',
+      'invalidImageType': 'نوع الصورة غير صالح. المسموح: JPG, JPEG, PNG',
+      'imageTooLarge': 'الصورة كبيرة جدًا. الحد الأقصى 2 ميجابايت',
+      'avatarRemoved': 'تم حذف صورة الملف الشخصي',
       'profileUpdated': 'تم تحديث الملف الشخصي',
+      'memberSince': 'عضو منذ',
     },
   };
 
@@ -176,8 +184,12 @@ class AppLocalizations {
   String get camera => _localizedValues[locale.languageCode]?['camera'] ?? 'Camera';
   String get gallery => _localizedValues[locale.languageCode]?['gallery'] ?? 'Gallery';
   String get invalidUsername => _localizedValues[locale.languageCode]?['invalidUsername'] ?? 'Username may contain only letters, numbers and underscores';
-  String get usernameRules => _localizedValues[locale.languageCode]?['usernameRules'] ?? 'Allowed: letters, numbers, underscores (e.g., sumail_007)';
+  String get usernameRules => _localizedValues[locale.languageCode]?['usernameRules'] ?? 'Letters, numbers, and underscores only';
+  String get invalidImageType => _localizedValues[locale.languageCode]?['invalidImageType'] ?? 'Invalid image type. Allowed: JPG, JPEG, PNG';
+  String get imageTooLarge => _localizedValues[locale.languageCode]?['imageTooLarge'] ?? 'Image is too large. Maximum size is 2 MB';
+  String get avatarRemoved => _localizedValues[locale.languageCode]?['avatarRemoved'] ?? 'Profile photo removed';
   String get profileUpdated => _localizedValues[locale.languageCode]?['profileUpdated'] ?? 'Profile updated';
+  String get memberSince => _localizedValues[locale.languageCode]?['memberSince'] ?? 'Member since';
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

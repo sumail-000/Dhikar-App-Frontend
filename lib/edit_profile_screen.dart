@@ -4,9 +4,10 @@ import 'dart:io';
 import 'package:provider/provider.dart';
 import 'app_localizations.dart';
 import 'theme_provider.dart';
+  import 'services/api_client.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  final String? name;
+  final String? name; // current username (server-side uses username)
   final String? email; // read-only display
   final String? avatarUrl;
   const EditProfileScreen({super.key, this.name, this.email, this.avatarUrl});
@@ -77,11 +78,88 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  Future<void> _handleSave() async {
+    final app = AppLocalizations.of(context)!;
+    final name = _usernameController.text.trim();
+    final valid = RegExp(r'^[A-Za-z0-9_]+$').hasMatch(name);
+    if (name.isEmpty || !valid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(app.invalidUsername)),
+      );
+      return;
+    }
+
+    String? avatarPath;
+    if (_picked != null) {
+      final path = _picked!.path;
+      final ext = path.split('.').last.toLowerCase();
+      if (!(ext == 'jpg' || ext == 'jpeg' || ext == 'png')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(app.invalidImageType)),
+        );
+        return;
+      }
+      final file = File(path);
+      final size = await file.length();
+      if (size > 2 * 1024 * 1024) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(app.imageTooLarge)),
+        );
+        return;
+      }
+      avatarPath = path;
+    }
+
+    setState(() => _saving = true);
+    final resp = await ApiClient.instance.updateProfile(
+      username: name,
+      displayName: null,
+      avatarFilePath: avatarPath,
+    );
+    if (!mounted) return;
+    setState(() => _saving = false);
+
+    if (!resp.ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(resp.error ?? 'Error')),
+      );
+      return;
+    }
+
+    Navigator.pop(context, {
+      'name': name,
+      'avatarChanged': _picked != null,
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(app.profileUpdated)),
+    );
+  }
+
+  Future<void> _handleRemovePhoto() async {
+    final app = AppLocalizations.of(context)!;
+    if (_picked != null) {
+      setState(() => _picked = null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(app.avatarRemoved)),
+      );
+      return;
+    }
+    final resp = await ApiClient.instance.deleteAvatar();
+    if (!resp.ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(resp.error ?? 'Error')),
+      );
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(app.avatarRemoved)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final app = AppLocalizations.of(context)!;
-
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Scaffold(
@@ -184,12 +262,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         child: TextField(
                           controller: _usernameController,
                           style: TextStyle(color: themeProvider.primaryTextColor),
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             border: InputBorder.none,
-                            hintText: 'sumail_007',
-                            hintStyle: TextStyle(color: themeProvider.primaryTextColor.withOpacity(0.5)),
                           ),
                         ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        app.usernameRules,
+                        style: TextStyle(color: themeProvider.isDarkMode ? Colors.white70 : const Color(0xFF205C3B), fontSize: 12),
                       ),
 
                       const SizedBox(height: 16),
@@ -211,12 +292,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                       ),
 
-                      const SizedBox(height: 12),
-                      Text(
-                        app.usernameRules,
-                        style: TextStyle(color: themeProvider.isDarkMode ? Colors.white70 : const Color(0xFF205C3B), fontSize: 12),
-                      ),
-
                       const SizedBox(height: 24),
 
                       // Save button
@@ -224,32 +299,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         width: double.infinity,
                         height: 48,
                         child: ElevatedButton(
-                          onPressed: _saving
-                              ? null
-                              : () {
-                                  final name = _usernameController.text.trim();
-                                  final valid = RegExp(r'^[A-Za-z0-9_]+$').hasMatch(name);
-                                  if (name.isEmpty || !valid) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(app.invalidUsername)),
-                                    );
-                                    return;
-                                  }
-
-                                  setState(() => _saving = true);
-                                  // Simulate client-only update for now
-                                  Future.delayed(const Duration(milliseconds: 300), () {
-                                    if (!mounted) return;
-                                    setState(() => _saving = false);
-                                    Navigator.pop(context, {
-                                      'name': name,
-                                      'avatarChanged': _picked != null,
-                                    });
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(app.profileUpdated)),
-                                    );
-                                  });
-                                },
+                          onPressed: _saving ? null : _handleSave,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: themeProvider.isDarkMode ? Colors.white.withOpacity(0.15) : const Color(0xFF205C3B),
                             foregroundColor: Colors.white,
@@ -267,7 +317,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(
-                          onPressed: () => setState(() => _picked = null),
+                          onPressed: _handleRemovePhoto,
                           style: OutlinedButton.styleFrom(
                             side: BorderSide(color: themeProvider.borderColor),
                             foregroundColor: themeProvider.isDarkMode ? Colors.white : const Color(0xFF205C3B),

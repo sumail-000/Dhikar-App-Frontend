@@ -119,6 +119,42 @@ class ApiClient {
     return _request('POST', '/auth/logout', auth: true);
   }
 
+  Future<_ApiResponse> updateProfile({
+    required String username,
+    String? displayName,
+    String? avatarFilePath, // local path for multipart
+  }) async {
+    final url = Uri.parse('$baseUrl/profile');
+    final token = await _getToken();
+    final request = http.MultipartRequest('POST', url);
+    request.headers['Accept'] = 'application/json';
+    if (token != null) request.headers['Authorization'] = 'Bearer $token';
+    request.fields['username'] = username;
+    if (displayName != null) request.fields['name'] = displayName;
+    if (avatarFilePath != null && avatarFilePath.isNotEmpty) {
+      request.files.add(await http.MultipartFile.fromPath('avatar', avatarFilePath));
+    }
+    try {
+      final streamed = await request.send();
+      final resp = await http.Response.fromStream(streamed);
+      if (resp.statusCode >= 200 && resp.statusCode < 300) {
+        return _ApiResponse(data: jsonDecode(resp.body));
+      } else {
+        final decoded = resp.body.isNotEmpty ? jsonDecode(resp.body) : null;
+        if (decoded is Map && decoded['message'] is String) {
+          return _ApiResponse(error: decoded['message']);
+        }
+        return _ApiResponse(error: 'Unexpected error (${resp.statusCode}).');
+      }
+    } catch (_) {
+      return _ApiResponse(error: 'Network error. Please check your connection.');
+    }
+  }
+
+  Future<_ApiResponse> deleteAvatar() {
+    return _request('DELETE', '/profile/avatar', auth: true);
+  }
+
   Future<_ApiResponse> checkDeletePassword({required String password}) {
     return _request(
       'POST',
