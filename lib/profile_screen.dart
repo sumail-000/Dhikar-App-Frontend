@@ -8,6 +8,9 @@ import 'app_localizations.dart';
 import 'khitma_screen.dart';
 import 'bottom_nav_bar.dart';
 import 'dhikr_screen.dart';
+import 'services/api_client.dart';
+import 'account_details_screen.dart';
+import 'edit_profile_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -117,26 +120,74 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     final appLocalizations = AppLocalizations.of(context)!;
 
-    // Show confirmation dialog
+    // Show confirmation dialog (localized & themed)
+    final isLightMode = !themeProvider.isDarkMode;
+    // Stronger contrast and solid background for dark mode
+    final bgColor = themeProvider.backgroundColor;
+    final titleColor = isLightMode ? const Color(0xFF205C3B) : Colors.white;
+    final textColor = isLightMode ? const Color(0xFF205C3B) : Colors.white.withOpacity(0.9);
+    final borderColor = isLightMode ? const Color(0xFFE0E0E0) : Colors.white.withOpacity(0.2);
+    final dialogBarrierColor = isLightMode ? Colors.black.withOpacity(0.35) : Colors.black.withOpacity(0.6);
+
     final shouldLogout = await showDialog<bool>(
       context: context,
+      barrierDismissible: true,
+      barrierColor: dialogBarrierColor,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(appLocalizations.logout),
-          content: Text('Are you sure you want to logout?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Cancel'),
+        return Directionality(
+          textDirection: Provider.of<LanguageProvider>(context, listen: false).textDirection,
+          child: AlertDialog(
+            backgroundColor: bgColor,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: borderColor, width: 1),
             ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(
-                appLocalizations.logout,
-                style: TextStyle(color: Colors.red),
+            titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            actionsPadding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
+            title: Row(
+              children: [
+                Icon(Icons.logout, color: titleColor),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    appLocalizations.logout,
+                    style: TextStyle(
+                      color: titleColor,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              appLocalizations.logoutConfirmMessage,
+              style: TextStyle(color: textColor, fontSize: 14, height: 1.4),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                style: TextButton.styleFrom(
+                  foregroundColor: isLightMode ? const Color(0xFF205C3B) : themeProvider.primaryTextColor,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text(appLocalizations.cancel),
               ),
-            ),
-          ],
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: const Color(0xFFB91C1C), // red-700
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text(appLocalizations.logout),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -149,6 +200,198 @@ class _ProfileScreenState extends State<ProfileScreen> {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const LoginScreen()),
         (route) => false, // Remove all previous routes
+      );
+    }
+  }
+
+  Future<void> _handleAccountDeletion(BuildContext context) async {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final app = AppLocalizations.of(context)!;
+    final isLight = !themeProvider.isDarkMode;
+    final bgColor = themeProvider.backgroundColor;
+    final titleColor = isLight ? const Color(0xFF205C3B) : Colors.white;
+    final textColor = isLight ? const Color(0xFF205C3B) : Colors.white.withOpacity(0.9);
+    final borderColor = isLight ? const Color(0xFFE0E0E0) : Colors.white.withOpacity(0.2);
+    final barrier = isLight ? Colors.black.withOpacity(0.35) : Colors.black.withOpacity(0.6);
+
+    final passController = TextEditingController();
+
+    // Step 1: Ask for password
+    final passOk = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: barrier,
+      builder: (ctx) {
+        return Directionality(
+          textDirection: Provider.of<LanguageProvider>(ctx, listen: false).textDirection,
+          child: AlertDialog(
+            backgroundColor: bgColor,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: borderColor, width: 1),
+            ),
+            titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            actionsPadding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
+            title: Row(
+              children: [
+                Icon(Icons.lock_outline, color: titleColor),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    app.enterPassword,
+                    style: TextStyle(color: titleColor, fontSize: 18, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(app.password, style: TextStyle(color: textColor, fontSize: 14)),
+                const SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: isLight ? Colors.white : Colors.white.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: borderColor),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: TextField(
+                    controller: passController,
+                    obscureText: true,
+                    style: TextStyle(color: textColor),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                style: TextButton.styleFrom(
+                  foregroundColor: isLight ? const Color(0xFF205C3B) : Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text(app.cancel),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final pass = passController.text.trim();
+                  if (pass.isEmpty) {
+                    Navigator.of(ctx).pop(false);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(app.enterPassword)),
+                    );
+                    return;
+                  }
+                  final resp = await ApiClient.instance.checkDeletePassword(password: pass);
+                  if (!resp.ok) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(resp.error ?? 'Error')),
+                    );
+                    return;
+                  }
+                  Navigator.of(ctx).pop(true);
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: isLight ? const Color(0xFF205C3B) : Colors.white.withOpacity(0.15),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text(app.continueLabel),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (passOk != true) return;
+
+    // Step 2: Final warning
+    final confirm = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: barrier,
+      builder: (ctx) {
+        return Directionality(
+          textDirection: Provider.of<LanguageProvider>(ctx, listen: false).textDirection,
+          child: AlertDialog(
+            backgroundColor: bgColor,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: borderColor, width: 1),
+            ),
+            titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            actionsPadding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
+            title: Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, color: titleColor),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    app.finalWarning,
+                    style: TextStyle(color: titleColor, fontSize: 18, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              app.deleteAccountExplain,
+              style: TextStyle(color: textColor, fontSize: 14, height: 1.4),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                style: TextButton.styleFrom(
+                  foregroundColor: isLight ? const Color(0xFF205C3B) : Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text(app.cancel),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final pass = passController.text.trim();
+                  final resp = await ApiClient.instance.deleteAccount(password: pass);
+                  if (!resp.ok) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(resp.error ?? 'Error')),
+                    );
+                    return;
+                  }
+                  await ApiClient.instance.clearToken();
+                  if (!mounted) return;
+                  Navigator.of(ctx).pop(true);
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: const Color(0xFFB91C1C),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text(app.confirmDelete),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (confirm == true) {
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
       );
     }
   }
@@ -227,8 +470,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 10),
                           // Content Sections
                           _ContentSections(
-                            onLanguageTap: _showLanguageDialog,
-                            onLogoutTap: _handleLogout,
+                          onLanguageTap: _showLanguageDialog,
+                          onLogoutTap: _handleLogout,
+                          onDeleteTap: _handleAccountDeletion,
                             sectionHeaderColor: sectionHeaderColor,
                             sectionCardColor: sectionCardColor,
                             sectionTextColor: sectionTextColor,
@@ -364,6 +608,7 @@ class _ProfileHeader extends StatelessWidget {
 class _ContentSections extends StatelessWidget {
   final Function(BuildContext) onLanguageTap;
   final Function(BuildContext) onLogoutTap;
+  final Function(BuildContext) onDeleteTap;
   final Color sectionHeaderColor;
   final Color sectionCardColor;
   final Color sectionTextColor;
@@ -376,6 +621,7 @@ class _ContentSections extends StatelessWidget {
   const _ContentSections({
     required this.onLanguageTap,
     required this.onLogoutTap,
+    required this.onDeleteTap,
     required this.sectionHeaderColor,
     required this.sectionCardColor,
     required this.sectionTextColor,
@@ -401,14 +647,33 @@ class _ContentSections extends StatelessWidget {
                 _SectionItem(
                   icon: Icons.person,
                   title: appLocalizations.accountDetails,
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AccountDetailsScreen(),
+                      ),
+                    );
+                  },
                   textColor: sectionTextColor,
                   iconColor: sectionIconColor,
                 ),
                 _SectionItem(
                   icon: Icons.edit,
                   title: appLocalizations.editProfile,
-                  onTap: () {},
+                  onTap: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const EditProfileScreen(),
+                      ),
+                    );
+                    if (result is Map && result['name'] is String) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Profile updated')),
+                      );
+                    }
+                  },
                   textColor: sectionTextColor,
                   iconColor: sectionIconColor,
                 ),
@@ -515,7 +780,7 @@ class _ContentSections extends StatelessWidget {
                 _SectionItem(
                   icon: Icons.person_remove,
                   title: appLocalizations.accountDeletionRequest,
-                  onTap: () {},
+                  onTap: () => onDeleteTap(context),
                   textColor: sectionTextColor,
                   iconColor: sectionIconColor,
                 ),

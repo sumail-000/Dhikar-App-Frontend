@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'services/api_client.dart';
@@ -60,16 +58,8 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
 
     setState(() => _loading = true);
     try {
-      final url = Uri.parse('${ApiClient.baseUrl}/password/forgot');
-      final resp = await http.post(
-        url,
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({'email': email}),
-      );
-      if (resp.statusCode >= 200 && resp.statusCode < 300) {
+      final resp = await ApiClient.instance.forgotPassword(email: email);
+      if (resp.ok) {
         setState(() {
           _email = email;
           _step = 1;
@@ -81,11 +71,10 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
               : 'A reset code has been sent to your email',
         );
       } else {
-        final body = resp.body.isNotEmpty ? jsonDecode(resp.body) : {};
-        final msg = body is Map && body['message'] is String
-            ? body['message'] as String
-            : (lang.isArabic ? 'تعذر إرسال الرمز' : 'Failed to send code');
-        _showSnack(context, msg);
+        _showSnack(
+          context,
+          resp.error ?? (lang.isArabic ? 'تعذر إرسال الرمز' : 'Failed to send code'),
+        );
       }
     } catch (_) {
       _showSnack(
@@ -109,16 +98,8 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
 
     setState(() => _loading = true);
     try {
-      final url = Uri.parse('${ApiClient.baseUrl}/password/verify');
-      final resp = await http.post(
-        url,
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({'email': _email, 'code': code}),
-      );
-      if (resp.statusCode >= 200 && resp.statusCode < 300) {
+      final resp = await ApiClient.instance.verifyCode(email: _email, code: code);
+      if (resp.ok) {
         setState(() {
           _code = code;
           _step = 2;
@@ -128,11 +109,10 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
           lang.isArabic ? 'تم التحقق من الرمز' : 'Code verified',
         );
       } else {
-        final body = resp.body.isNotEmpty ? jsonDecode(resp.body) : {};
-        final msg = body is Map && body['message'] is String
-            ? body['message'] as String
-            : (lang.isArabic ? 'رمز غير صالح' : 'Invalid code');
-        _showSnack(context, msg);
+        _showSnack(
+          context,
+          resp.error ?? (lang.isArabic ? 'رمز غير صالح' : 'Invalid code'),
+        );
       }
     } catch (_) {
       _showSnack(
@@ -164,32 +144,23 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
 
     setState(() => _loading = true);
     try {
-      final url = Uri.parse('${ApiClient.baseUrl}/password/reset');
-      final resp = await http.post(
-        url,
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'email': _email,
-          'code': _code,
-          'password': pass,
-          'password_confirmation': confirm,
-        }),
+      final resp = await ApiClient.instance.resetPassword(
+        email: _email,
+        code: _code,
+        password: pass,
+        passwordConfirmation: confirm,
       );
-      if (resp.statusCode >= 200 && resp.statusCode < 300) {
+      if (resp.ok) {
         _showSnack(
           context,
           lang.isArabic ? 'تم إعادة تعيين كلمة المرور' : 'Password has been reset',
         );
         if (mounted) Navigator.pop(context);
       } else {
-        final body = resp.body.isNotEmpty ? jsonDecode(resp.body) : {};
-        final msg = body is Map && body['message'] is String
-            ? body['message'] as String
-            : (lang.isArabic ? 'تعذر إعادة تعيين كلمة المرور' : 'Failed to reset password');
-        _showSnack(context, msg);
+        _showSnack(
+          context,
+          resp.error ?? (lang.isArabic ? 'تعذر إعادة تعيين كلمة المرور' : 'Failed to reset password'),
+        );
       }
     } catch (_) {
       _showSnack(

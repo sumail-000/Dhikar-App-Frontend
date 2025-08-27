@@ -281,7 +281,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                     decoration: InputDecoration(
                                       labelText:
-                                          languageProvider.isArabic ? 'كل��ة المرور' : 'Password',
+                                          languageProvider.isArabic ? 'كلمة المرور' : 'Password',
                                       labelStyle: TextStyle(
                                         color: themeProvider.secondaryTextColor,
                                         fontSize: MediaQuery.of(context).size.width * 0.04,

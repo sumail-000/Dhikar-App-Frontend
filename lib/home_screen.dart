@@ -9,6 +9,7 @@ import 'khitma_screen.dart';
 import 'bottom_nav_bar.dart';
 import 'dhikr_screen.dart';
 import 'notification_screen.dart';
+import 'services/api_client.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,6 +20,27 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  String? _name;
+  String? _avatarUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final resp = await ApiClient.instance.me();
+    if (!mounted) return;
+    if (resp.ok && resp.data is Map) {
+      final data = resp.data as Map<String, dynamic>;
+      setState(() {
+        _name = (data['name'] as String?)?.trim();
+        // TODO: set _avatarUrl when backend provides it
+        _avatarUrl = null;
+      });
+    }
+  }
 
   void _onItemTapped(int index) {
     if (_selectedIndex != index) {
@@ -110,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             const SizedBox(height: 25),
                             // Profile & Notification
-                            _ProfileSection(),
+                            _ProfileSection(name: _name, avatarUrl: _avatarUrl),
                             const SizedBox(height: 20),
                             // Overall Progress
                             _ProgressSection(),
@@ -142,7 +164,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
 // Optimized Profile Section
 class _ProfileSection extends StatelessWidget {
-  const _ProfileSection();
+  final String? name;
+  final String? avatarUrl;
+  const _ProfileSection({super.key, this.name, this.avatarUrl});
 
   @override
   Widget build(BuildContext context) {
@@ -177,16 +201,39 @@ class _ProfileSection extends StatelessWidget {
                         width: 2,
                       ),
                     ),
-                    child: Icon(
-                      Icons.person,
-                      color: themeProvider.primaryTextColor,
-                      size: 24,
-                    ),
+                    child: (avatarUrl != null && avatarUrl!.isNotEmpty)
+                        ? ClipOval(
+                            child: Image.network(
+                              avatarUrl!,
+                              fit: BoxFit.cover,
+                              width: 48,
+                              height: 48,
+                            ),
+                          )
+                        : ((name != null && name!.trim().isNotEmpty)
+                            ? Center(
+                                child: Text(
+                                  name!.trim()[0].toUpperCase(),
+                                  style: TextStyle(
+                                    color: themeProvider.primaryTextColor,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              )
+                            : Icon(
+                                Icons.person,
+                                color: themeProvider.primaryTextColor,
+                                size: 24,
+                              )),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  appLocalizations.salaamAli,
+                  (name != null && name!.trim().isNotEmpty)
+                      ? ((Localizations.localeOf(context).languageCode == 'ar' ? 'سلام، ' : 'Salaam, ') +
+                          ((name!.trim().contains(' ')) ? name!.trim().split(' ').first : name!.trim()))
+                      : appLocalizations.salaamAli,
                   style: TextStyle(
                     color: themeProvider.homeUsernameColor,
                     fontSize: 20,

@@ -7,7 +7,7 @@ class ApiClient {
   static final ApiClient instance = ApiClient._();
 
   // TODO: adjust to your backend host when deploying
-  static const String baseUrl = 'http://192.168.1.2:8000/api';
+  static const String baseUrl = String.fromEnvironment('API_BASE', defaultValue: 'http://192.168.40.250:8000/api');
 
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -119,11 +119,58 @@ class ApiClient {
     return _request('POST', '/auth/logout', auth: true);
   }
 
+  Future<_ApiResponse> checkDeletePassword({required String password}) {
+    return _request(
+      'POST',
+      '/auth/delete/check',
+      auth: true,
+      body: jsonEncode({'password': password}),
+    );
+  }
+
+  Future<_ApiResponse> deleteAccount({required String password}) {
+    return _request(
+      'DELETE',
+      '/auth/delete',
+      auth: true,
+      body: jsonEncode({'password': password}),
+    );
+  }
+
   Future<_ApiResponse> forgotPassword({required String email}) {
     return _request(
       'POST',
       '/password/forgot',
       body: jsonEncode({'email': email}),
+    );
+  }
+
+  Future<_ApiResponse> verifyCode({
+    required String email,
+    required String code,
+  }) {
+    return _request(
+      'POST',
+      '/password/verify',
+      body: jsonEncode({'email': email, 'code': code}),
+    );
+  }
+
+  Future<_ApiResponse> resetPassword({
+    required String email,
+    required String code,
+    required String password,
+    required String passwordConfirmation,
+  }) {
+    return _request(
+      'POST',
+      '/password/reset',
+      body: jsonEncode({
+        'email': email,
+        'code': code,
+        'password': password,
+        'password_confirmation': passwordConfirmation,
+      }),
     );
   }
 }

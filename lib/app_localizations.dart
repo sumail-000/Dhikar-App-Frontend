@@ -46,8 +46,27 @@ class AppLocalizations {
       'accountControl': 'Account Control',
       'accountDeletionRequest': 'Account Deletion Request',
       'logout': 'Logout',
+      'logoutConfirmMessage': 'Are you sure you want to log out?',
+      'cancel': 'Cancel',
       'english': 'English',
       'arabic': 'العربية',
+      'deleteAccount': 'Delete Account',
+      'deleteAccountExplain': 'This action is permanent and cannot be undone. All your data will be erased.',
+      'enterPassword': 'Enter your password to continue',
+      'password': 'Password',
+      'confirmDelete': 'Yes, delete my account',
+      'continue': 'Continue',
+      'finalWarning': 'Final Warning',
+      'username': 'Username',
+      'email': 'Email',
+      'save': 'Save',
+      'removePhoto': 'Remove photo',
+      'changePhoto': 'Change photo',
+      'camera': 'Camera',
+      'gallery': 'Gallery',
+      'invalidUsername': 'Username may contain only letters, numbers and underscores',
+      'usernameRules': 'Allowed: letters, numbers, underscores (e.g., sumail_007)',
+      'profileUpdated': 'Profile updated',
     },
     'ar': {
       'salaamAli': 'السلام عليك يا علي!',
@@ -82,8 +101,27 @@ class AppLocalizations {
       'accountControl': 'التحكم في الحساب',
       'accountDeletionRequest': 'طلب حذف الحساب',
       'logout': 'تسجيل الخروج',
+      'logoutConfirmMessage': 'هل أنت متأكد أنك تريد تسجيل الخروج؟',
+      'cancel': 'إلغاء',
       'english': 'English',
       'arabic': 'العربية',
+      'deleteAccount': 'حذف الحساب',
+      'deleteAccountExplain': 'هذا الإجراء نهائي ولا يمكن التراجع عنه. سيتم حذف جميع بياناتك.',
+      'enterPassword': 'أدخل كلمة المرور للمتابعة',
+      'password': 'كلمة المرور',
+      'confirmDelete': 'نعم، احذف حسابي',
+      'continue': 'متابعة',
+      'finalWarning': 'تحذير نهائي',
+      'username': 'اسم المستخدم',
+      'email': 'البريد الإلكتروني',
+      'save': 'حفظ',
+      'removePhoto': 'حذف الصورة',
+      'changePhoto': 'تغيير الصورة',
+      'camera': 'الكاميرا',
+      'gallery': 'المعرض',
+      'invalidUsername': 'اسم المستخدم يجب أن يحتوي على حروف وأرقام وشرطة سفلية فقط',
+      'usernameRules': 'المسموح: حروف، أرقام، شرطة سفلية (مثال: sumail_007)',
+      'profileUpdated': 'تم تحديث الملف الشخصي',
     },
   };
 
@@ -119,8 +157,27 @@ class AppLocalizations {
   String get accountControl => _localizedValues[locale.languageCode]?['accountControl'] ?? 'Account Control';
   String get accountDeletionRequest => _localizedValues[locale.languageCode]?['accountDeletionRequest'] ?? 'Account Deletion Request';
   String get logout => _localizedValues[locale.languageCode]?['logout'] ?? 'Logout';
+  String get logoutConfirmMessage => _localizedValues[locale.languageCode]?['logoutConfirmMessage'] ?? 'Are you sure you want to log out?';
+  String get cancel => _localizedValues[locale.languageCode]?['cancel'] ?? 'Cancel';
   String get english => _localizedValues[locale.languageCode]?['english'] ?? 'English';
   String get arabic => _localizedValues[locale.languageCode]?['arabic'] ?? 'العربية';
+  String get deleteAccount => _localizedValues[locale.languageCode]?['deleteAccount'] ?? 'Delete Account';
+  String get deleteAccountExplain => _localizedValues[locale.languageCode]?['deleteAccountExplain'] ?? 'This action is permanent and cannot be undone. All your data will be erased.';
+  String get enterPassword => _localizedValues[locale.languageCode]?['enterPassword'] ?? 'Enter your password to continue';
+  String get password => _localizedValues[locale.languageCode]?['password'] ?? 'Password';
+  String get confirmDelete => _localizedValues[locale.languageCode]?['confirmDelete'] ?? 'Yes, delete my account';
+  String get continueLabel => _localizedValues[locale.languageCode]?['continue'] ?? 'Continue';
+  String get finalWarning => _localizedValues[locale.languageCode]?['finalWarning'] ?? 'Final Warning';
+  String get username => _localizedValues[locale.languageCode]?['username'] ?? 'Username';
+  String get email => _localizedValues[locale.languageCode]?['email'] ?? 'Email';
+  String get save => _localizedValues[locale.languageCode]?['save'] ?? 'Save';
+  String get removePhoto => _localizedValues[locale.languageCode]?['removePhoto'] ?? 'Remove photo';
+  String get changePhoto => _localizedValues[locale.languageCode]?['changePhoto'] ?? 'Change photo';
+  String get camera => _localizedValues[locale.languageCode]?['camera'] ?? 'Camera';
+  String get gallery => _localizedValues[locale.languageCode]?['gallery'] ?? 'Gallery';
+  String get invalidUsername => _localizedValues[locale.languageCode]?['invalidUsername'] ?? 'Username may contain only letters, numbers and underscores';
+  String get usernameRules => _localizedValues[locale.languageCode]?['usernameRules'] ?? 'Allowed: letters, numbers, underscores (e.g., sumail_007)';
+  String get profileUpdated => _localizedValues[locale.languageCode]?['profileUpdated'] ?? 'Profile updated';
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
