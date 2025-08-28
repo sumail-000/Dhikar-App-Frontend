@@ -7,7 +7,7 @@ class ApiClient {
   static final ApiClient instance = ApiClient._();
 
   // TODO: adjust to your backend host when deploying
-  static const String baseUrl = String.fromEnvironment('API_BASE', defaultValue: 'http://192.168.40.250:8000/api');
+  static const String baseUrl = String.fromEnvironment('API_BASE', defaultValue: 'http://192.168.1.3:8000/api');
 
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -208,6 +208,76 @@ class ApiClient {
         'password_confirmation': passwordConfirmation,
       }),
     );
+  }
+
+  // ===== Groups =====
+  Future<_ApiResponse> getGroups() {
+    return _request('GET', '/groups', auth: true);
+  }
+
+  Future<_ApiResponse> createGroup({
+    required String name,
+    String type = 'khitma',
+    int? daysToComplete,
+    String? startDate, // 'YYYY-MM-DD'
+    int? membersTarget,
+    bool isPublic = true,
+  }) {
+    final body = <String, dynamic>{
+      'name': name,
+      'type': type,
+      'is_public': isPublic,
+    };
+    if (daysToComplete != null) body['days_to_complete'] = daysToComplete;
+    if (startDate != null) body['start_date'] = startDate;
+    if (membersTarget != null) body['members_target'] = membersTarget;
+    return _request('POST', '/groups', auth: true, body: jsonEncode(body));
+  }
+
+  Future<_ApiResponse> getGroup(int id) {
+    return _request('GET', '/groups/$id', auth: true);
+  }
+
+  Future<_ApiResponse> getGroupInvite(int id) {
+    return _request('GET', '/groups/$id/invite', auth: true);
+  }
+
+  Future<_ApiResponse> joinGroup({required String token}) {
+    return _request('POST', '/groups/join', auth: true, body: jsonEncode({'token': token}));
+  }
+
+  Future<_ApiResponse> leaveGroup(int id) {
+    return _request('POST', '/groups/$id/leave', auth: true);
+  }
+
+  Future<_ApiResponse> removeGroupMember(int id, int userId) {
+    return _request('DELETE', '/groups/$id/members/$userId', auth: true);
+  }
+
+  // ===== Khitma-specific =====
+  Future<_ApiResponse> khitmaAutoAssign(int id) {
+    return _request('POST', '/groups/$id/khitma/auto-assign', auth: true);
+  }
+
+  Future<_ApiResponse> khitmaManualAssign(int id, List<Map<String, dynamic>> assignments) {
+    // assignments: [{ 'user_id': 1, 'juz_numbers': [1,2,3] }, ...]
+    return _request('POST', '/groups/$id/khitma/manual-assign', auth: true, body: jsonEncode({'assignments': assignments}));
+  }
+
+  Future<_ApiResponse> khitmaAssignments(int id) {
+    return _request('GET', '/groups/$id/khitma/assignments', auth: true);
+  }
+
+  Future<_ApiResponse> khitmaUpdateAssignment(
+    int id, {
+    required int juzNumber,
+    String? status,
+    int? pagesRead,
+  }) {
+    final body = <String, dynamic>{'juz_number': juzNumber};
+    if (status != null) body['status'] = status;
+    if (pagesRead != null) body['pages_read'] = pagesRead;
+    return _request('PATCH', '/groups/$id/khitma/assignment', auth: true, body: jsonEncode(body));
   }
 }
 

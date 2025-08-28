@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'services/api_client.dart';
 
 class ProfileProvider extends ChangeNotifier {
+  int? _id;
   String? _name; // display name (can be same as username for now)
   String? _username;
   String? _email;
@@ -9,6 +10,7 @@ class ProfileProvider extends ChangeNotifier {
   String? _joinedAt; // ISO string
   bool _loading = false;
 
+  int? get id => _id;
   String? get name => _name;
   String? get username => _username;
   String? get email => _email;
@@ -35,6 +37,7 @@ class ProfileProvider extends ChangeNotifier {
   }
 
   void setFromMap(Map<String, dynamic> data) {
+    _id = (data['id'] is int) ? data['id'] as int : int.tryParse('${data['id'] ?? ''}');
     _name = (data['name'] as String?)?.trim();
     _username = (data['username'] as String?)?.trim();
     _email = (data['email'] as String?)?.trim();
@@ -44,6 +47,7 @@ class ProfileProvider extends ChangeNotifier {
   }
 
   void clear() {
+    _id = null;
     _name = null;
     _username = null;
     _email = null;

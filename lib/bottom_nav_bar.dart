@@ -17,74 +17,97 @@ class BottomNavBar extends StatelessWidget {
 
   void _showGroupsDialog(BuildContext context, ThemeProvider themeProvider) {
     final appLocalizations = AppLocalizations.of(context)!;
-    
+    final isLightMode = !themeProvider.isDarkMode;
+    const greenColor = Color(0xFF205C3B);
+    const creamColor = Color(0xFFF7F3E8);
+    final cardColor = isLightMode ? const Color(0xFFE6F2E8) : const Color(0xFFB9A9D0).withOpacity(0.18);
+    final borderColor = isLightMode ? const Color(0xFFB6D1C2) : const Color(0xFFB9A9D0).withOpacity(0.35);
+    final textColor = isLightMode ? const Color(0xFF2D1B69) : creamColor;
+
     showDialog(
       context: context,
+      barrierDismissible: true,
       builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: themeProvider.isDarkMode 
-              ? const Color(0xFF4A148C) // Deep purple for dark mode
-              : Colors.white, // White for light mode
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          backgroundColor: isLightMode ? Colors.white : const Color(0xFF2A2A2A),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(color: borderColor, width: 1.5),
           ),
-          title: Text(
-            appLocalizations.groups,
-            style: TextStyle(
-              color: themeProvider.isDarkMode 
-                  ? Colors.white // White text in dark mode
-                  : const Color(0xFF2D5A27), // Dark green text in light mode
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
             ),
-            textAlign: TextAlign.center,
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Dhikr Groups option
-              ListTile(
-                title: Text(
-                  'Dhikr Groups',
-                  style: TextStyle(
-                    color: themeProvider.isDarkMode 
-                        ? Colors.white // White text in dark mode
-                        : const Color(0xFF2D5A27), // Dark green text in light mode
-                    fontSize: 16,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Title row with icon
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: isLightMode ? greenColor.withOpacity(0.08) : creamColor.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(Icons.group, color: isLightMode ? greenColor : creamColor, size: 22),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          appLocalizations.groups,
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close, size: 20, color: textColor.withOpacity(0.8)),
+                        onPressed: () => Navigator.of(context).pop(),
+                      )
+                    ],
                   ),
-                ),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const DhikrGroupScreen(),
-                    ),
-                  );
-                },
-              ),
-              // Khitma Groups option
-              ListTile(
-                title: Text(
-                  'Khitma Groups',
-                  style: TextStyle(
-                    color: themeProvider.isDarkMode 
-                        ? Colors.white // White text in dark mode
-                        : const Color(0xFF2D5A27), // Dark green text in light mode
-                    fontSize: 16,
+                  const SizedBox(height: 16),
+                  // Options
+                  _GroupChoiceTile(
+                    icon: Icons.menu_book,
+                    label: 'Khitma Groups',
+                    cardColor: cardColor,
+                    borderColor: borderColor,
+                    textColor: textColor,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const KhitmaGroupScreen()),
+                      );
+                    },
                   ),
-                ),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const KhitmaGroupScreen(),
-                    ),
-                  );
-                },
+                  const SizedBox(height: 10),
+                  _GroupChoiceTile(
+                    icon: Icons.favorite_outline,
+                    label: 'Dhikr Groups',
+                    cardColor: cardColor,
+                    borderColor: borderColor,
+                    textColor: textColor,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const DhikrGroupScreen()),
+                      );
+                    },
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },
@@ -158,6 +181,57 @@ class BottomNavBar extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _GroupChoiceTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color cardColor;
+  final Color borderColor;
+  final Color textColor;
+  final VoidCallback onTap;
+
+  const _GroupChoiceTile({
+    required this.icon,
+    required this.label,
+    required this.cardColor,
+    required this.borderColor,
+    required this.textColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderColor, width: 1.2),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 22, color: textColor),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            Icon(Icons.chevron_right, color: textColor.withOpacity(0.8), size: 22),
+          ],
+        ),
+      ),
     );
   }
 }

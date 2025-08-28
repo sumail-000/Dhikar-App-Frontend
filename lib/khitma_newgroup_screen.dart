@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'wered_screen.dart';
+import 'services/api_client.dart';
 
 class KhitmaNewgroupScreen extends StatefulWidget {
   const KhitmaNewgroupScreen({super.key});
@@ -14,19 +15,23 @@ class KhitmaNewgroupScreen extends StatefulWidget {
 class _KhitmaNewgroupScreenState extends State<KhitmaNewgroupScreen> {
   int? selectedDays;
   bool agreedToTerms = false;
+  bool _creating = false;
   final TextEditingController groupNameController = TextEditingController();
   final TextEditingController groupMembersController = TextEditingController();
+  bool _isPublic = true;
 
   final List<Map<String, dynamic>> khitmaOptions = [
     {'days': 1, 'juzzDaily': 30},
     {'days': 2, 'juzzDaily': 15},
     {'days': 3, 'juzzDaily': 10},
+    {'days': 4, 'juzzDaily': 8},
     {'days': 5, 'juzzDaily': 6},
     {'days': 6, 'juzzDaily': 5},
     {'days': 10, 'juzzDaily': 3},
     {'days': 15, 'juzzDaily': 2},
     {'days': 30, 'juzzDaily': 1},
   ];
+
 
   @override
   Widget build(BuildContext context) {
@@ -153,53 +158,62 @@ class _KhitmaNewgroupScreenState extends State<KhitmaNewgroupScreen> {
 
                             const SizedBox(height: 15),
 
-                            // Predefined options
+                            // Public/Private toggle
+                            Row(
+                              children: [
+                                Switch(
+                                  value: _isPublic,
+                                  onChanged: (v) => setState(() => _isPublic = v),
+                                  activeColor: isLightMode ? greenColor : creamColor,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  languageProvider.isArabic ? (_isPublic ? 'عام' : 'خاص') : (_isPublic ? 'Public' : 'Private'),
+                                  style: TextStyle(
+                                    color: isLightMode ? greenColor : creamColor,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 15),
+
+                            // Predefined options (all day options enabled)
                             ...khitmaOptions.map((option) {
-                              final isSelected = selectedDays == option['days'];
+                              final int days = option['days'] as int;
+                              final isSelected = selectedDays == days;
+                              final baseBg = themeProvider.isDarkMode ? Colors.white : const Color(0xFFE8F5E8);
+                              final selectedBg = themeProvider.isDarkMode ? const Color(0xFF8B5CF6) : const Color(0xFF2D5A27);
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 8),
                                 child: InkWell(
                                   onTap: () {
                                     setState(() {
-                                      selectedDays = option['days'];
+                                      selectedDays = days;
                                     });
                                   },
                                   child: Container(
                                     width: double.infinity,
                                     padding: const EdgeInsets.all(16),
                                     decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? (themeProvider.isDarkMode
-                                                ? const Color(0xFF8B5CF6)
-                                                : const Color(0xFF2D5A27))
-                                          : (themeProvider.isDarkMode
-                                                ? Colors.white
-                                                : const Color(0xFFE8F5E8)),
+                                      color: isSelected ? selectedBg : baseBg,
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                        color: isSelected
-                                            ? (themeProvider.isDarkMode
-                                                  ? const Color(0xFF8B5CF6)
-                                                  : const Color(0xFF2D5A27))
-                                            : Colors.grey.withOpacity(0.3),
+                                        color: isSelected ? selectedBg : Colors.grey.withOpacity(0.3),
                                       ),
                                     ),
                                     child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment: CrossAxisAlignment.center,
                                       children: [
                                         Text(
-                                          option['days'] == 1
-                                              ? (languageProvider.isArabic
-                                                    ? 'يوم واحد'
-                                                    : '1 Day')
-                                              : (languageProvider.isArabic
-                                                    ? '${option['days']} أيام'
-                                                    : '${option['days']} Days'),
+                                          days == 1
+                                              ? (languageProvider.isArabic ? 'يوم واحد' : '1 Day')
+                                              : (languageProvider.isArabic ? '$days أيام' : '$days Days'),
                                           style: TextStyle(
-                                            color: isSelected
-                                                ? Colors.white
-                                                : const Color(0xFF2D1B69),
+                                            color: isSelected ? Colors.white : const Color(0xFF2D1B69),
                                             fontSize: 16,
                                             fontWeight: FontWeight.w500,
                                           ),
@@ -209,11 +223,7 @@ class _KhitmaNewgroupScreenState extends State<KhitmaNewgroupScreen> {
                                               ? '${option['juzzDaily']} جزء يومياً'
                                               : '${option['juzzDaily']} Juzz Daily',
                                           style: TextStyle(
-                                            color: isSelected
-                                                ? Colors.white.withOpacity(0.9)
-                                                : const Color(
-                                                    0xFF2D1B69,
-                                                  ).withOpacity(0.7),
+                                            color: isSelected ? Colors.white.withOpacity(0.9) : const Color(0xFF2D1B69).withOpacity(0.7),
                                             fontSize: 14,
                                           ),
                                         ),
@@ -311,19 +321,10 @@ class _KhitmaNewgroupScreenState extends State<KhitmaNewgroupScreen> {
                               child: ElevatedButton(
                                 onPressed:
                                     agreedToTerms &&
-                                        (selectedDays != null ||
-                                            groupNameController.text.isNotEmpty)
-                                    ? () {
-                                        // Navigate to WeredScreen
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const WeredScreen(),
-                                          ),
-                                        );
-                                      }
-                                    : null,
+                                            selectedDays != null &&
+                                            groupNameController.text.trim().isNotEmpty
+                                        ? _createGroup
+                                        : null,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: themeProvider.isDarkMode
                                       ? Colors.white
@@ -340,18 +341,26 @@ class _KhitmaNewgroupScreenState extends State<KhitmaNewgroupScreen> {
                                       ? Colors.white
                                       : const Color.fromARGB(255, 16, 34, 13),
                                 ),
-                                child: Text(
-                                  languageProvider.isArabic
-                                      ? 'بدء الختمة'
-                                      : 'Start Wered',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: themeProvider.isDarkMode
-                                        ? const Color(0xFF2D1B69)
-                                        : Colors.white,
-                                  ),
-                                ),
+                                child: _creating
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : Text(
+                                        languageProvider.isArabic
+                                            ? 'بدء الختمة'
+                                            : 'Start Wered',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: themeProvider.isDarkMode
+                                              ? const Color(0xFF2D1B69)
+                                              : Colors.white,
+                                        ),
+                                      ),
                               ),
                             ),
 
@@ -368,6 +377,36 @@ class _KhitmaNewgroupScreenState extends State<KhitmaNewgroupScreen> {
         );
       },
     );
+  }
+
+  Future<void> _createGroup() async {
+    final name = groupNameController.text.trim();
+    final days = selectedDays;
+    if (days == null || name.isEmpty) return;
+
+
+    setState(() => _creating = true);
+    final resp = await ApiClient.instance.createGroup(
+      name: name,
+      type: 'khitma',
+      daysToComplete: days,
+      membersTarget: int.tryParse(groupMembersController.text.trim()) ?? 15,
+      isPublic: _isPublic,
+    );
+    if (!mounted) return;
+    setState(() => _creating = false);
+
+    if (!resp.ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(resp.error ?? 'Error')),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Khitma group created')),
+    );
+    Navigator.pop(context, true);
   }
 
   @override
