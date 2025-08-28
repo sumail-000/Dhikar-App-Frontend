@@ -23,18 +23,6 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   int _selectedIndex = 4; // Profile is selected
 
-  @override
-  void initState() {
-    super.initState();
-    // Ensure profile is hydrated when opening this screen
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        // ignore: use_build_context_synchronously
-        Provider.of<ProfileProvider>(context, listen: false).refresh();
-      }
-    });
-  }
-
   void _onItemTapped(int index) {
     if (_selectedIndex != index) {
       setState(() {

@@ -6,7 +6,6 @@ import 'forgetpass_screen.dart';
 import 'services/api_client.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
-import 'profile_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -75,9 +74,6 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
       await ApiClient.instance.saveToken(token);
-      if (!context.mounted) return;
-      // Hydrate profile state before navigating
-      await context.read<ProfileProvider>().refresh();
       scaffold.showSnackBar(
         SnackBar(
           content: Text(
