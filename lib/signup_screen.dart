@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 import 'login_screen.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
+import 'app_localizations.dart';
 import 'services/api_client.dart';
 import 'home_screen.dart';
+import 'profile_provider.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -36,16 +38,13 @@ class _SignupScreenState extends State<SignupScreen> {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    final usernameReg = RegExp(r'^[A-Za-z0-9_]+$');
+    // Match server rule: letters and spaces only (Latin + Arabic ranges)
+    final usernameReg = RegExp(r'^[A-Za-z\u0621-\u064A\u0670-\u06D3\u06D5\s]+$');
 
     if (name.isEmpty || !usernameReg.hasMatch(name)) {
       scaffold.showSnackBar(
         SnackBar(
-          content: Text(
-            languageProvider.isArabic
-                ? 'اسم المستخدم يجب أن يحتوي على حروف وأرقام وشرطة سفلية فقط'
-                : 'Username may contain only letters, numbers and underscores',
-          ),
+          content: Text(AppLocalizations.of(context)!.invalidUsername),
         ),
       );
       return;
@@ -65,7 +64,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
     setState(() => _loading = true);
     try {
-      final resp = await ApiClient.instance.register(name: name, email: email, password: password);
+      final resp = await ApiClient.instance.register(username: name, email: email, password: password);
       if (!resp.ok) {
         scaffold.showSnackBar(
           SnackBar(
@@ -90,6 +89,9 @@ class _SignupScreenState extends State<SignupScreen> {
         return;
       }
       await ApiClient.instance.saveToken(token);
+      if (!context.mounted) return;
+      // Hydrate profile state before navigating
+      await context.read<ProfileProvider>().refresh();
       scaffold.showSnackBar(
         SnackBar(
           content: Text(

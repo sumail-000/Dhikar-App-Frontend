@@ -11,6 +11,7 @@ import 'bottom_nav_bar.dart';
 import 'khitma_newgroup_screen.dart';
 import 'services/api_client.dart';
 import 'widgets/group_card.dart';
+import 'group_khitma_info_screen.dart';
 
 // Small chip helper for cozy density
 Widget _chip(String label, bool isLightMode, Color greenColor) {
@@ -149,9 +150,9 @@ Widget buildExploreJoin({
   required bool isLightMode,
   required Color greenColor,
   required Color creamColor,
-  required int? myUserId,
-  required Future<List<MemberAvatar>> Function(int groupId) membersPreviewFetcher,
   required bool isArabicLocale,
+  required Future<List<MemberAvatar>> Function(int groupId) membersPreviewFetcher,
+  required void Function(int id, String name, int membersCount) onOpenInfo,
 }) {
   // Explore: all public groups, newest first (including groups I created or joined)
   final explore = groups.where((g) {
@@ -180,6 +181,7 @@ Widget buildExploreJoin({
             total: membersTarget,
             memberAvatars: avatars,
             plusCount: membersCount > 5 ? (membersCount - 5) : 0,
+            onTap: () => onOpenInfo((g['id'] as int), name, membersCount),
           );
         },
       );
@@ -201,6 +203,7 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
   bool _loading = false;
   String? _error;
   List<Map<String, dynamic>> _groups = [];
+  List<Map<String, dynamic>> _publicGroups = [];
   final TextEditingController _inviteController = TextEditingController();
 
   void _onItemTapped(int index) {
@@ -243,6 +246,7 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
   void initState() {
     super.initState();
     _loadGroups();
+    _loadPublicGroups();
   }
 
   Future<void> _loadGroups() async {
@@ -270,6 +274,21 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
     }
   }
 
+  Future<void> _loadPublicGroups() async {
+    final resp = await ApiClient.instance.getPublicGroups();
+    if (!mounted) return;
+    if (resp.ok && resp.data is Map) {
+      final list = (resp.data['groups'] as List).cast<dynamic>();
+      final filtered = list
+          .map((e) => (e as Map).cast<String, dynamic>())
+          .where((g) => (g['type'] as String?) == 'khitma')
+          .toList();
+      setState(() {
+        _publicGroups = filtered;
+      });
+    }
+  }
+
   Future<List<MemberAvatar>> _membersPreview(int groupId) async {
     if (_memberInitialsCache.containsKey(groupId)) {
       return _memberInitialsCache[groupId]!;
@@ -277,36 +296,48 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
     final resp = await ApiClient.instance.getGroup(groupId);
     if (resp.ok && resp.data is Map && (resp.data['group'] is Map)) {
       final group = (resp.data['group'] as Map).cast<String, dynamic>();
-      final members = (group['members'] as List?)?.cast<dynamic>() ?? [];
-      List<MemberAvatar> items = members
+final rawMembers = (group['members'] as List?)?.cast<dynamic>() ?? [];
+      // Normalize to List<Map<String,dynamic>>
+      List<Map<String, dynamic>> members = rawMembers
+          .whereType<Map>()
           .map((m) => (m as Map).cast<String, dynamic>())
-          .map((m) {
-            final avatar = (m['avatar_url'] as String?) ?? (m['avatar'] as String?);
-            if (avatar != null && avatar.trim().isNotEmpty) {
-              return MemberAvatar(imageUrl: avatar.trim());
-            }
-
-            String? username = (m['username'] as String?)?.trim();
-            String? fullName = (m['name'] as String?)?.trim();
-
-            String pickForInitials = '';
-            if (username != null && username.isNotEmpty) {
-              pickForInitials = username;
-            } else if (fullName != null && fullName.isNotEmpty) {
-              pickForInitials = fullName;
-            }
-
-            String initials = '?';
-            if (pickForInitials.isNotEmpty) {
-              // First alphanumeric only
-              final m = RegExp(r'[A-Za-z0-9]').firstMatch(pickForInitials);
-              if (m != null) {
-                initials = pickForInitials[m.start].toUpperCase();
-              }
-            }
-            return MemberAvatar(initials: initials);
-          })
           .toList();
+
+      // Ensure creator is first in the preview if present
+      final creatorIdVal = group['creator_id'];
+      int? creatorId = (creatorIdVal is int) ? creatorIdVal : int.tryParse('${creatorIdVal ?? ''}');
+      if (creatorId != null) {
+        final idx = members.indexWhere((m) {
+          final idVal = m['id'] ?? m['user_id'];
+          if (idVal is int) return idVal == creatorId;
+          if (idVal is String) return int.tryParse(idVal) == creatorId;
+          return false;
+        });
+        if (idx > 0) {
+          final creator = members.removeAt(idx);
+          members.insert(0, creator);
+        }
+      }
+
+      List<MemberAvatar> items = members.map((m) {
+        final avatar = (m['avatar_url'] as String?) ?? (m['avatar'] as String?);
+        if (avatar != null && avatar.trim().isNotEmpty) {
+          return MemberAvatar(imageUrl: avatar.trim());
+        }
+        String? username = (m['username'] as String?)?.trim();
+        String pickForInitials = '';
+        if (username != null && username.isNotEmpty) {
+          pickForInitials = username;
+        }
+        String initials = '?';
+        if (pickForInitials.isNotEmpty) {
+          final mm = RegExp(r'[A-Za-z0-9]').firstMatch(pickForInitials);
+          if (mm != null) {
+            initials = pickForInitials[mm.start].toUpperCase();
+          }
+        }
+        return MemberAvatar(initials: initials);
+      }).toList();
 
       // Fallback: if API returns no members but the current user is the creator, show the creator avatar
       if (items.isEmpty) {
@@ -341,10 +372,14 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
   Future<void> _joinWithToken() async {
     final token = _inviteController.text.trim();
     if (token.isEmpty) return;
-    setState(() => _loading = true);
+setState(() {
+      _loading = true;
+    });
     final resp = await ApiClient.instance.joinGroup(token: token);
     if (!mounted) return;
-    setState(() => _loading = false);
+setState(() {
+      _loading = false;
+    });
     if (!resp.ok) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(resp.error ?? 'Error')),
@@ -471,7 +506,11 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
                             children: [
                               Expanded(
                                 child: GestureDetector(
-                                  onTap: () => setState(() => _selectedTab = 0),
+onTap: () {
+                                    setState(() {
+                                      _selectedTab = 0;
+                                    });
+                                  },
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                                     decoration: BoxDecoration(
@@ -500,7 +539,11 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
                               ),
                               Expanded(
                                 child: GestureDetector(
-                                  onTap: () => setState(() => _selectedTab = 1),
+onTap: () {
+                                    setState(() {
+                                      _selectedTab = 1;
+                                    });
+                                  },
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                                     decoration: BoxDecoration(
@@ -548,15 +591,29 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
                                     isArabicLocale: languageProvider.isArabic,
                                   ),
                                 )
-                              : buildExploreJoin(
-                                  loading: _loading,
-                                  groups: _groups,
-                                  isLightMode: isLightMode,
-                                  greenColor: greenColor,
-                                  creamColor: creamColor,
-                                  myUserId: context.read<ProfileProvider?>()?.id,
-                                  membersPreviewFetcher: _membersPreview,
-                                  isArabicLocale: languageProvider.isArabic,
+                              : RefreshIndicator(
+                                  onRefresh: _loadPublicGroups,
+child: buildExploreJoin(
+                                    loading: _loading,
+                                    groups: _publicGroups,
+                                    isLightMode: isLightMode,
+                                    greenColor: greenColor,
+                                    creamColor: creamColor,
+                                    isArabicLocale: languageProvider.isArabic,
+                                    membersPreviewFetcher: _membersPreview,
+                                    onOpenInfo: (id, name, membersCount) {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (ctx) => GroupInfoScreen(
+                                            groupId: id,
+                                            groupName: name,
+                                            membersCount: membersCount,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
                                 ),
                         ),
                       ],

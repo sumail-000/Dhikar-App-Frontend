@@ -7,7 +7,7 @@ class ApiClient {
   static final ApiClient instance = ApiClient._();
 
   // TODO: adjust to your backend host when deploying
-  static const String baseUrl = String.fromEnvironment('API_BASE', defaultValue: 'http://192.168.1.3:8000/api');
+  static const String baseUrl = String.fromEnvironment('API_BASE', defaultValue: 'http://192.168.1.2:8000/api');
 
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -89,14 +89,14 @@ class ApiClient {
   }
 
   Future<_ApiResponse> register({
-    required String name,
+    required String username,
     required String email,
     required String password,
   }) {
     return _request(
       'POST',
       '/auth/register',
-      body: jsonEncode({'name': name, 'email': email, 'password': password}),
+      body: jsonEncode({'username': username, 'email': email, 'password': password}),
     );
   }
 
@@ -232,6 +232,10 @@ class ApiClient {
     if (startDate != null) body['start_date'] = startDate;
     if (membersTarget != null) body['members_target'] = membersTarget;
     return _request('POST', '/groups', auth: true, body: jsonEncode(body));
+  }
+
+  Future<_ApiResponse> getPublicGroups() {
+    return _request('GET', '/groups/public', auth: true);
   }
 
   Future<_ApiResponse> getGroup(int id) {
