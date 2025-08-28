@@ -7,7 +7,7 @@ class ApiClient {
   static final ApiClient instance = ApiClient._();
 
   // TODO: adjust to your backend host when deploying
-  static const String baseUrl = String.fromEnvironment('API_BASE', defaultValue: 'http://192.168.1.3:8000/api');
+  static const String baseUrl = String.fromEnvironment('API_BASE', defaultValue: 'http://192.168.1.5:8000/api');
 
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -89,14 +89,14 @@ class ApiClient {
   }
 
   Future<_ApiResponse> register({
-    required String name,
+    required String username,
     required String email,
     required String password,
   }) {
     return _request(
       'POST',
       '/auth/register',
-      body: jsonEncode({'name': name, 'email': email, 'password': password}),
+      body: jsonEncode({'username': username, 'email': email, 'password': password}),
     );
   }
 

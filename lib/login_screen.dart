@@ -6,6 +6,7 @@ import 'forgetpass_screen.dart';
 import 'services/api_client.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
+import 'profile_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -74,6 +75,12 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
       await ApiClient.instance.saveToken(token);
+      // Prime in-memory profile with response user
+      try {
+        final userMap = (resp.data['user'] as Map).cast<String, dynamic>();
+        // ignore: use_build_context_synchronously
+        Provider.of<ProfileProvider>(context, listen: false).setFromMap(userMap);
+      } catch (_) {}
       scaffold.showSnackBar(
         SnackBar(
           content: Text(

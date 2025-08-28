@@ -183,8 +183,8 @@ class AppLocalizations {
   String get changePhoto => _localizedValues[locale.languageCode]?['changePhoto'] ?? 'Change photo';
   String get camera => _localizedValues[locale.languageCode]?['camera'] ?? 'Camera';
   String get gallery => _localizedValues[locale.languageCode]?['gallery'] ?? 'Gallery';
-  String get invalidUsername => _localizedValues[locale.languageCode]?['invalidUsername'] ?? 'Username may contain only letters, numbers and underscores';
-  String get usernameRules => _localizedValues[locale.languageCode]?['usernameRules'] ?? 'Letters, numbers, and underscores only';
+  String get invalidUsername => _localizedValues[locale.languageCode]?['invalidUsername'] ?? 'Username can contain letters and spaces only (no numbers or special characters)';
+  String get usernameRules => _localizedValues[locale.languageCode]?['usernameRules'] ?? 'Letters and spaces only – no numbers or special characters';
   String get invalidImageType => _localizedValues[locale.languageCode]?['invalidImageType'] ?? 'Invalid image type. Allowed: JPG, JPEG, PNG';
   String get imageTooLarge => _localizedValues[locale.languageCode]?['imageTooLarge'] ?? 'Image is too large. Maximum size is 2 MB';
   String get avatarRemoved => _localizedValues[locale.languageCode]?['avatarRemoved'] ?? 'Profile photo removed';
