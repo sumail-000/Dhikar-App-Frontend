@@ -124,51 +124,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                                   textAlign: TextAlign.center,
                                 ),
                               ),
-                              // Join button on header for non-members on public groups
-                              if (widget.groupId != null)
-                                Builder(
-                                  builder: (_) {
-                                    final gid = widget.groupId!;
-                                    final amMember = _members.any((m) {
-                                      final id = (m['id'] is int) ? m['id'] as int : int.tryParse('${m['id'] ?? ''}');
-                                      return id != null && id == myId;
-                                    }) || (myId != null && _creatorId == myId);
-                                    final showJoin = _isPublic && !amMember;
-                                    if (!showJoin) return const SizedBox(width: 48);
-                                    return SizedBox(
-                                      height: 36,
-                                      child: TextButton(
-                                        onPressed: _joining
-                                            ? null
-                                            : () async {
-                                                setState(() => _joining = true);
-                                                final r = await ApiClient.instance.joinPublicGroup(gid);
-                                                if (!mounted) return;
-                                                setState(() => _joining = false);
-                                                if (!r.ok) {
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text(r.error ?? (languageProvider.isArabic ? 'خطأ' : 'Error'))),
-                                                  );
-                                                } else {
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text(languageProvider.isArabic ? 'تم الانضمام بنجاح' : 'Joined successfully')),
-                                                  );
-                                                  // Return to previous screen and signal that a change occurred
-                                                  Navigator.pop(context, true);
-                                                }
-                                              },
-                                        style: TextButton.styleFrom(
-                                          backgroundColor: isDarkMode ? Colors.white24 : const Color(0xFF2E7D32),
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                                        ),
-                                        child: _joining
-                                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                                            : Text(languageProvider.isArabic ? 'انضمام' : 'Join'),
-                                      ),
-                                    );
-                                  },
-                                ),
+                              const SizedBox(width: 48),
                             ],
                           ),
                         ),
@@ -322,6 +278,74 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                                       },
                                     ),
                         ),
+                        // Footer join bar
+                        if (widget.groupId != null)
+                          Builder(
+                            builder: (_) {
+                              final gid = widget.groupId!;
+                              final amMember = _members.any((m) {
+                                final id = (m['id'] is int) ? m['id'] as int : int.tryParse('${m['id'] ?? ''}');
+                                return id != null && id == myId;
+                              }) || (myId != null && _creatorId == myId);
+                              final showJoin = _isPublic && !amMember;
+                              if (!showJoin) return const SizedBox.shrink();
+                              return Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+                                decoration: BoxDecoration(
+                                  color: isDarkMode ? Colors.black.withOpacity(0.4) : Colors.white.withOpacity(0.9),
+                                  border: Border(
+                                    top: BorderSide(
+                                      color: isDarkMode ? Colors.white24 : const Color(0xFFE5E7EB),
+                                      width: 1,
+                                    ),
+                                  ),
+                                ),
+                                child: SizedBox(
+                                  height: 50,
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    onPressed: _joining
+                                        ? null
+                                        : () async {
+                                            setState(() => _joining = true);
+                                            final r = await ApiClient.instance.joinPublicGroup(gid);
+                                            if (!mounted) return;
+                                            setState(() => _joining = false);
+                                            if (!r.ok) {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(content: Text(r.error ?? (languageProvider.isArabic ? 'خطأ' : 'Error'))),
+                                              );
+                                            } else {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(content: Text(languageProvider.isArabic ? 'تم الانضمام بنجاح' : 'Joined successfully')),
+                                              );
+                                              Navigator.pop(context, true);
+                                            }
+                                          },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: isDarkMode ? Colors.white.withOpacity(0.2) : const Color(0xFF2E7D32),
+                                      foregroundColor: isDarkMode ? textColor : Colors.white,
+                                      elevation: 0,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(25),
+                                        side: BorderSide(
+                                          color: isDarkMode ? textColor : Colors.white,
+                                          width: 1,
+                                        ),
+                                      ),
+                                    ),
+                                    child: _joining
+                                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                                        : Text(
+                                            languageProvider.isArabic ? 'انضمام إلى المجموعة' : 'Join Group',
+                                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                          ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                       ],
                     ),
                   ),

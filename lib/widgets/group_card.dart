@@ -218,20 +218,23 @@ class GroupCard extends StatelessWidget {
                   ),
                 ),
 
-                // Percent text exact positioning per spec
+                // Percent text - Fixed width to prevent wrapping for 2-3 digit percentages
                 Positioned(
-                  left: 358 * s,
+                  right: 16 * s, // Position from right edge for better alignment
                   top: 145 * s,
-                  width: 34 * s,
+                  width: 50 * s,  // Increased width from 34 to 50 to accommodate "100%"
+                  height: 20 * s, // Fixed height to prevent wrapping
                   child: Text(
                     '${(_percent * 100).round()}%',
                     textAlign: TextAlign.right,
+                    maxLines: 1, // Force single line
+                    overflow: TextOverflow.visible, // Don't truncate, just display
                     style: TextStyle(
                       fontFamily: 'Manrope',
                       fontWeight: FontWeight.w400,
                       fontSize: 16 * s,
-                      color: Color(0xFF392852),
-                      height: 1.0,
+                      color: const Color(0xFF392852),
+                      height: 1.0, // Tight line height
                     ),
                   ),
                 ),

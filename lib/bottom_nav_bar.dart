@@ -28,84 +28,87 @@ class BottomNavBar extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
-        return Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          backgroundColor: isLightMode ? Colors.white : const Color(0xFF2A2A2A),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: borderColor, width: 1.5),
-          ),
-          child: Container(
-            decoration: BoxDecoration(
+        return Directionality(
+          textDirection: Directionality.of(context),
+          child: Dialog(
+            insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            backgroundColor: isLightMode ? Colors.white : const Color(0xFF2A2A2A),
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: borderColor, width: 1.5),
             ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Title row with icon
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: isLightMode ? greenColor.withOpacity(0.08) : creamColor.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(12),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Title row with icon
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: isLightMode ? greenColor.withOpacity(0.08) : creamColor.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(Icons.group, color: isLightMode ? greenColor : creamColor, size: 22),
                         ),
-                        child: Icon(Icons.group, color: isLightMode ? greenColor : creamColor, size: 22),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          appLocalizations.groups,
-                          textAlign: TextAlign.left,
-                          style: TextStyle(
-                            color: textColor,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            appLocalizations.groups,
+                            textAlign: TextAlign.start,
+                            style: TextStyle(
+                              color: textColor,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.close, size: 20, color: textColor.withOpacity(0.8)),
-                        onPressed: () => Navigator.of(context).pop(),
-                      )
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  // Options
-                  _GroupChoiceTile(
-                    icon: Icons.menu_book,
-                    label: 'Khitma Groups',
-                    cardColor: cardColor,
-                    borderColor: borderColor,
-                    textColor: textColor,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const KhitmaGroupScreen()),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  _GroupChoiceTile(
-                    icon: Icons.favorite_outline,
-                    label: 'Dhikr Groups',
-                    cardColor: cardColor,
-                    borderColor: borderColor,
-                    textColor: textColor,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const DhikrGroupScreen()),
-                      );
-                    },
-                  ),
-                ],
+                        IconButton(
+                          icon: Icon(Icons.close, size: 20, color: textColor.withOpacity(0.8)),
+                          onPressed: () => Navigator.of(context).pop(),
+                        )
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // Options
+                    _GroupChoiceTile(
+                      icon: Icons.menu_book,
+                      label: appLocalizations.khitmaGroups,
+                      cardColor: cardColor,
+                      borderColor: borderColor,
+                      textColor: textColor,
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const KhitmaGroupScreen()),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    _GroupChoiceTile(
+                      icon: Icons.favorite_outline,
+                      label: appLocalizations.dhikrGroups,
+                      cardColor: cardColor,
+                      borderColor: borderColor,
+                      textColor: textColor,
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const DhikrGroupScreen()),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

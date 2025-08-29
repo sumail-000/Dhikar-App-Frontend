@@ -30,6 +30,8 @@ class AppLocalizations {
       'dhikr': 'Dhikr',
       'khitma': 'Khitma',
       'groups': 'Groups',
+      'khitmaGroups': 'Khitma Groups',
+      'dhikrGroups': 'Dhikr Groups',
       'profile': 'Profile',
       'accountInfo': 'Account Info.',
       'accountDetails': 'Account Details',
@@ -89,6 +91,8 @@ class AppLocalizations {
       'dhikr': 'الذكر',
       'khitma': 'الختمة',
       'groups': 'المجموعات',
+      'khitmaGroups': 'مجموعات الختمة',
+      'dhikrGroups': 'مجموعات الذكر',
       'profile': 'الملف الشخصي',
       'accountInfo': 'معلومات الحساب',
       'accountDetails': 'تفاصيل الحساب',
@@ -149,6 +153,8 @@ class AppLocalizations {
   String get dhikr => _localizedValues[locale.languageCode]?['dhikr'] ?? 'Dhikr';
   String get khitma => _localizedValues[locale.languageCode]?['khitma'] ?? 'Khitma';
   String get groups => _localizedValues[locale.languageCode]?['groups'] ?? 'Groups';
+  String get khitmaGroups => _localizedValues[locale.languageCode]?['khitmaGroups'] ?? 'Khitma Groups';
+  String get dhikrGroups => _localizedValues[locale.languageCode]?['dhikrGroups'] ?? 'Dhikr Groups';
   String get profile => _localizedValues[locale.languageCode]?['profile'] ?? 'Profile';
   String get accountInfo => _localizedValues[locale.languageCode]?['accountInfo'] ?? 'Account Info.';
   String get accountDetails => _localizedValues[locale.languageCode]?['accountDetails'] ?? 'Account Details';
