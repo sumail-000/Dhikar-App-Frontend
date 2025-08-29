@@ -432,54 +432,91 @@ class _KhitmaNewgroupScreenState extends State<KhitmaNewgroupScreen> {
           return AlertDialog(
             backgroundColor: isDark ? const Color(0xFF2D1B69) : Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            titlePadding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            contentPadding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             title: Text(
               isArabic ? 'دعوة الأعضاء' : 'Invite members',
-              style: TextStyle(color: isDark ? Colors.white : const Color(0xFF2D1B69)),
+              style: TextStyle(
+                color: isDark ? Colors.white : const Color(0xFF2D1B69),
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+              ),
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SelectableText(
+                Text(
                   message,
                   style: TextStyle(
-                    color: isDark ? Colors.white : const Color(0xFF2D1B69),
-                    fontSize: 16,
+                    color: isDark ? Colors.white.withOpacity(0.9) : const Color(0xFF2D1B69),
+                    fontSize: 14,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
                     color: isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFF2F2F2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: SelectableText(
-                    token,
-                    style: TextStyle(
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                      letterSpacing: 1.2,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : const Color(0xFF2D1B69),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isDark ? Colors.white.withOpacity(0.12) : const Color(0xFFE0E0E0),
                     ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: SelectableText(
+                          token,
+                          style: TextStyle(
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                            letterSpacing: 1.0,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white : const Color(0xFF2D1B69),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: isArabic ? 'نسخ' : 'Copy',
+                        onPressed: () async {
+                          await Clipboard.setData(ClipboardData(text: token));
+                          if (ctx.mounted) Navigator.of(ctx).pop();
+                        },
+                        icon: Icon(
+                          Icons.copy_rounded,
+                          size: 18,
+                          color: isDark ? Colors.white : const Color(0xFF2D1B69),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
+            actionsPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
             actions: [
-              TextButton(
+              TextButton.icon(
                 onPressed: () async {
                   await Share.share(message);
                 },
-                child: Text(isArabic ? 'مشاركة' : 'Share'),
+                icon: const Icon(Icons.share_rounded, size: 18),
+                label: Text(
+                  isArabic ? 'مشاركة' : 'Share',
+                  style: TextStyle(color: isDark ? Colors.white : const Color(0xFF2D1B69)),
+                ),
               ),
-              TextButton(
+              TextButton.icon(
                 onPressed: () async {
                   await Clipboard.setData(ClipboardData(text: message));
                   if (ctx.mounted) Navigator.of(ctx).pop();
                 },
-                child: Text(isArabic ? 'نسخ' : 'Copy'),
+                icon: const Icon(Icons.copy_rounded, size: 18),
+                label: Text(
+                  isArabic ? 'نسخ' : 'Copy',
+                  style: TextStyle(color: isDark ? Colors.white : const Color(0xFF2D1B69)),
+                ),
               ),
             ],
           );

@@ -12,6 +12,7 @@ import 'khitma_newgroup_screen.dart';
 import 'services/api_client.dart';
 import 'widgets/group_card.dart';
 import 'group_khitma_info_screen.dart';
+import 'group_khitma_details_screen.dart';
 
 // Small chip helper for cozy density
 Widget _chip(String label, bool isLightMode, Color greenColor) {
@@ -137,6 +138,18 @@ Widget buildJoinedList({
             total: membersTarget,
             memberAvatars: avatars,
             plusCount: membersCount > 5 ? (membersCount - 5) : 0,
+            onTap: () async {
+              final int gid = (g['id'] is int) ? g['id'] as int : int.parse('${g['id']}');
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DhikrGroupDetailsScreen(
+                    groupId: gid,
+                    groupName: name,
+                  ),
+                ),
+              );
+            },
           );
         },
       );
@@ -352,24 +365,135 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
     return const <MemberAvatar>[];
   }
 
-  Future<void> _joinWithToken() async {
-    final token = _inviteController.text.trim();
-    if (token.isEmpty) return;
-    setState(() => _loading = true);
-    final resp = await ApiClient.instance.joinGroup(token: token);
-    if (!mounted) return;
-    setState(() => _loading = false);
-    if (!resp.ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(resp.error ?? 'Error')),
-      );
-      return;
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Joined group successfully')),
+  Future<void> _showJoinByCodeDialog() async {
+    final lang = context.read<LanguageProvider>();
+    final theme = context.read<ThemeProvider>();
+    final isArabic = lang.isArabic;
+    final isDark = theme.isDarkMode;
+    final TextEditingController codeCtrl = TextEditingController();
+    String? errorText;
+    bool loading = false;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: !loading,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setLocal) {
+            Future<void> doJoin() async {
+              final token = codeCtrl.text.trim();
+              if (token.isEmpty) {
+                setLocal(() {
+                  errorText = isArabic ? 'الرجاء إدخال الرمز' : 'Please enter the code';
+                });
+                return;
+              }
+              setLocal(() {
+                loading = true;
+                errorText = null;
+              });
+              final resp = await ApiClient.instance.joinGroup(token: token);
+              if (!mounted) return;
+              if (!resp.ok) {
+                final msg = resp.error?.toLowerCase() ?? '';
+                String friendly;
+                if (msg.contains('already')) {
+                  friendly = isArabic ? 'أنت عضو بالفعل في هذه المجموعة' : 'You are already a member of this group';
+                } else if (msg.contains('full') || msg.contains('limit') || msg.contains('complete')) {
+                  friendly = isArabic ? 'اكتمل عدد أعضاء المجموعة' : 'Group members are complete';
+                } else if (msg.contains('invalid') || msg.contains('expired') || msg.contains('not found') || msg.contains('token')) {
+                  friendly = isArabic ? 'رمز الدعوة غير صالح' : 'Invalid invite code';
+                } else {
+                  friendly = resp.error ?? (isArabic ? 'حدث خطأ' : 'Error');
+                }
+                setLocal(() {
+                  loading = false;
+                  errorText = friendly;
+                });
+                return;
+              }
+              if (ctx.mounted) Navigator.of(ctx).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(isArabic ? 'تم الانضمام إلى المجموعة بنجاح' : 'Joined group successfully')),
+              );
+              setState(() {
+                _selectedTab = 0;
+              });
+              await _loadGroups();
+            }
+
+            final Color bg = isDark ? const Color(0xFF2D1B69) : Colors.white;
+            final Color fg = isDark ? Colors.white : const Color(0xFF2D1B69);
+
+            return AlertDialog(
+              backgroundColor: bg,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              titlePadding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              contentPadding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              title: Text(
+                isArabic ? 'الانضمام برمز' : 'Join by Code',
+                style: TextStyle(color: fg, fontWeight: FontWeight.w700, fontSize: 16),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: codeCtrl,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: isArabic ? 'أدخل رمز الدعوة' : 'Enter invite code',
+                      hintStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 14),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      filled: true,
+                      fillColor: isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFF2F2F2),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: isDark ? Colors.white12 : const Color(0xFFE0E0E0)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: isDark ? Colors.white12 : const Color(0xFFE0E0E0)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: isDark ? Colors.white70 : const Color(0xFF205C3B)),
+                      ),
+                      errorText: errorText,
+                    ),
+                    style: TextStyle(color: fg, fontSize: 14),
+                    onSubmitted: (_) => loading ? null : doJoin(),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+              actionsPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+              actions: [
+                TextButton(
+                  onPressed: loading ? null : () => Navigator.of(ctx).pop(),
+                  child: Text(isArabic ? 'إلغاء' : 'Cancel', style: TextStyle(color: fg)),
+                ),
+                ElevatedButton.icon(
+                  onPressed: loading ? null : doJoin,
+                  icon: loading
+                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.vpn_key_rounded, size: 18, color: Colors.white),
+                  label: Text(isArabic ? 'انضم' : 'Join', style: const TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isDark ? const Color(0xFF8B5CF6) : const Color(0xFF205C3B),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    minimumSize: const Size(0, 40),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
-    _inviteController.clear();
-    await _loadGroups();
   }
 
   @override
@@ -590,6 +714,14 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
                   ),
                 ),
               ],
+            ),
+            floatingActionButton: FloatingActionButton.extended(
+              onPressed: _showJoinByCodeDialog,
+              backgroundColor: isLightMode ? const Color(0xFF205C3B) : const Color(0xFF8B5CF6),
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.vpn_key_rounded),
+              label: Text(languageProvider.isArabic ? 'انضم برمز' : 'Join by Code'),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             bottomNavigationBar: BottomNavBar(
               selectedIndex: _selectedIndex,
