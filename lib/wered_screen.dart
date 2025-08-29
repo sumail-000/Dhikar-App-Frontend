@@ -5,7 +5,10 @@ import 'language_provider.dart';
 import 'group_khitma_details_screen.dart';
 
 class WeredScreen extends StatefulWidget {
-  const WeredScreen({super.key});
+  final int? groupId;
+  final String? groupName;
+
+  const WeredScreen({super.key, this.groupId, this.groupName});
 
   @override
   State<WeredScreen> createState() => _WeredScreenState();
@@ -151,11 +154,14 @@ class _WeredScreenState extends State<WeredScreen> {
                   height: 48,
                   child: ElevatedButton(
                     onPressed: () {
-                      // Navigate to DhikrGroupDetailsScreen
+                      // Navigate to DhikrGroupDetailsScreen with groupId if available
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const DhikrGroupDetailsScreen(),
+                          builder: (context) => DhikrGroupDetailsScreen(
+                            groupId: widget.groupId,
+                            groupName: widget.groupName,
+                          ),
                         ),
                       );
                     },

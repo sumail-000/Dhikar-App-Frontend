@@ -45,6 +45,14 @@ class ApiClient {
       }
     }
 
+    // Debug logging
+    print('=== API Request Debug ===');
+    print('URL: $url');
+    print('Method: $method');
+    print('Headers: $defaultHeaders');
+    print('Body: $body');
+    print('========================');
+
     http.Response resp;
     try {
       switch (method) {
@@ -121,7 +129,6 @@ class ApiClient {
 
   Future<_ApiResponse> updateProfile({
     required String username,
-    String? displayName,
     String? avatarFilePath, // local path for multipart
   }) async {
     final url = Uri.parse('$baseUrl/profile');
@@ -130,7 +137,6 @@ class ApiClient {
     request.headers['Accept'] = 'application/json';
     if (token != null) request.headers['Authorization'] = 'Bearer $token';
     request.fields['username'] = username;
-    if (displayName != null) request.fields['name'] = displayName;
     if (avatarFilePath != null && avatarFilePath.isNotEmpty) {
       request.files.add(await http.MultipartFile.fromPath('avatar', avatarFilePath));
     }
@@ -215,6 +221,10 @@ class ApiClient {
     return _request('GET', '/groups', auth: true);
   }
 
+  Future<_ApiResponse> getGroupsExplore() {
+    return _request('GET', '/groups/explore', auth: true);
+  }
+
   Future<_ApiResponse> createGroup({
     required String name,
     String type = 'khitma',
@@ -244,6 +254,10 @@ class ApiClient {
 
   Future<_ApiResponse> joinGroup({required String token}) {
     return _request('POST', '/groups/join', auth: true, body: jsonEncode({'token': token}));
+  }
+
+  Future<_ApiResponse> joinPublicGroup(int id) {
+    return _request('POST', '/groups/$id/join', auth: true);
   }
 
   Future<_ApiResponse> leaveGroup(int id) {

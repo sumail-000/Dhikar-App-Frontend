@@ -5,7 +5,10 @@ import 'theme_provider.dart';
 import 'language_provider.dart';
 
 class DhikrGroupDetailsScreen extends StatefulWidget {
-  const DhikrGroupDetailsScreen({super.key});
+  final int? groupId;
+  final String? groupName;
+
+  const DhikrGroupDetailsScreen({super.key, this.groupId, this.groupName});
 
   @override
   State<DhikrGroupDetailsScreen> createState() =>
@@ -133,57 +136,29 @@ class _DhikrGroupDetailsScreenState extends State<DhikrGroupDetailsScreen> {
                                     height: 50,
                                     child: ElevatedButton(
                                       onPressed: () {
-                                        // Sample members data - in a real app this would come from a database or API
-                                        final sampleMembers = [
-                                          {
-                                            'name': 'Bint e Hawa',
-                                            'juzz': '01',
-                                            'status': 'Completed',
-                                          },
-                                          {
-                                            'name': 'Muhammad Umar Farooq',
-                                            'juzz': '02',
-                                            'status': 'In Progress',
-                                          },
-                                          {
-                                            'name': 'Muhammad Abu Bakar',
-                                            'juzz': '03',
-                                            'status': 'Completed',
-                                          },
-                                          {
-                                            'name': 'Muhammad Hussain',
-                                            'juzz': '04',
-                                            'status': 'Completed',
-                                          },
-                                          {
-                                            'name': 'Hassan Mujtaba',
-                                            'juzz': '05',
-                                            'status': 'Completed',
-                                          },
-                                          {
-                                            'name': 'Ali Murtaza',
-                                            'juzz': '06',
-                                            'status': 'Cancelled',
-                                          },
-                                          {
-                                            'name': 'Bint e Iqbal',
-                                            'juzz': '07',
-                                            'status': 'In Progress',
-                                          },
-                                          {
-                                            'name': 'Usman Ghani',
-                                            'juzz': '08',
-                                            'status': 'Completed',
-                                          },
-                                        ];
+                                        // Prefer real backend data if groupId is available
+                                        if (widget.groupId != null) {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => GroupInfoScreen(
+                                                groupId: widget.groupId,
+                                                groupName: widget.groupName,
+                                              ),
+                                            ),
+                                          ).then((changed) async {
+                                            if (changed == true) {
+                                              // On returning after join, you may want to refresh upstream lists/screens.
+                                              // This screen does not own the lists; parent screens will handle refresh.
+                                            }
+                                          });
+                                          return;
+                                        }
 
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                GroupInfoScreen(
-                                                  members: sampleMembers,
-                                                ),
+                                        // Fallback: if no groupId provided, keep previous behavior but inform developer
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Group ID not provided. Cannot load real group info.'),
                                           ),
                                         );
                                       },

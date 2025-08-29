@@ -120,7 +120,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() => _saving = true);
     final resp = await ApiClient.instance.updateProfile(
       username: name,
-      displayName: null,
       avatarFilePath: avatarPath,
     );
     if (!mounted) return;

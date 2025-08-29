@@ -11,6 +11,7 @@ import 'bottom_nav_bar.dart';
 import 'khitma_newgroup_screen.dart';
 import 'services/api_client.dart';
 import 'widgets/group_card.dart';
+import 'group_khitma_info_screen.dart';
 
 // Small chip helper for cozy density
 Widget _chip(String label, bool isLightMode, Color greenColor) {
@@ -113,8 +114,8 @@ Widget buildJoinedList({
     );
   }
 
-  // Groups the user is a member of (includes groups they created)
-  final joined = groups.where((g) => _isMemberOf(g, myUserId)).toList();
+  // These groups are already scoped by the API to the current user (created or joined)
+  final joined = groups;
 
   return ListView.separated(
     padding: const EdgeInsets.symmetric(vertical: 8),
@@ -152,6 +153,7 @@ Widget buildExploreJoin({
   required int? myUserId,
   required Future<List<MemberAvatar>> Function(int groupId) membersPreviewFetcher,
   required bool isArabicLocale,
+  required Future<void> Function(int groupId, String name) openGroup,
 }) {
   // Explore: all public groups, newest first (including groups I created or joined)
   final explore = groups.where((g) {
@@ -180,6 +182,10 @@ Widget buildExploreJoin({
             total: membersTarget,
             memberAvatars: avatars,
             plusCount: membersCount > 5 ? (membersCount - 5) : 0,
+            onTap: () async {
+              final int gid = (g['id'] is int) ? g['id'] as int : int.parse('${g['id']}');
+              await openGroup(gid, name);
+            },
           );
         },
       );
@@ -201,6 +207,7 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
   bool _loading = false;
   String? _error;
   List<Map<String, dynamic>> _groups = [];
+  List<Map<String, dynamic>> _explore = [];
   final TextEditingController _inviteController = TextEditingController();
 
   void _onItemTapped(int index) {
@@ -251,20 +258,27 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
       _error = null;
     });
     final resp = await ApiClient.instance.getGroups();
+    final respExplore = await ApiClient.instance.getGroupsExplore();
     if (!mounted) return;
-    if (resp.ok && resp.data is Map) {
+    if (resp.ok && resp.data is Map && respExplore.ok && respExplore.data is Map) {
       final list = (resp.data['groups'] as List).cast<dynamic>();
       final filtered = list
           .map((e) => (e as Map).cast<String, dynamic>())
           .where((g) => (g['type'] as String?) == 'khitma')
           .toList();
+      final exploreList = (respExplore.data['groups'] as List).cast<dynamic>();
+      final exploreFiltered = exploreList
+          .map((e) => (e as Map).cast<String, dynamic>())
+          .where((g) => (g['type'] as String?) == 'khitma')
+          .toList();
       setState(() {
         _groups = filtered;
+        _explore = exploreFiltered;
         _loading = false;
       });
     } else {
       setState(() {
-        _error = resp.error ?? 'Failed to load groups';
+        _error = resp.error ?? (respExplore.error ?? 'Failed to load groups');
         _loading = false;
       });
     }
@@ -550,13 +564,25 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
                                 )
                               : buildExploreJoin(
                                   loading: _loading,
-                                  groups: _groups,
+                                  groups: _explore,
                                   isLightMode: isLightMode,
                                   greenColor: greenColor,
                                   creamColor: creamColor,
                                   myUserId: context.read<ProfileProvider?>()?.id,
                                   membersPreviewFetcher: _membersPreview,
                                   isArabicLocale: languageProvider.isArabic,
+                                  openGroup: (gid, name) async {
+                                    final changed = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => GroupInfoScreen(groupId: gid, groupName: name),
+                                      ),
+                                    );
+                                    if (changed == true) {
+                                      setState(() => _memberInitialsCache.clear());
+                                      await _loadGroups();
+                                    }
+                                  },
                                 ),
                         ),
                       ],

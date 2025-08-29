@@ -109,4 +109,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get arabic => 'العربية';
+
+  @override
+  String get username => 'Username';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get camera => 'Camera';
+
+  @override
+  String get gallery => 'Gallery';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get removePhoto => 'Remove Photo';
+
+  @override
+  String get profileUpdated => 'Profile updated successfully';
+
+  @override
+  String get avatarRemoved => 'Avatar removed';
+
+  @override
+  String get imageTooLarge => 'Image too large (max 2MB)';
+
+  @override
+  String get invalidImageType => 'Please select JPG or PNG image';
+
+  @override
+  String get invalidUsername => 'Username may contain only letters and spaces';
+
+  @override
+  String get usernameRules => 'Username can contain letters and spaces only';
 }

@@ -298,6 +298,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'العربية'**
   String get arabic;
+
+  /// No description provided for @username.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get username;
+
+  /// No description provided for @email.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get email;
+
+  /// No description provided for @camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get camera;
+
+  /// No description provided for @gallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get gallery;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @removePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Photo'**
+  String get removePhoto;
+
+  /// No description provided for @profileUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile updated successfully'**
+  String get profileUpdated;
+
+  /// No description provided for @avatarRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Avatar removed'**
+  String get avatarRemoved;
+
+  /// No description provided for @imageTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Image too large (max 2MB)'**
+  String get imageTooLarge;
+
+  /// No description provided for @invalidImageType.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select JPG or PNG image'**
+  String get invalidImageType;
+
+  /// No description provided for @invalidUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Username may contain only letters and spaces'**
+  String get invalidUsername;
+
+  /// No description provided for @usernameRules.
+  ///
+  /// In en, this message translates to:
+  /// **'Username can contain letters and spaces only'**
+  String get usernameRules;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

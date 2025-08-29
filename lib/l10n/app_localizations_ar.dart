@@ -109,4 +109,40 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get arabic => 'العربية';
+
+  @override
+  String get username => 'اسم المستخدم';
+
+  @override
+  String get email => 'البريد الإلكتروني';
+
+  @override
+  String get camera => 'الكاميرا';
+
+  @override
+  String get gallery => 'المعرض';
+
+  @override
+  String get save => 'حفظ';
+
+  @override
+  String get removePhoto => 'إزالة الصورة';
+
+  @override
+  String get profileUpdated => 'تم تحديث الملف الشخصي بنجاح';
+
+  @override
+  String get avatarRemoved => 'تم إزالة الصورة الشخصية';
+
+  @override
+  String get imageTooLarge => 'الصورة كبيرة جداً (أقصى حد 2 ميجابايت)';
+
+  @override
+  String get invalidImageType => 'يرجى اختيار صورة JPG أو PNG';
+
+  @override
+  String get invalidUsername => 'اسم المستخدم يجب أن يحتوي على حروف ومسافات فقط';
+
+  @override
+  String get usernameRules => 'يمكن لاسم المستخدم أن يحتوي على حروف ومسافات فقط';
 }
