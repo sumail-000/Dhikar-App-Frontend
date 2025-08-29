@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'wered_screen.dart';
@@ -351,8 +353,8 @@ class _KhitmaNewgroupScreenState extends State<KhitmaNewgroupScreen> {
                                       )
                                     : Text(
                                         languageProvider.isArabic
-                                            ? 'بدء الختمة'
-                                            : 'Start Wered',
+                                            ? 'إنشاء مجموعة'
+                                            : 'Create Group',
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
@@ -403,10 +405,94 @@ class _KhitmaNewgroupScreenState extends State<KhitmaNewgroupScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Khitma group created')),
-    );
-    Navigator.pop(context, true);
+    // On success: fetch invite token and show dialog with Share/Copy
+    try {
+      final group = (resp.data['group'] as Map).cast<String, dynamic>();
+      final gid = group['id'] as int;
+      final inviteResp = await ApiClient.instance.getGroupInvite(gid);
+      if (!mounted) return;
+      if (!inviteResp.ok) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(inviteResp.error ?? 'Invite error')),
+        );
+        Navigator.pop(context, true);
+        return;
+      }
+      final invite = (inviteResp.data['invite'] as Map).cast<String, dynamic>();
+      final token = (invite['token'] as String).trim();
+      final isArabic = context.read<LanguageProvider>().isArabic;
+      final message = isArabic
+          ? 'استخدم هذا الرمز للانضمام إلى مجموعة الختمة: $token'
+          : 'Use this token to join the Khitma group: $token';
+
+      await showDialog(
+        context: context,
+        builder: (ctx) {
+          final isDark = context.read<ThemeProvider>().isDarkMode;
+          return AlertDialog(
+            backgroundColor: isDark ? const Color(0xFF2D1B69) : Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Text(
+              isArabic ? 'دعوة الأعضاء' : 'Invite members',
+              style: TextStyle(color: isDark ? Colors.white : const Color(0xFF2D1B69)),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SelectableText(
+                  message,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : const Color(0xFF2D1B69),
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFF2F2F2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: SelectableText(
+                    token,
+                    style: TextStyle(
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : const Color(0xFF2D1B69),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  await Share.share(message);
+                },
+                child: Text(isArabic ? 'مشاركة' : 'Share'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await Clipboard.setData(ClipboardData(text: message));
+                  if (ctx.mounted) Navigator.of(ctx).pop();
+                },
+                child: Text(isArabic ? 'نسخ' : 'Copy'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (_) {
+      // Fallback to simple toast if anything fails
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Khitma group created')),
+      );
+    }
+
+    if (mounted) Navigator.pop(context, true);
   }
 
   @override

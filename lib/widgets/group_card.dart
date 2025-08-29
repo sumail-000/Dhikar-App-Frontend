@@ -96,165 +96,207 @@ class GroupCard extends StatelessWidget {
                   ),
                 ),
 
-                // English name (Manrope, Medium 22)
-                Positioned(
-                  left: 16 * s,
-                  top: 34 * s,
-                  width: 177 * s,
-                  child: Text(
-                    englishName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: 'Manrope',
-                      fontWeight: FontWeight.w500,
-                      fontSize: 22 * s,
-                      color: titleColor,
-                    ),
-                  ),
-                ),
+                // Helpers for localization and script detection
+                ...(() {
+                  final locale = Localizations.localeOf(context);
+                  final isArabicLocale = locale.languageCode == 'ar';
+                  bool containsArabic(String t) => RegExp(r'[\u0600-\u06FF]').hasMatch(t);
+                  String toArabicDigits(String t) {
+                    if (!isArabicLocale) return t;
+                    const western = ['0','1','2','3','4','5','6','7','8','9'];
+                    const eastern = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+                    final buf = StringBuffer();
+                    for (final ch in t.split('')) {
+                      final idx = western.indexOf(ch);
+                      buf.write(idx >= 0 ? eastern[idx] : ch);
+                    }
+                    return buf.toString();
+                  }
+                  String fmtNum(int n) => toArabicDigits(_formatInt(n));
 
-                // Arabic name (Amiri Regular 24)
-                Positioned(
-                  left: 301 * s,
-                  top: 28 * s,
-                  width: 91 * s,
-                  child: Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: Text(
-                      arabicName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontFamily: 'Amiri',
-                        fontWeight: FontWeight.w400,
-                        fontSize: 24 * s,
-                        color: titleColor,
+                  // Decide which side to render the name on, based on script
+                  final rawName = (arabicName.trim().isNotEmpty ? arabicName : englishName).trim();
+                  final isArabicName = containsArabic(rawName);
+
+                  // Build positioned widgets list
+                  return <Widget>[
+                    if (!isArabicName)
+                      // LTR name on left
+                      Positioned(
+                        left: 16 * s,
+                        top: 34 * s,
+                        width: 250 * s,
+                        child: Text(
+                          rawName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            fontFamily: 'Manrope',
+                            fontWeight: FontWeight.w500,
+                            fontSize: 22 * s,
+                            color: titleColor,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-
-                // Avatars stack (50px circles)
-                Positioned(
-                  left: 16 * s,
-                  top: 80 * s,
-                  child: _AvatarsStack(
-                    avatars: memberAvatars,
-                    size: 50 * s,
-                    overlap: 14 * s,
-                    borderWidth: 2 * s,
-                  ),
-                ),
-
-                // +N circle (50px)
-                if (plusCount > 0)
-                  Positioned(
-                    left: 198 * s,
-                    top: 80 * s,
-                    child: Container(
-                      width: 50 * s,
-                      height: 50 * s,
-                      decoration: const BoxDecoration(
-                        color: chipBg,
-                        shape: BoxShape.circle,
+                    if (isArabicName)
+                      // RTL name on right
+                      Positioned(
+                        right: 16 * s,
+                        top: 28 * s,
+                        width: 200 * s,
+                        child: Directionality(
+                          textDirection: TextDirection.rtl,
+                          child: Text(
+                            rawName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                              fontFamily: 'Amiri',
+                              fontWeight: FontWeight.w400,
+                              fontSize: 24 * s,
+                              color: titleColor,
+                            ),
+                          ),
+                        ),
                       ),
-                      alignment: Alignment.center,
+
+                    // Determine app directionality for layout mirroring
+                    ...(() {
+                      final isRTL = Directionality.of(context) == TextDirection.rtl;
+
+                      return <Widget>[
+                        // Avatars stack (50px circles)
+                        Positioned(
+                          left: isRTL ? null : 16 * s,
+                          right: isRTL ? 16 * s : null,
+                          top: 80 * s,
+                          child: _AvatarsStack(
+                            avatars: memberAvatars,
+                            size: 50 * s,
+                            overlap: 14 * s,
+                            borderWidth: 2 * s,
+                          ),
+                        ),
+
+                        // +N circle (50px) with localized digits
+                        if (plusCount > 0)
+                          Positioned(
+                            left: isRTL ? null : 198 * s,
+                            right: isRTL ? 198 * s : null,
+                            top: 80 * s,
+                            child: Container(
+                              width: 50 * s,
+                              height: 50 * s,
+                              decoration: const BoxDecoration(
+                                color: chipBg,
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                '+${toArabicDigits(plusCount.toString())}',
+                                style: TextStyle(
+                                  fontFamily: 'Manrope',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15 * s,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                        // Chevron button mirrors for RTL
+                        Positioned(
+                          left: isRTL ? 16 * s : null,
+                          right: isRTL ? null : 16 * s,
+                          top: 87 * s,
+                          child: GestureDetector(
+                            onTap: onTap,
+                            child: Container(
+                              width: 36 * s,
+                              height: 36 * s,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: chipBg, width: 1.5 * s),
+                                color: Colors.transparent,
+                              ),
+                              alignment: Alignment.center,
+                              child: Icon(
+                                isRTL ? Icons.chevron_left : Icons.chevron_right,
+                                size: 27 * s,
+                                color: titleColor,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Progress bar (334x10), aligned by direction
+                        Positioned(
+                          left: isRTL ? null : 16 * s,
+                          right: isRTL ? 16 * s : null,
+                          top: 152 * s,
+                          width: 334 * s,
+                          height: 10 * s,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(100 * s),
+                            child: Stack(
+                              children: [
+                                Container(color: progressTrack),
+                                FractionallySizedBox(
+                                  alignment: isRTL ? Alignment.centerRight : Alignment.centerLeft,
+                                  widthFactor: _percent,
+                                  child: Container(color: progressFill),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        // Percent text with localized digits
+                        Positioned(
+                          left: isRTL ? 16 * s : null,
+                          right: isRTL ? null : 16 * s,
+                          top: 145 * s,
+                          width: 50 * s,
+                          height: 20 * s,
+                          child: Text(
+                            '${toArabicDigits((_percent * 100).round().toString())}%',
+                            textAlign: isRTL ? TextAlign.left : TextAlign.right,
+                            maxLines: 1,
+                            overflow: TextOverflow.visible,
+                            style: TextStyle(
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w400,
+                              fontSize: 16 * s,
+                              color: const Color(0xFF392852),
+                              height: 1.0,
+                            ),
+                          ),
+                        ),
+                      ];
+                    })(),
+
+                    // "X out of Y" label localized
+                    Positioned(
+                      left: 125 * s,
+                      top: 170 * s,
+                      width: 160 * s,
                       child: Text(
-                        '+$plusCount',
+                        isArabicLocale
+                            ? '${fmtNum(completed)} \u0645\u0646 \u0623\u0635\u0644 ${fmtNum(total)}' // "من أصل"
+                            : '${fmtNum(completed)} out of ${fmtNum(total)}',
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           fontFamily: 'Manrope',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15 * s,
-                          color: Colors.white,
+                          fontWeight: FontWeight.w400,
+                          fontSize: 12 * s,
+                          color: percentTextColor,
                         ),
                       ),
                     ),
-                  ),
-
-                // Chevron button (36px with 1.5px border)
-                Positioned(
-                  right: 16 * s,
-                  top: 87 * s,
-                  child: GestureDetector(
-                    onTap: onTap,
-                    child: Container(
-                      width: 36 * s,
-                      height: 36 * s,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: chipBg, width: 1.5 * s),
-                        color: Colors.transparent,
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(
-                        Icons.chevron_right,
-                        size: 27 * s,
-                        color: titleColor,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Progress bar (334x10), left aligned
-                Positioned(
-                  left: 16 * s,
-                  top: 152 * s,
-                  width: 334 * s,
-                  height: 10 * s,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(100 * s),
-                    child: Stack(
-                      children: [
-                        Container(color: progressTrack),
-                        FractionallySizedBox(
-                          alignment: Alignment.centerLeft,
-                          widthFactor: _percent,
-                          child: Container(color: progressFill),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Percent text - Fixed width to prevent wrapping for 2-3 digit percentages
-                Positioned(
-                  right: 16 * s, // Position from right edge for better alignment
-                  top: 145 * s,
-                  width: 50 * s,  // Increased width from 34 to 50 to accommodate "100%"
-                  height: 20 * s, // Fixed height to prevent wrapping
-                  child: Text(
-                    '${(_percent * 100).round()}%',
-                    textAlign: TextAlign.right,
-                    maxLines: 1, // Force single line
-                    overflow: TextOverflow.visible, // Don't truncate, just display
-                    style: TextStyle(
-                      fontFamily: 'Manrope',
-                      fontWeight: FontWeight.w400,
-                      fontSize: 16 * s,
-                      color: const Color(0xFF392852),
-                      height: 1.0, // Tight line height
-                    ),
-                  ),
-                ),
-
-                // "X out of Y" label (centered)
-                Positioned(
-                  left: 125 * s,
-                  top: 170 * s,
-                  width: 116 * s,
-                  child: Text(
-                    '${_formatInt(completed)} out of ${_formatInt(total)}',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'Manrope',
-                      fontWeight: FontWeight.w400,
-                      fontSize: 12 * s,
-                      color: percentTextColor,
-                    ),
-                  ),
-                ),
+                  ];
+                })(),
               ],
             ),
           );
