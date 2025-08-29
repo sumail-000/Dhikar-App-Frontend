@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wered/group_khitma_info_screen.dart';
 import 'package:wered/group_khitma_assignments_screen.dart';
+
 import 'theme_provider.dart';
 import 'language_provider.dart';
 
@@ -131,35 +131,29 @@ class _DhikrGroupDetailsScreenState extends State<DhikrGroupDetailsScreen> {
 
                                   const SizedBox(height: 40),
 
-                                  // See Group Info button
+                                  // View Group Assignments button (default action in Joined flow)
                                   SizedBox(
                                     width: double.infinity,
                                     height: 50,
                                     child: ElevatedButton(
                                       onPressed: () {
-                                        // Prefer real backend data if groupId is available
                                         if (widget.groupId != null) {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) => GroupInfoScreen(
+                                              builder: (context) => GroupKhitmaAssignmentsScreen(
                                                 groupId: widget.groupId,
                                                 groupName: widget.groupName,
                                               ),
                                             ),
-                                          ).then((changed) async {
-                                            if (changed == true) {
-                                              // On returning after join, you may want to refresh upstream lists/screens.
-                                              // This screen does not own the lists; parent screens will handle refresh.
-                                            }
-                                          });
+                                          );
                                           return;
                                         }
 
-                                        // Fallback: if no groupId provided, keep previous behavior but inform developer
+                                        // Fallback when no groupId is provided
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           const SnackBar(
-                                            content: Text('Group ID not provided. Cannot load real group info.'),
+                                            content: Text('Group ID not provided. Cannot load assignments.'),
                                           ),
                                         );
                                       },
@@ -185,8 +179,8 @@ class _DhikrGroupDetailsScreenState extends State<DhikrGroupDetailsScreen> {
                                       ),
                                       child: Text(
                                         languageProvider.isArabic
-                                            ? 'عرض معلومات المجموعة'
-                                            : 'See Group Info',
+                                            ? 'أجزاء المجموعة وحالتها'
+                                            : 'Group Juz & Status',
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
@@ -200,44 +194,8 @@ class _DhikrGroupDetailsScreenState extends State<DhikrGroupDetailsScreen> {
 
                                   const SizedBox(height: 20),
 
-                                  // View Assignments button (Demo)
-                                  SizedBox(
-                                    width: double.infinity,
-                                    height: 50,
-                                    child: ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => GroupKhitmaAssignmentsScreen(
-                                              groupId: widget.groupId,
-                                              groupName: widget.groupName,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(0xFFF2EDE0),
-                                        foregroundColor: const Color(0xFF2D1B69),
-                                        elevation: 0,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            25,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        languageProvider.isArabic
-                                            ? 'عرض تفاصيل التكليفات (تجريبي)'
-                                            : 'View Assignments (Demo)',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: const Color(0xFF2D1B69),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                                  // Removed demo assignments button as per final flow
+                                  const SizedBox.shrink(),
                                 ],
                               ),
                             ),

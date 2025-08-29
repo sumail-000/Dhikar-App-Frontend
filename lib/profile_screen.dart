@@ -12,6 +12,7 @@ import 'services/api_client.dart';
 import 'account_details_screen.dart';
 import 'edit_profile_screen.dart';
 import 'profile_provider.dart';
+import 'group_management_groups_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -790,7 +791,14 @@ class _ContentSections extends StatelessWidget {
                 _SectionItem(
                   icon: Icons.group,
                   title: appLocalizations.groups,
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const GroupManagementGroupsScreen(),
+                      ),
+                    );
+                  },
                   textColor: sectionTextColor,
                   iconColor: sectionIconColor,
                 ),
