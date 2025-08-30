@@ -248,6 +248,10 @@ class ApiClient {
     return _request('GET', '/groups/$id', auth: true);
   }
 
+  Future<_ApiResponse> updateGroupPrivacy(int id, bool isPublic) {
+    return _request('PATCH', '/groups/$id', auth: true, body: jsonEncode({'is_public': isPublic}));
+  }
+
   Future<_ApiResponse> getGroupInvite(int id) {
     return _request('GET', '/groups/$id/invite', auth: true);
   }
@@ -266,6 +270,10 @@ class ApiClient {
 
   Future<_ApiResponse> removeGroupMember(int id, int userId) {
     return _request('DELETE', '/groups/$id/members/$userId', auth: true);
+  }
+
+  Future<_ApiResponse> deleteGroup(int id) {
+    return _request('DELETE', '/groups/$id', auth: true);
   }
 
   // ===== Khitma-specific =====

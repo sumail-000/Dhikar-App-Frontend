@@ -259,14 +259,19 @@ class _GroupManagementGroupsScreenState extends State<GroupManagementGroupsScree
                                     await Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => GroupInfoScreen(
+                                        builder: (context) => DhikrGroupDetailsScreen(
                                           groupId: gid,
                                           groupName: name,
                                         ),
                                       ),
                                     );
                                   },
-                                  onDelete: null, // hook later
+                                  onDelete: () {
+                                    // Remove the deleted group from list and refresh UI
+                                    setState(() {
+                                      _khitmaGroups.removeWhere((x) => (x['id'] as int) == gid);
+                                    });
+                                  },
                                 );
                               },
                             ),
