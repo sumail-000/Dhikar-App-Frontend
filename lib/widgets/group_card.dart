@@ -68,31 +68,28 @@ class GroupCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(12 * s),
               border: Border.all(color: cardBorder, width: 1 * s),
             ),
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // Decorative corners (top-left and bottom-right), no rotation
-                const _CornerDecoration(
-                  angleDeg: 0,
-                  assetPath: 'assets/background_elements/9.png',
-                  size: 0, // placeholder; replaced below using Positioned with explicit size
-                ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12 * s),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                // Corner decorations - edge-aligned positioning (top-left and bottom-right only)
                 Positioned(
-                  top: -22 * s,
-                  left: -22 * s,
+                  top: -8 * s,
+                  left: -8 * s,
                   child: _CornerDecoration(
                     angleDeg: 0,
                     assetPath: 'assets/background_elements/9.png',
-                    size: 62 * s,
+                    size: 45 * s,
                   ),
                 ),
                 Positioned(
-                  bottom: -22 * s,
-                  right: -22 * s,
+                  bottom: -8 * s,
+                  right: -8 * s,
                   child: _CornerDecoration(
                     angleDeg: 180,
                     assetPath: 'assets/background_elements/9.png',
-                    size: 62 * s,
+                    size: 45 * s,
                   ),
                 ),
 
@@ -299,7 +296,8 @@ class GroupCard extends StatelessWidget {
                 })(),
               ],
             ),
-          );
+          ),
+        );
         },
       ),
     );

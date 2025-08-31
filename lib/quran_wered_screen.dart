@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'wered_reading_screen.dart';
 
 class DailyWeredScreen extends StatefulWidget {
+  // Updated with real Quran data integration
   const DailyWeredScreen({super.key});
 
   @override
@@ -13,10 +16,16 @@ class DailyWeredScreen extends StatefulWidget {
 
 class _DailyWeredScreenState extends State<DailyWeredScreen> {
   final TextEditingController _pagesController = TextEditingController();
-  final Set<String> _selectedSurahs = {};
+  String? _selectedSurahName;
+  Map<String, dynamic>? _selectedSurahMetadata;
   bool _agreedToTerms = false;
   bool _showAllSurahs = false;
-  bool _hasSelectedSurahs = false;
+  
+  // Real Quran data variables
+  bool _isLoadingQuranData = false;
+  String? _quranDataError;
+  List<Map<String, dynamic>> _realSurahMetadata = [];
+  Map<String, Map<String, dynamic>> _surahMetadataByName = {};
 
   final List<Map<String, String>> _surahs = [
     {'name': 'Al-Fatihah', 'arabic': 'الفاتحة', 'subtitle': 'The Opening'},
@@ -224,6 +233,124 @@ class _DailyWeredScreenState extends State<DailyWeredScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _loadQuranMetadata();
+  }
+
+  Future<void> _loadQuranMetadata() async {
+    setState(() {
+      _isLoadingQuranData = true;
+      _quranDataError = null;
+    });
+
+    try {
+      print('🚀 DEBUG: Loading Quran metadata for surah selection...');
+      
+      final String jsonString = await rootBundle.loadString('assets/hafsData_v2-0.json');
+      final List<dynamic> data = json.decode(jsonString);
+      
+      print('🚀 DEBUG: JSON data loaded, total entries: ${data.length}');
+      
+      // Process data to extract surah metadata
+      final Map<int, Set<int>> pagesBySurah = {};
+      final Map<int, String> englishNamesBySurah = {};
+      final Map<int, String> arabicNamesBySurah = {};
+      
+      for (final item in data) {
+        final Map<String, dynamic> verse = item as Map<String, dynamic>;
+        final int surahNo = verse['sura_no'] as int;
+        final String englishName = (verse['sura_name_en'] as String).trim();
+        final String arabicName = (verse['sura_name_ar'] as String).trim();
+        final int page = verse['page'] as int;
+        
+        pagesBySurah.putIfAbsent(surahNo, () => <int>{}).add(page);
+        englishNamesBySurah[surahNo] = englishName;
+        arabicNamesBySurah[surahNo] = arabicName;
+      }
+      
+      print('🚀 DEBUG: Found data for ${pagesBySurah.length} surahs');
+      
+      // Build metadata list and mapping using our UI names
+      final List<Map<String, dynamic>> metadataList = [];
+      final Map<String, Map<String, dynamic>> metadataByName = {};
+      
+      // Map our UI surah names to their corresponding surah numbers
+      final Map<String, int> surahNameToNumber = {
+        'Al-Fatihah': 1, 'Al-Baqarah': 2, 'Al Imran': 3, 'An-Nisa': 4, 'Al-Maidah': 5,
+        'Al-Anam': 6, 'Al-Araf': 7, 'Al-Anfal': 8, 'At-Tawbah': 9, 'Yunus': 10,
+        'Hud': 11, 'Yusuf': 12, 'Ar-Rad': 13, 'Ibrahim': 14, 'Al-Hijr': 15,
+        'An-Nahl': 16, 'Al-Isra': 17, 'Al-Kahf': 18, 'Maryam': 19, 'Taha': 20,
+        'Al-Anbiya': 21, 'Al-Hajj': 22, 'Al-Muminun': 23, 'An-Nur': 24, 'Al-Furqan': 25,
+        'Ash-Shuara': 26, 'An-Naml': 27, 'Al-Qasas': 28, 'Al-Ankabut': 29, 'Ar-Rum': 30,
+        'Luqman': 31, 'As-Sajdah': 32, 'Al-Ahzab': 33, 'Saba': 34, 'Fatir': 35,
+        'Ya-Sin': 36, 'As-Saffat': 37, 'Sad': 38, 'Az-Zumar': 39, 'Ghafir': 40,
+        'Fussilat': 41, 'Ash-Shuraa': 42, 'Az-Zukhruf': 43, 'Ad-Dukhan': 44, 'Al-Jathiyah': 45,
+        'Al-Ahqaf': 46, 'Muhammad': 47, 'Al-Fath': 48, 'Al-Hujurat': 49, 'Qaf': 50,
+        'Adh-Dhariyat': 51, 'At-Tur': 52, 'An-Najm': 53, 'Al-Qamar': 54, 'Ar-Rahman': 55,
+        'Al-Waqiah': 56, 'Al-Hadid': 57, 'Al-Mujadila': 58, 'Al-Hashr': 59, 'Al-Mumtahanah': 60,
+        'As-Saff': 61, 'Al-Jumuah': 62, 'Al-Munafiqun': 63, 'At-Taghabun': 64, 'At-Talaq': 65,
+        'At-Tahrim': 66, 'Al-Mulk': 67, 'Al-Qalam': 68, 'Al-Haqqah': 69, 'Al-Maarij': 70,
+        'Nuh': 71, 'Al-Jinn': 72, 'Al-Muzzammil': 73, 'Al-Muddaththir': 74, 'Al-Qiyamah': 75,
+        'Al-Insan': 76, 'Al-Mursalat': 77, 'An-Naba': 78, 'An-Naziat': 79, 'Abasa': 80,
+        'At-Takwir': 81, 'Al-Infitar': 82, 'Al-Mutaffifin': 83, 'Al-Inshiqaq': 84, 'Al-Buruj': 85,
+        'At-Tariq': 86, 'Al-Ala': 87, 'Al-Ghashiyah': 88, 'Al-Fajr': 89, 'Al-Balad': 90,
+        'Ash-Shams': 91, 'Al-Layl': 92, 'Ad-Duhaa': 93, 'Ash-Sharh': 94, 'At-Tin': 95,
+        'Al-Alaq': 96, 'Al-Qadr': 97, 'Al-Bayyinah': 98, 'Az-Zalzalah': 99, 'Al-Adiyat': 100,
+        'Al-Qariah': 101, 'At-Takathur': 102, 'Al-Asr': 103, 'Al-Humazah': 104, 'Al-Fil': 105,
+        'Quraysh': 106, 'Al-Maun': 107, 'Al-Kawthar': 108, 'Al-Kafirun': 109, 'An-Nasr': 110,
+        'Al-Masad': 111, 'Al-Ikhlas': 112, 'Al-Falaq': 113, 'An-Nas': 114,
+      };
+      
+      // For each surah in our UI list, get its metadata from the JSON
+      for (final surah in _surahs) {
+        final String uiName = surah['name']!;
+        final int? surahNumber = surahNameToNumber[uiName];
+        
+        if (surahNumber != null && pagesBySurah.containsKey(surahNumber)) {
+          final pages = pagesBySurah[surahNumber]!;
+          final sortedPages = pages.toList()..sort();
+          
+          final metadata = {
+            'surahNo': surahNumber,
+            'englishName': uiName,  // Use our UI name
+            'arabicName': surah['arabic']!,  // Use our UI Arabic name
+            'firstPage': sortedPages.first,
+            'lastPage': sortedPages.last,
+            'totalPages': pages.length,
+            'pages': sortedPages,
+          };
+          
+          metadataList.add(metadata);
+          metadataByName[uiName] = metadata;
+          
+          print('🔍 DEBUG: Mapped "$uiName" (surah #$surahNumber) -> ${pages.length} pages');
+        } else {
+          print('⚠️ DEBUG: Could not find data for "$uiName" (surah #$surahNumber)');
+        }
+      }
+      
+      // Sort by surah number
+      metadataList.sort((a, b) => (a['surahNo'] as int).compareTo(b['surahNo'] as int));
+      
+      print('✅ DEBUG: Successfully loaded metadata for ${metadataList.length} surahs');
+      
+      setState(() {
+        _realSurahMetadata = metadataList;
+        _surahMetadataByName = metadataByName;
+        _isLoadingQuranData = false;
+      });
+    } catch (e, stackTrace) {
+      print('❌ DEBUG: Error loading Quran metadata: $e');
+      print('❌ DEBUG: Stack trace: $stackTrace');
+      setState(() {
+        _quranDataError = 'Failed to load Quran data: $e';
+        _isLoadingQuranData = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Consumer2<ThemeProvider, LanguageProvider>(
       builder: (context, themeProvider, languageProvider, child) {
@@ -412,7 +539,179 @@ class _DailyWeredScreenState extends State<DailyWeredScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
         children: [
-          // Number of pages input
+          // Choose surah input (moved to top)
+          InkWell(
+            onTap: () {
+              setState(() {
+                _showAllSurahs = !_showAllSurahs;
+              });
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: themeProvider.isDarkMode
+                    ? const Color(0xFFB9A9D0).withOpacity(0.18)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: themeProvider.isDarkMode
+                      ? const Color(0xFFB9A9D0).withOpacity(0.35)
+                      : const Color(0xFFB6D1C2),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _selectedSurahName == null
+                        ? (languageProvider.isArabic
+                              ? 'اختر السورة'
+                              : 'Choose surah')
+                        : languageProvider.isArabic
+                        ? _selectedSurahMetadata!['arabicName']
+                        : _selectedSurahName!,
+                    style: TextStyle(
+                      color: themeProvider.isDarkMode
+                          ? const Color(0xFFF7F3E8).withOpacity(0.7)
+                          : const Color(0xFF205C3B).withOpacity(0.7),
+                      fontSize: 16,
+                    ),
+                  ),
+                  Icon(
+                    _showAllSurahs
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                    color: themeProvider.isDarkMode
+                        ? const Color(0xFFF7F3E8).withOpacity(0.7)
+                        : const Color(0xFF205C3B).withOpacity(0.7),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Surah list
+          if (_showAllSurahs)
+            Builder(
+              builder: (context) {
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _surahs.length,
+                  itemBuilder: (context, index) {
+                    final surah = _surahs[index];
+                    final isSelected = _selectedSurahName == surah['name'];
+                    
+                    // Get real metadata for this surah if available
+                    final realMetadata = _surahMetadataByName[surah['name']];
+                    final pageCount = realMetadata?['totalPages'] ?? 0;
+                    
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 7),
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            if (_selectedSurahName == surah['name']) {
+                              // Deselect if already selected
+                              _selectedSurahName = null;
+                              _selectedSurahMetadata = null;
+                            } else {
+                              // Select new surah
+                              _selectedSurahName = surah['name']!;
+                              _selectedSurahMetadata = realMetadata;
+                            }
+                            // Clear pages input when selection changes
+                            _pagesController.clear();
+                            // Close dropdown after selection
+                            _showAllSurahs = false;
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected
+                                  ? const Color(0xFF4A148C)
+                                  : Colors.grey[300]!,
+                              width: isSelected ? 2 : 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      languageProvider.isArabic
+                                          ? surah['arabic']!
+                                          : surah['name']!,
+                                      style: TextStyle(
+                                        color: isSelected ? const Color(0xFF4A148C) : const Color(0xFF4A148C),
+                                        fontSize: 16,
+                                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      languageProvider.isArabic
+                                          ? surah['name']!
+                                          : surah['subtitle']!,
+                                      style: TextStyle(
+                                        color: const Color(0xFF4A148C).withOpacity(0.7),
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    languageProvider.isArabic
+                                        ? surah['name']!
+                                        : surah['arabic']!,
+                                    style: const TextStyle(
+                                      color: Color(0xFF4A148C),
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  if (pageCount > 0)
+                                    Text(
+                                      languageProvider.isArabic
+                                          ? '$pageCount صفحة'
+                                          : '$pageCount pages',
+                                      style: TextStyle(
+                                        color: const Color(0xFF4A148C).withOpacity(0.6),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(width: 8),
+                              if (isSelected)
+                                const Icon(
+                                  Icons.check_circle,
+                                  color: Color(0xFF4A148C),
+                                  size: 24,
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          const SizedBox(height: 16),
+          // Number of pages input with inline max pages display
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -447,170 +746,46 @@ class _DailyWeredScreenState extends State<DailyWeredScreen> {
                   fontSize: 16,
                 ),
                 border: InputBorder.none,
-              ),
-              keyboardType: TextInputType.number,
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Choose surah input
-          InkWell(
-            onTap: () {
-              setState(() {
-                if (_showAllSurahs && _selectedSurahs.isNotEmpty) {
-                  _showAllSurahs = false;
-                  _hasSelectedSurahs = true;
-                } else {
-                  _showAllSurahs = !_showAllSurahs;
-                  _hasSelectedSurahs = false;
-                }
-              });
-            },
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: themeProvider.isDarkMode
-                    ? const Color(0xFFB9A9D0).withOpacity(0.18)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
+                // Show max pages inline when surah is selected
+                suffixText: () {
+                  print('🔍 DEBUG: Suffix check - _selectedSurahMetadata != null: ${_selectedSurahMetadata != null}');
+                  if (_selectedSurahMetadata != null) {
+                    print('🔍 DEBUG: Selected metadata: ${_selectedSurahMetadata!['totalPages']}');
+                    return languageProvider.isArabic
+                        ? 'أقصى: ${_selectedSurahMetadata!['totalPages']}'
+                        : 'Max: ${_selectedSurahMetadata!['totalPages']}';
+                  }
+                  return null;
+                }(),
+                suffixStyle: TextStyle(
                   color: themeProvider.isDarkMode
-                      ? const Color(0xFFB9A9D0).withOpacity(0.35)
-                      : const Color(0xFFB6D1C2),
-                  width: 1,
+                      ? const Color(0xFFF7F3E8).withOpacity(0.5)
+                      : const Color(0xFF205C3B).withOpacity(0.5),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    _selectedSurahs.isEmpty
-                        ? (languageProvider.isArabic
-                              ? 'اختر السورة'
-                              : 'Choose surah')
-                        : languageProvider.isArabic
-                        ? '${_selectedSurahs.length} سورة مختارة'
-                        : '${_selectedSurahs.length} surah(s) selected',
-                    style: TextStyle(
-                      color: themeProvider.isDarkMode
-                          ? const Color(0xFFF7F3E8).withOpacity(0.7)
-                          : const Color(0xFF205C3B).withOpacity(0.7),
-                      fontSize: 16,
-                    ),
-                  ),
-                  Icon(
-                    _showAllSurahs
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
-                    color: themeProvider.isDarkMode
-                        ? const Color(0xFFF7F3E8).withOpacity(0.7)
-                        : const Color(0xFF205C3B).withOpacity(0.7),
-                  ),
-                ],
-              ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                // Add validation to prevent exceeding max pages
+                if (_selectedSurahMetadata != null)
+                  TextInputFormatter.withFunction((oldValue, newValue) {
+                    if (newValue.text.isEmpty) return newValue;
+                    final int? value = int.tryParse(newValue.text);
+                    if (value == null) return oldValue;
+                    final int maxPages = _selectedSurahMetadata!['totalPages'] as int;
+                    if (value > maxPages) {
+                      return TextEditingValue(
+                        text: maxPages.toString(),
+                        selection: TextSelection.collapsed(offset: maxPages.toString().length),
+                      );
+                    }
+                    return newValue;
+                  }),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
-          // Surah list
-          if (_showAllSurahs || _hasSelectedSurahs)
-            Builder(
-              builder: (context) {
-                List<Map<String, String>> filteredSurahs;
-                if (_showAllSurahs) {
-                  filteredSurahs = _surahs;
-                } else if (_hasSelectedSurahs) {
-                  filteredSurahs = _surahs
-                      .where((surah) => _selectedSurahs.contains(surah['name']))
-                      .toList();
-                } else {
-                  filteredSurahs = [];
-                }
-
-                return ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: filteredSurahs.length,
-                  itemBuilder: (context, index) {
-                    final surah = filteredSurahs[index];
-                    final isSelected = _selectedSurahs.contains(surah['name']);
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 7),
-                      child: InkWell(
-                        onTap: () {
-                          setState(() {
-                            if (_selectedSurahs.contains(surah['name'])) {
-                              _selectedSurahs.remove(surah['name']);
-                            } else {
-                              _selectedSurahs.add(surah['name']!);
-                            }
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isSelected
-                                  ? Colors.grey[400]!
-                                  : Colors.grey[300]!,
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      languageProvider.isArabic
-                                          ? surah['arabic']!
-                                          : surah['name']!,
-                                      style: const TextStyle(
-                                        color: Color(0xFF4A148C),
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    if (!languageProvider.isArabic)
-                                      Text(
-                                        surah['subtitle']!,
-                                        style: const TextStyle(
-                                          color: Color(0xFF4A148C),
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                              Text(
-                                languageProvider.isArabic
-                                    ? surah['name']!
-                                    : surah['arabic']!,
-                                style: const TextStyle(
-                                  color: Color(0xFF4A148C),
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              if (isSelected)
-                                const Icon(
-                                  Icons.check_circle,
-                                  color: Color(0xFF4A148C),
-                                  size: 24,
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
           // Privacy policy checkbox
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -659,16 +834,14 @@ class _DailyWeredScreenState extends State<DailyWeredScreen> {
               width: double.infinity,
               height: 48,
               child: ElevatedButton(
-                onPressed: _agreedToTerms && _selectedSurahs.isNotEmpty
+                onPressed: _agreedToTerms && _selectedSurahName != null && _pagesController.text.isNotEmpty
                     ? () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => WeredReadingScreen(
-                              selectedSurahs: _selectedSurahs.toList(),
-                              pages: _pagesController.text.isEmpty
-                                  ? '1'
-                                  : _pagesController.text,
+                              selectedSurahs: [_selectedSurahName!],
+                              pages: _pagesController.text,
                             ),
                           ),
                         );

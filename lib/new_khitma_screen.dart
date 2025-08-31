@@ -14,6 +14,7 @@ class _NewKhitmaScreenState extends State<NewKhitmaScreen> {
   int? selectedDays;
   bool agreedToTerms = false;
   final TextEditingController daysController = TextEditingController();
+  bool isCustomInputActive = false;
 
   final List<Map<String, dynamic>> khitmaOptions = [
     {'days': 1, 'juzzDaily': 30},
@@ -25,6 +26,20 @@ class _NewKhitmaScreenState extends State<NewKhitmaScreen> {
     {'days': 15, 'juzzDaily': 2},
     {'days': 30, 'juzzDaily': 1},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Listen to changes in custom input
+    daysController.addListener(() {
+      setState(() {
+        isCustomInputActive = daysController.text.isNotEmpty;
+        if (isCustomInputActive) {
+          selectedDays = null; // Clear predefined selection
+        }
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,7 +128,19 @@ class _NewKhitmaScreenState extends State<NewKhitmaScreen> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 48),
+                                // Info icon
+                                IconButton(
+                                  onPressed: () {
+                                    _showKhitmaInfoDialog(context, themeProvider, languageProvider);
+                                  },
+                                  icon: Icon(
+                                    Icons.info_outline,
+                                    color: isLightMode
+                                        ? greenColor
+                                        : creamColor,
+                                    size: 22,
+                                  ),
+                                ),
                               ],
                             ),
                             const SizedBox(height: 20),
