@@ -34,6 +34,9 @@ class _DhikrGroupDetailsScreenState extends State<DhikrGroupDetailsScreen> {
   String? _startDate;
   int? _completedJuz;
   int _totalJuz = 30;
+  // Pages progress (Mushaf-based)
+  int _pagesRead = 0;
+  int _totalPagesMushaf = 604;
   bool _isAdmin = false;
 
   @override
@@ -90,6 +93,34 @@ class _DhikrGroupDetailsScreenState extends State<DhikrGroupDetailsScreen> {
       _completedJuz = (summary != null) ? (summary['completed_juz'] as int?) : null;
       _totalJuz = (summary != null && summary['total_juz'] is int) ? summary['total_juz'] as int : 30;
       _isAdmin = isAdmin;
+    });
+
+    // Fetch pages progress (total pages + pages_read sum)
+    int pagesTotal = 604;
+    final pagesMeta = await ApiClient.instance.khitmaJuzPages();
+    if (pagesMeta.ok) {
+      final mp = (pagesMeta.data as Map?)?.cast<String, dynamic>();
+      if (mp != null && mp['total_pages'] is int) {
+        pagesTotal = mp['total_pages'] as int;
+      }
+    }
+
+    int pagesRead = 0;
+    final assigns = await ApiClient.instance.khitmaAssignments(id);
+    if (assigns.ok) {
+      final ad = (assigns.data as Map?)?.cast<String, dynamic>();
+      final list = (ad?['assignments'] as List?)?.cast<dynamic>() ?? const [];
+      for (final it in list) {
+        final m = (it as Map).cast<String, dynamic>();
+        final pr = m['pages_read'];
+        if (pr is int && pr > 0) pagesRead += pr;
+      }
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _totalPagesMushaf = pagesTotal;
+      _pagesRead = pagesRead;
       _loading = false;
     });
   }
@@ -222,11 +253,11 @@ class _DhikrGroupDetailsScreenState extends State<DhikrGroupDetailsScreen> {
                                                 ],
                                               ),
                                               const SizedBox(height: 10),
-                                              // Progress bar + percent
+                                              // Progress bar + percent (Juz)
                                               ClipRRect(
                                                 borderRadius: BorderRadius.circular(100),
                                                 child: LinearProgressIndicator(
-                                                  value: progress.clamp(0.0, 1.0),
+                                                  value: (progress.clamp(0.0, 1.0)).toDouble(),
                                                   minHeight: 10,
                                                   backgroundColor: isDarkMode ? Colors.white10 : const Color(0xFFE5E7EB),
                                                   valueColor: AlwaysStoppedAnimation<Color>(isDarkMode ? const Color(0xFFC2AEEA) : const Color(0xFF235347)),
@@ -250,6 +281,37 @@ class _DhikrGroupDetailsScreenState extends State<DhikrGroupDetailsScreen> {
                                                   ),
                                                 ],
                                               ),
+
+                                              // Pages progress (Mushaf)
+                                              const SizedBox(height: 10),
+                                              ClipRRect(
+                                                borderRadius: BorderRadius.circular(100),
+                                                child: LinearProgressIndicator(
+                                                  value: (((_totalPagesMushaf <= 0 ? 0.0 : (_pagesRead / _totalPagesMushaf)).clamp(0.0, 1.0))).toDouble(),
+                                                  minHeight: 10,
+                                                  backgroundColor: isDarkMode ? Colors.white10 : const Color(0xFFE5E7EB),
+                                                  valueColor: AlwaysStoppedAnimation<Color>(isDarkMode ? const Color(0xFF8B5CF6) : const Color(0xFF8B5CF6)),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 6),
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Text(
+                                                    '${_pagesRead}/${_totalPagesMushaf} ${isArabic ? 'صفحات مقروءة' : 'Pages read'}',
+                                                    style: TextStyle(color: isDarkMode ? Colors.white70 : const Color(0xFF374151)),
+                                                  ),
+                                                  Text(
+'${(((_totalPagesMushaf <= 0 ? 0.0 : (_pagesRead / _totalPagesMushaf)) * 100).clamp(0.0, 100.0)).round()}%'
+                                                        '${isArabic ? '' : ''}',
+                                                    style: TextStyle(
+                                                      color: isDarkMode ? Colors.white : const Color(0xFF392852),
+                                                      fontWeight: FontWeight.w700,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+
                                               const SizedBox(height: 12),
                                               Wrap(
                                                 spacing: 8,
@@ -309,7 +371,10 @@ class _DhikrGroupDetailsScreenState extends State<DhikrGroupDetailsScreen> {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (_) => const GroupInfoScreen(),
+                                              builder: (_) => GroupInfoScreen(
+                                                groupId: widget.groupId,
+                                                groupName: _name ?? widget.groupName,
+                                              ),
                                             ),
                                           );
                                         },
@@ -324,7 +389,10 @@ class _DhikrGroupDetailsScreenState extends State<DhikrGroupDetailsScreen> {
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
-                                                builder: (_) => const GroupManageMembersScreen(),
+                                                builder: (_) => GroupManageMembersScreen(
+                                                  groupId: widget.groupId!,
+                                                  groupName: _name ?? widget.groupName,
+                                                ),
 
                                                 ),
                                             );

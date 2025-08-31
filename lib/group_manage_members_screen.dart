@@ -1,23 +1,62 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'services/api_client.dart';
 
-// Manage Members screen (UI only, compact, Figma-style)
-class GroupManageMembersScreen extends StatelessWidget {
-  const GroupManageMembersScreen({super.key});
+// Manage Members screen (UI only, compact, Figma-style) now wired to real data
+class GroupManageMembersScreen extends StatefulWidget {
+  const GroupManageMembersScreen({super.key, required this.groupId, this.groupName});
+  final int groupId;
+  final String? groupName;
+
+  @override
+  State<GroupManageMembersScreen> createState() => _GroupManageMembersScreenState();
+}
+
+class _GroupManageMembersScreenState extends State<GroupManageMembersScreen> {
+  bool _loading = false;
+  String? _error;
+  String? _resolvedGroupName;
+  final List<_Member> _members = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _resolvedGroupName = widget.groupName;
+    _fetch();
+  }
+
+  Future<void> _fetch() async {
+    setState(() { _loading = true; _error = null; });
+    final resp = await ApiClient.instance.getGroup(widget.groupId);
+    if (!mounted) return;
+    if (!resp.ok || resp.data is! Map<String, dynamic>) {
+      setState(() { _loading = false; _error = resp.error ?? 'Failed to load group'; });
+      return;
+    }
+    final g = ((resp.data as Map)['group'] as Map).cast<String, dynamic>();
+    final name = (g['name'] as String?) ?? _resolvedGroupName;
+    final list = (g['members'] as List?)?.cast<dynamic>() ?? const [];
+    final members = <_Member>[];
+    for (final it in list) {
+      final m = (it as Map).cast<String, dynamic>();
+      final userId = (m['id'] is int) ? m['id'] as int : int.tryParse('${m['id'] ?? ''}') ?? 0;
+      final username = (m['username'] as String?)?.trim();
+      final email = (m['email'] as String?)?.trim();
+      final avatar = (m['avatar_url'] as String?)?.trim();
+      final safeAvatar = (avatar != null && avatar.isNotEmpty) ? avatar : _avatars[0];
+      members.add(_Member(userId, username ?? '—', email ?? '', safeAvatar));
+    }
+    setState(() {
+      _resolvedGroupName = name;
+      _members
+        ..clear()
+        ..addAll(members);
+      _loading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final members = <_Member>[
-      _Member('Ali Shahwaiz', 'ali@gmail.com', _avatars[0]),
-      _Member('Saba Iqbal', 'saba@gmail.com', _avatars[1]),
-      _Member('Zakria', 'zakria@gmail.com', _avatars[2]),
-      _Member('Aon Abbas', 'aon@gmail.com', _avatars[3]),
-      _Member('Fakhar e Abid', 'fakhar@gmail.com', _avatars[4]),
-      _Member('Waqas Ahmed', 'waqas@gmail.com', _avatars[5]),
-      _Member('Muhammad Binyamin', 'mbd@gmail.com', _avatars[6]),
-      _Member('Muhammad Abdullah', 'abdullah@gmail.com', _avatars[7]),
-    ];
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -73,7 +112,7 @@ class GroupManageMembersScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      "The Qur'an Circle",
+                      _resolvedGroupName ?? "",
                       style: GoogleFonts.manrope(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -102,7 +141,7 @@ class GroupManageMembersScreen extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${members.length} Members',
+                      '${_members.length} Members',
                       style: GoogleFonts.manrope(
                         fontSize: 12,
                         color: Colors.white.withOpacity(0.9),
@@ -115,12 +154,16 @@ class GroupManageMembersScreen extends StatelessWidget {
               const SizedBox(height: 6),
 
               Expanded(
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  itemBuilder: (_, i) => _MemberRow(member: members[i]),
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemCount: members.length,
-                ),
+                child: _loading
+                    ? const Center(child: CircularProgressIndicator())
+                    : (_error != null)
+                        ? Center(child: Text(_error!, style: const TextStyle(color: Colors.white)))
+                        : ListView.separated(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            itemBuilder: (_, i) => _MemberRow(member: _members[i]),
+                            separatorBuilder: (_, __) => const SizedBox(height: 10),
+                            itemCount: _members.length,
+                          ),
               ),
             ],
           ),
@@ -192,11 +235,30 @@ class _MemberRow extends StatelessWidget {
           _IconBadgeButton(
             icon: Icons.delete_outline,
             color: const Color(0xFFEF4444),
-            onTap: () {
-              // TODO: call ApiClient.instance.removeGroupMember(groupId, userId)
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Delete member (not wired yet)')),
+            onTap: () async {
+              final ok = await showDialog<bool>(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: const Text('Remove member?'),
+                  content: Text('Remove ${member.name} from the group?'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                    TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Remove')),
+                  ],
+                ),
               );
+              if (ok != true) return;
+              final state = context.findAncestorStateOfType<_GroupManageMembersScreenState>();
+              if (state == null) return;
+              final resp = await ApiClient.instance.removeGroupMember(state.widget.groupId, member.userId);
+              if (resp.ok) {
+                state._fetch();
+              } else {
+                // ignore: use_build_context_synchronously
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(resp.error ?? 'Failed to remove member')),
+                );
+              }
             },
           ),
           const SizedBox(width: 10),
@@ -265,10 +327,11 @@ class _CircleIconButton extends StatelessWidget {
 }
 
 class _Member {
+  final int userId;
   final String name;
   final String email;
   final String avatarUrl;
-  const _Member(this.name, this.email, this.avatarUrl);
+  const _Member(this.userId, this.name, this.email, this.avatarUrl);
 }
 
 const _avatars = <String>[

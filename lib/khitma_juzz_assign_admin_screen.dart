@@ -19,8 +19,48 @@ class WeredScreen extends StatefulWidget {
 class _WeredScreenState extends State<WeredScreen> {
   bool _busy = false;
 
+  Future<bool> _confirmAutoAssign(LanguageProvider languageProvider) async {
+    if (widget.groupId == null) return false;
+    // Fetch group to detect current mode
+    final resp = await ApiClient.instance.getGroup(widget.groupId!);
+    if (!resp.ok) return true; // If cannot fetch, default to confirm silently
+    final g = (resp.data['group'] as Map?)?.cast<String, dynamic>();
+    final autoEnabled = (g != null && g['auto_assign_enabled'] == true);
+    if (autoEnabled) return true; // no manual customizations active
+
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          title: Text(languageProvider.isArabic ? 'إعادة التعيين التلقائي؟' : 'Reset with Auto-assign?'),
+          content: Text(
+            languageProvider.isArabic
+                ? 'سيؤدي التعيين التلقائي إلى إعادة تعيين التخصيصات اليدوية الحالية. هل تريد المتابعة؟'
+                : 'Auto-assign will reset current manual customizations. Do you want to continue?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(languageProvider.isArabic ? 'إلغاء' : 'Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(languageProvider.isArabic ? 'متابعة' : 'Continue'),
+            ),
+          ],
+        );
+      },
+    );
+    return proceed == true;
+  }
+
   Future<void> _autoAssign(LanguageProvider languageProvider) async {
     if (widget.groupId == null) return;
+
+    // Confirm if this will reset manual state
+    final ok = await _confirmAutoAssign(languageProvider);
+    if (!ok) return; // user canceled
+
     setState(() => _busy = true);
     final resp = await ApiClient.instance.khitmaAutoAssign(widget.groupId!);
     if (!mounted) return;
@@ -47,125 +87,17 @@ class _WeredScreenState extends State<WeredScreen> {
   }
 
   Future<void> _manualAssign(LanguageProvider languageProvider) async {
+    // Open the unified assignments table in manual mode (matches your Figma table UX)
     if (widget.groupId == null) return;
-
-    // Fetch group to get members
-    final resp = await ApiClient.instance.getGroup(widget.groupId!);
-    if (!mounted) return;
-    if (!resp.ok || resp.data is! Map) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(languageProvider.isArabic ? 'تعذر تحميل الأعضاء' : 'Failed to load members')),
-      );
-      return;
-    }
-    final group = ((resp.data as Map)['group'] as Map?)?.cast<String, dynamic>() ?? {};
-    final members = (group['members'] as List?)?.cast<dynamic>() ?? const [];
-    final items = members.map((m) => (m as Map).cast<String, dynamic>()).toList();
-
-    int? selectedUserId;
-    final Set<int> selectedJuz = {};
-    bool localBusy = false;
-
-    await showDialog(
-      context: context,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setLocal) {
-            return AlertDialog(
-              title: Text(languageProvider.isArabic ? 'تعيين الأجزاء' : 'Assign Juz'),
-              content: SizedBox(
-                width: 420,
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      DropdownButtonFormField<int>(
-                        decoration: InputDecoration(labelText: languageProvider.isArabic ? 'العضو' : 'Member'),
-                        value: selectedUserId,
-                        items: [
-                          for (final m in items)
-                            DropdownMenuItem<int>(
-                              value: (m['id'] is int) ? m['id'] as int : int.tryParse('${m['id'] ?? ''}'),
-                              child: Text((m['username'] as String?)?.trim().isNotEmpty == true
-                                  ? (m['username'] as String)
-                                  : ((m['email'] as String?) ?? 'User')),
-                            )
-                        ],
-                        onChanged: (v) => setLocal(() => selectedUserId = v),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(languageProvider.isArabic ? 'اختر الأجزاء' : 'Select Juz'),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: [
-                          for (int j = 1; j <= 30; j++)
-                            FilterChip(
-                              label: Text(j.toString()),
-                              selected: selectedJuz.contains(j),
-                              onSelected: (sel) {
-                                setLocal(() {
-                                  if (sel) {
-                                    selectedJuz.add(j);
-                                  } else {
-                                    selectedJuz.remove(j);
-                                  }
-                                });
-                              },
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: localBusy ? null : () => Navigator.of(ctx).pop(),
-                  child: Text(languageProvider.isArabic ? 'إلغاء' : 'Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: (selectedUserId == null || selectedJuz.isEmpty || localBusy)
-                      ? null
-                      : () async {
-                          setLocal(() => localBusy = true);
-                          final payload = [
-                            {
-                              'user_id': selectedUserId,
-                              'juz_numbers': selectedJuz.toList()..sort(),
-                            }
-                          ];
-                          final r = await ApiClient.instance.khitmaManualAssign(widget.groupId!, payload);
-                          if (!mounted) return;
-                          setLocal(() => localBusy = false);
-                          if (r.ok) {
-                            Navigator.of(ctx).pop();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(languageProvider.isArabic ? 'تم التعيين' : 'Assigned')),
-                            );
-                            // Refresh details screen
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => DhikrGroupDetailsScreen(groupId: widget.groupId, groupName: widget.groupName),
-                              ),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(r.error ?? (languageProvider.isArabic ? 'فشل التعيين' : 'Assign failed'))),
-                            );
-                          }
-                        },
-                  child: localBusy
-                      ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                      : Text(languageProvider.isArabic ? 'تعيين' : 'Assign'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => GroupKhitmaAssignmentsAdminScreen(
+          groupId: widget.groupId!,
+          groupName: widget.groupName,
+          manualMode: true,
+        ),
+      ),
     );
   }
 

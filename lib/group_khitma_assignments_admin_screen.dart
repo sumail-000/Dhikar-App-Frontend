@@ -200,6 +200,172 @@ class _GroupKhitmaAssignmentsAdminScreenState extends State<GroupKhitmaAssignmen
     return false;
   }
 
+  Future<void> _openJuzPicker(int userId, Set<int> initial) async {
+    final lang = context.read<LanguageProvider>();
+    final isArabic = lang.isArabic;
+    final isDark = context.read<ThemeProvider>().isDarkMode;
+
+    // Local copy for dialog editing
+    final Set<int> localSel = {...initial};
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: isDark ? const Color(0xFF2D1B69) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setLocal) {
+            final Color borderColor = isDark ? Colors.white24 : const Color(0xFFE0E0E0);
+            final Color chipBg = isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFF2F2F2);
+            final Color selectedBg = const Color(0xFF8B5CF6);
+            final Color textColor = isDark ? Colors.white : const Color(0xFF2D1B69);
+
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(ctx).viewInsets.bottom,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 8),
+                    // Grab handle
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white24 : const Color(0xFFCCCCCC),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    // Title row
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              isArabic ? 'اختر الأجزاء' : 'Choose Juz',
+                              style: TextStyle(
+                                color: textColor,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.close, color: textColor),
+                            onPressed: () => Navigator.of(ctx).pop(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    // Chips grid (no scrolling) fits all 30
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: LayoutBuilder(
+                        builder: (c2, cons) {
+                          // Choose columns to fit: prefer 6, fallback to 5 on very narrow widths
+                          final double minItemWidth = 44; // chip target width
+                          int cols = (cons.maxWidth / minItemWidth).floor();
+                          if (cols > 6) cols = 6; // don't exceed 6 columns
+                          if (cols < 5) cols = 5;
+                          return GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: cols,
+                              mainAxisSpacing: 6,
+                              crossAxisSpacing: 6,
+                              mainAxisExtent: 34,
+                            ),
+                            itemCount: 30,
+                            itemBuilder: (c3, i) {
+                              final j = i + 1;
+                              final selected = localSel.contains(j);
+                              return ChoiceChip(
+                                label: Text(
+                                  j.toString(),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: selected ? Colors.white : textColor,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                selected: selected,
+                                onSelected: (sel) {
+                                  setLocal(() {
+                                    if (sel) {
+                                      for (final e in _selectedByUser.entries) {
+                                        if (e.key != userId) e.value.remove(j);
+                                      }
+                                      localSel.add(j);
+                                    } else {
+                                      localSel.remove(j);
+                                    }
+                                  });
+                                },
+                                selectedColor: const Color(0xFF8B5CF6),
+                                backgroundColor: chipBg,
+                                pressElevation: 0,
+                                side: BorderSide(color: borderColor),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                showCheckmark: false,
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                    // Actions
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                      child: Row(
+                        children: [
+                          TextButton(
+                            onPressed: () => setLocal(() => localSel.clear()),
+                            child: Text(isArabic ? 'مسح' : 'Clear', style: TextStyle(color: textColor)),
+                          ),
+                          const Spacer(),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                _selectedByUser[userId] = localSel;
+                              });
+                              Navigator.of(ctx).pop();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isDark ? Colors.white.withOpacity(0.15) : const Color(0xFF235347),
+                              foregroundColor: isDark ? Colors.white : Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              elevation: 0,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              child: Text(isArabic ? 'تطبيق' : 'Apply'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Future<void> _saveManual(LanguageProvider lang) async {
     setState(() { _saving = true; });
 
@@ -367,6 +533,35 @@ class _GroupKhitmaAssignmentsAdminScreenState extends State<GroupKhitmaAssignmen
                           ),
                         ),
 
+                        // Unassigned summary (shown for both modes, placed before table headings)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: _unassignedCount > 0 ? const Color(0xFFE65A5A).withOpacity(0.2) : const Color(0xFF235347).withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: _unassignedCount > 0 ? const Color(0xFFE65A5A).withOpacity(0.4) : const Color(0xFF235347).withOpacity(0.4),
+                                ),
+                              ),
+                              child: Text(
+                                _unassignedCount > 0
+                                  ? (isArabic ? 'أجزاء غير مُعينة: $_unassignedCount' : 'Unassigned Juz: $_unassignedCount')
+                                  : (isArabic ? 'جميع الأجزاء مُعينة' : 'All Juz assigned'),
+                                style: TextStyle(
+                                  color: isDarkMode ? Colors.white : const Color(0xFF2D1B69),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+
                         // Headers row
                         Container(
                           margin: const EdgeInsets.only(top: 8),
@@ -389,7 +584,7 @@ class _GroupKhitmaAssignmentsAdminScreenState extends State<GroupKhitmaAssignmen
                                 ),
                               ),
                               Expanded(
-                                flex: 2,
+                                flex: 3,
                                 child: Text(
                                   widget.manualMode ? (isArabic ? 'اختر الأجزاء' : 'Choose Juz') : (isArabic ? 'الأجزاء' : 'Assigned Juz'),
                                   style: const TextStyle(
@@ -403,6 +598,7 @@ class _GroupKhitmaAssignmentsAdminScreenState extends State<GroupKhitmaAssignmen
                                   textAlign: TextAlign.center,
                                 ),
                               ),
+                              const SizedBox(width: 12),
                               Expanded(
                                 flex: 3,
                                 child: Text(
@@ -423,34 +619,6 @@ class _GroupKhitmaAssignmentsAdminScreenState extends State<GroupKhitmaAssignmen
                         ),
                         const SizedBox(height: 6),
 
-                        if (!widget.manualMode)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: _unassignedCount > 0 ? const Color(0xFFE65A5A).withOpacity(0.2) : const Color(0xFF235347).withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(
-                                    color: _unassignedCount > 0 ? const Color(0xFFE65A5A).withOpacity(0.4) : const Color(0xFF235347).withOpacity(0.4),
-                                  ),
-                                ),
-                                child: Text(
-                                  _unassignedCount > 0
-                                    ? (isArabic ? 'أجزاء غير مُعينة: $_unassignedCount' : 'Unassigned Juz: $_unassignedCount')
-                                    : (isArabic ? 'جميع الأجزاء مُعينة' : 'All Juz assigned'),
-                                  style: TextStyle(
-                                    color: isDarkMode ? Colors.white : const Color(0xFF2D1B69),
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-
                         // Content list
                         Expanded(
                           child: _loading
@@ -466,7 +634,7 @@ class _GroupKhitmaAssignmentsAdminScreenState extends State<GroupKhitmaAssignmen
                                           if (!widget.manualMode) {
                                             final row = _rows[index];
                                             final statusColor = _statusColor(row.statusType);
-                                            return Container(
+                                              return Container(
                                               height: 28,
                                               margin: const EdgeInsets.only(bottom: 2),
                                               child: Row(
@@ -491,22 +659,21 @@ class _GroupKhitmaAssignmentsAdminScreenState extends State<GroupKhitmaAssignmen
                                                       textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis,
                                                     ),
                                                   ),
+                                                  const SizedBox(width: 12),
                                                   Expanded(
                                                     flex: 3,
-                                                    child: Container(
+                                                    child: Align(
                                                       alignment: Alignment.center,
-                                                      child: Container(
-                                                        height: 20,
-                                                        constraints: const BoxConstraints(minWidth: 60, maxWidth: 140),
-                                                        alignment: Alignment.center,
-                                                        decoration: BoxDecoration(color: statusColor, borderRadius: BorderRadius.circular(3)),
-                                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                        child: Text(
-                                                          isArabic ? _localizedStatus(languageProvider, row.statusText) : row.statusText,
-                                                          style: const TextStyle(
-                                                            fontFamily: 'Manrope', fontWeight: FontWeight.w500, fontSize: 11, height: 1.0, letterSpacing: 0, color: Colors.white,
-                                                          ),
-                                                          textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                                      child: Text(
+                                                        isArabic ? _localizedStatus(languageProvider, row.statusText) : row.statusText,
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow.ellipsis,
+                                                        textAlign: TextAlign.center,
+                                                        style: TextStyle(
+                                                          fontFamily: 'Manrope',
+                                                          fontWeight: FontWeight.w600,
+                                                          fontSize: 12,
+                                                          color: statusColor,
                                                         ),
                                                       ),
                                                     ),
@@ -524,92 +691,85 @@ class _GroupKhitmaAssignmentsAdminScreenState extends State<GroupKhitmaAssignmen
                                             String statusText = entries.isEmpty ? 'Not Assigned' : (allCompleted ? 'Completed' : (anyPages ? 'Pages Read' : 'Not Started'));
                                             final statusColor = _statusColor(statusText == 'Completed' ? 'completed' : statusText == 'Pages Read' ? 'pages_read' : statusText == 'Not Assigned' ? 'not_assigned' : 'not_started');
 
-                                            return Column(
-                                              children: [
-                                                Container(
-                                                  height: 28,
-                                                  margin: const EdgeInsets.only(bottom: 2),
-                                                  child: Row(
-                                                    children: [
-                                                      Expanded(
-                                                        flex: 4,
-                                                        child: Text(
-                                                          m.name,
-                                                          style: const TextStyle(
-                                                            fontFamily: 'Manrope', fontWeight: FontWeight.w400, fontSize: 13, height: 1.2, letterSpacing: 0, color: Colors.white,
-                                                          ),
-                                                          maxLines: 1, overflow: TextOverflow.ellipsis,
-                                                        ),
+                                            return Container(
+                                              height: 28,
+                                              margin: const EdgeInsets.only(bottom: 2),
+                                              child: Row(
+                                                children: [
+                                                  Expanded(
+                                                    flex: 4,
+                                                    child: Text(
+                                                      m.name,
+                                                      style: const TextStyle(
+                                                        fontFamily: 'Manrope', fontWeight: FontWeight.w400, fontSize: 13, height: 1.2, letterSpacing: 0, color: Colors.white,
                                                       ),
-                                                      Expanded(
-                                                        flex: 2,
-                                                        child: GestureDetector(
-                                                          onTap: () => _toggleExpand(m.id),
-                                                          child: Container(
-                                                            alignment: Alignment.center,
-                                                            height: 24,
-                                                            decoration: BoxDecoration(
-                                                              color: Colors.white.withOpacity(0.08),
-                                                              border: Border.all(color: Colors.white24),
-                                                              borderRadius: BorderRadius.circular(4),
-                                                            ),
-                                                            padding: const EdgeInsets.symmetric(horizontal: 6),
-                                                            child: Row(
+                                                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    flex: 3,
+                                                    child: GestureDetector(
+                                                      onTap: () => _openJuzPicker(m.id, selected),
+                                                      child: Container(
+                                                        alignment: Alignment.center,
+                                                        height: 24,
+                                                        decoration: BoxDecoration(
+                                                          color: Colors.white.withOpacity(0.10),
+                                                          border: Border.all(color: Colors.white24),
+                                                          borderRadius: BorderRadius.circular(6),
+                                                        ),
+                                                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                                                        child: LayoutBuilder(
+                                                          builder: (ctx, c) {
+                                                            // Responsive: keep within cell; ellipsis when tight
+                                                            final baseLabel = isArabic ? 'اختر الأجزاء' : 'Choose Juz';
+                                                            final count = selected.length;
+                                                            // If there are selections, show a condensed preview instead of the generic label
+                                                            final String label = count > 0
+                                                                ? _formatJuzList(selected.toList(), isArabic)
+                                                                : baseLabel;
+                                                            return Row(
                                                               mainAxisAlignment: MainAxisAlignment.center,
-                                                              mainAxisSize: MainAxisSize.min,
+                                                              mainAxisSize: MainAxisSize.max,
                                                               children: [
-                                                                Text(
-                                                                  isArabic ? 'اختر الأجزاء' : 'Choose Juz',
-                                                                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                                                                Flexible(
+                                                                  child: Text(
+                                                                    label,
+                                                                    maxLines: 1,
+                                                                    overflow: TextOverflow.ellipsis,
+                                                                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                                                                  ),
                                                                 ),
                                                                 const SizedBox(width: 4),
-                                                                const Icon(Icons.arrow_drop_down_rounded, size: 18, color: Colors.white),
+                                                                const Icon(Icons.arrow_drop_down_rounded, size: 16, color: Colors.white),
                                                               ],
-                                                            ),
-                                                          ),
+                                                            );
+                                                          },
                                                         ),
                                                       ),
-                                                      Expanded(
-                                                        flex: 3,
-                                                        child: Container(
-                                                          alignment: Alignment.center,
-                                                          child: Container(
-                                                            height: 20,
-                                                            constraints: const BoxConstraints(minWidth: 60, maxWidth: 140),
-                                                            alignment: Alignment.center,
-                                                            decoration: BoxDecoration(color: statusColor, borderRadius: BorderRadius.circular(3)),
-                                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                            child: Text(
-                                                              languageProvider.isArabic ? _localizedStatus(languageProvider, statusText) : statusText,
-                                                              style: const TextStyle(fontFamily: 'Manrope', fontWeight: FontWeight.w500, fontSize: 11, height: 1.0, letterSpacing: 0, color: Colors.white),
-                                                              textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                                            ),
-                                                          ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Expanded(
+                                                    flex: 3,
+                                                    child: Align(
+                                                      alignment: Alignment.center,
+                                                      child: Text(
+                                                        languageProvider.isArabic ? _localizedStatus(languageProvider, statusText) : statusText,
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow.ellipsis,
+                                                        textAlign: TextAlign.center,
+                                                        style: TextStyle(
+                                                          fontFamily: 'Manrope',
+                                                          fontWeight: FontWeight.w600,
+                                                          fontSize: 12,
+                                                          color: statusColor,
                                                         ),
                                                       ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                if (_expandedUserId == m.id)
-                                                  Container(
-                                                    width: double.infinity,
-                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.white.withOpacity(0.06),
-                                                      border: Border.all(color: Colors.white24),
-                                                      borderRadius: BorderRadius.circular(6),
-                                                    ),
-                                                    child: Wrap(
-                                                      spacing: 6,
-                                                      runSpacing: 6,
-                                                      children: [
-                                                        for (int j = 1; j <= 30; j++) ...[
-                                                          _buildJuzChip(j, m.id, selected)
-                                                        ],
-                                                      ],
                                                     ),
                                                   ),
-                                              ],
+                                                ],
+                                              ),
                                             );
                                           }
                                         },

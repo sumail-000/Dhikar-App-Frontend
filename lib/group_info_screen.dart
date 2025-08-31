@@ -1,25 +1,186 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'services/api_client.dart';
+import 'profile_provider.dart';
+import 'language_provider.dart';
 
-// Compact "Group Info" screen (UI only for now)
-class GroupInfoScreen extends StatelessWidget {
-  const GroupInfoScreen({super.key});
+// Functional Group Info screen with real API data
+class GroupInfoScreen extends StatefulWidget {
+  final int? groupId;
+  final String? groupName;
+
+  const GroupInfoScreen({super.key, this.groupId, this.groupName});
+
+  @override
+  State<GroupInfoScreen> createState() => _GroupInfoScreenState();
+}
+
+class _GroupInfoScreenState extends State<GroupInfoScreen> {
+  bool _loading = false;
+  String? _error;
+  String? _groupName;
+  int _membersCount = 0;
+  List<_Member> _members = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _groupName = widget.groupName;
+    if (widget.groupId != null) {
+      _fetchGroupData();
+    }
+  }
+
+  Future<void> _fetchGroupData() async {
+    if (widget.groupId == null) return;
+
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      // Fetch group details and assignments in parallel
+      final groupFuture = ApiClient.instance.getGroup(widget.groupId!);
+      final assignmentsFuture = ApiClient.instance.khitmaAssignments(widget.groupId!);
+
+      final results = await Future.wait([groupFuture, assignmentsFuture]);
+      final groupResp = results[0];
+      final assignmentsResp = results[1];
+
+      if (!mounted) return;
+
+      if (!groupResp.ok) {
+        setState(() {
+          _loading = false;
+          _error = groupResp.error ?? 'Failed to load group';
+        });
+        return;
+      }
+
+      if (!assignmentsResp.ok) {
+        setState(() {
+          _loading = false;
+          _error = assignmentsResp.error ?? 'Failed to load assignments';
+        });
+        return;
+      }
+
+      // Process group data
+      final groupData = (groupResp.data['group'] as Map).cast<String, dynamic>();
+      final groupName = groupData['name'] as String? ?? widget.groupName ?? "The Qur'an Circle";
+      final members = (groupData['members'] as List?)?.cast<dynamic>() ?? [];
+      final membersCount = members.length;
+
+      // Process assignments data
+      final assignmentsData = (assignmentsResp.data['assignments'] as List?)?.cast<dynamic>() ?? [];
+      final memberAssignments = _processAssignments(assignmentsData, members);
+
+      setState(() {
+        _groupName = groupName;
+        _membersCount = membersCount;
+        _members = memberAssignments;
+        _loading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = 'Error loading data: $e';
+        });
+      }
+    }
+  }
+
+  List<_Member> _processAssignments(List<dynamic> assignments, List<dynamic> members) {
+    // Create a map of user_id -> user info
+    final Map<int, Map<String, dynamic>> userMap = {};
+    for (final member in members) {
+      final memberData = (member as Map).cast<String, dynamic>();
+      final userId = memberData['id'] as int? ?? 0;
+      userMap[userId] = memberData;
+    }
+
+    // Group assignments by user
+    final Map<int, List<Map<String, dynamic>>> userAssignments = {};
+    for (final assignment in assignments) {
+      final assignmentData = (assignment as Map).cast<String, dynamic>();
+      final user = (assignmentData['user'] as Map?)?.cast<String, dynamic>();
+      final userId = user?['id'] as int?;
+      
+      if (userId != null && assignmentData['status'] != 'unassigned') {
+        userAssignments.putIfAbsent(userId, () => []).add(assignmentData);
+      }
+    }
+
+    // Convert to _Member objects
+    final List<_Member> membersList = [];
+    
+    for (final entry in userAssignments.entries) {
+      final userId = entry.key;
+      final assignments = entry.value;
+      final userData = userMap[userId];
+      
+      if (userData != null) {
+        final name = userData['username'] as String? ?? 'Unknown User';
+        final avatarUrl = userData['avatar_url'] as String?;
+        
+        // Extract Juz numbers and determine status
+        final juzNumbers = <int>[];
+        var allCompleted = true;
+        var hasProgress = false;
+        
+        for (final assignment in assignments) {
+          final juzNumber = assignment['juz_number'] as int? ?? 0;
+          final status = assignment['status'] as String? ?? 'unassigned';
+          final pagesRead = assignment['pages_read'] as int? ?? 0;
+          
+          juzNumbers.add(juzNumber);
+          
+          if (status != 'completed') {
+            allCompleted = false;
+          }
+          
+          if (pagesRead > 0 || status == 'completed') {
+            hasProgress = true;
+          }
+        }
+        
+        // Determine overall status
+        final _Status memberStatus;
+        if (allCompleted) {
+          memberStatus = _Status.completed;
+        } else if (hasProgress) {
+          memberStatus = _Status.inProgress;
+        } else {
+          memberStatus = _Status.notStarted;
+        }
+        
+        juzNumbers.sort(); // Ensure sorted for proper formatting
+        
+        membersList.add(_Member(
+          juzNumbers: juzNumbers,
+          name: name,
+          status: memberStatus,
+          avatarUrl: avatarUrl?.isNotEmpty == true ? avatarUrl : null,
+        ));
+      }
+    }
+    
+    // Sort members by name
+    membersList.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    
+    return membersList;
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Dummy members (compact list)
-    final members = <_Member>[
-      _Member(juz: 1, name: 'Bint e Hawa', status: _Status.completed, avatarUrl: _avatars[0]),
-      _Member(juz: 2, name: 'Muhammad Umar Farooq', status: _Status.inProgress, avatarUrl: _avatars[1]),
-      _Member(juz: 3, name: 'Muhammad Abu Bakar', status: _Status.completed, avatarUrl: _avatars[2]),
-      _Member(juz: 4, name: 'Muhammad Hussain', status: _Status.completed, avatarUrl: _avatars[3]),
-      _Member(juz: 5, name: 'Hassan Mujtaba', status: _Status.completed, avatarUrl: _avatars[4]),
-      _Member(juz: 5, name: 'Ali Murtaza', status: _Status.cancelled, avatarUrl: _avatars[5]),
-      _Member(juz: 6, name: 'Bint e Iqbal', status: _Status.inProgress, avatarUrl: _avatars[6]),
-      _Member(juz: 7, name: 'Usman Ghani', status: _Status.completed, avatarUrl: _avatars[7]),
-    ];
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final languageProvider = context.watch<LanguageProvider>();
+    final isArabic = languageProvider.isArabic;
+    
+    final membersToDisplay = _members;
 
     return Scaffold(
       body: Container(
@@ -64,7 +225,7 @@ class GroupInfoScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      'Group Info.',
+                      isArabic ? 'معلومات المجموعة' : 'Group Info.',
                       style: GoogleFonts.manrope(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -74,7 +235,7 @@ class GroupInfoScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      "The Qur'an Circle",
+                      _groupName ?? (isArabic ? 'دائرة القرآن' : "The Qur'an Circle"),
                       style: GoogleFonts.manrope(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -84,7 +245,7 @@ class GroupInfoScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '15 Members',
+                      isArabic ? '$_membersCount عضو' : '$_membersCount Members',
                       style: GoogleFonts.manrope(
                         fontSize: 12,
                         color: Colors.white.withOpacity(0.9),
@@ -100,7 +261,7 @@ class GroupInfoScreen extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14.0),
                 child: Text(
-                  'Members List',
+                  isArabic ? 'قائمة الأعضاء' : 'Members List',
                   style: GoogleFonts.manrope(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -113,12 +274,64 @@ class GroupInfoScreen extends StatelessWidget {
 
               // Members list (compact density)
               Expanded(
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  itemBuilder: (context, index) => _MemberTile(member: members[index]),
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemCount: members.length,
-                ),
+                child: _loading
+                    ? const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      )
+                    : _error != null
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.error_outline,
+                                  color: Colors.white.withOpacity(0.7),
+                                  size: 48,
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  _error!,
+                                  style: GoogleFonts.manrope(
+                                    color: Colors.white.withOpacity(0.7),
+                                    fontSize: 14,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 12),
+                                ElevatedButton(
+                                  onPressed: _fetchGroupData,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white.withOpacity(0.2),
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  child: Text(
+                                    isArabic ? 'إعادة المحاولة' : 'Retry',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : membersToDisplay.isEmpty
+                            ? Center(
+                                child: Text(
+                                  isArabic
+                                      ? 'لا توجد تعيينات للأعضاء'
+                                      : 'No member assignments found',
+                                  style: GoogleFonts.manrope(
+                                    color: Colors.white.withOpacity(0.7),
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              )
+                            : ListView.separated(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                itemBuilder: (context, index) => _MemberTile(
+                                  member: membersToDisplay[index],
+                                  isArabic: isArabic,
+                                ),
+                                separatorBuilder: (context, index) => const SizedBox(height: 8),
+                                itemCount: membersToDisplay.length,
+                              ),
               ),
             ],
           ),
@@ -152,8 +365,34 @@ class _CircleIconButton extends StatelessWidget {
 }
 
 class _MemberTile extends StatelessWidget {
-  const _MemberTile({required this.member});
+  const _MemberTile({required this.member, required this.isArabic});
   final _Member member;
+  final bool isArabic;
+
+  String _formatJuzNumbers(List<int> juzNumbers) {
+    if (juzNumbers.isEmpty) return '';
+    if (juzNumbers.length == 1) return juzNumbers.first.toString();
+    
+    // Sort to ensure proper order
+    final sorted = List<int>.from(juzNumbers)..sort();
+    
+    // Check if consecutive for range formatting
+    bool isConsecutive = true;
+    for (int i = 1; i < sorted.length; i++) {
+      if (sorted[i] != sorted[i - 1] + 1) {
+        isConsecutive = false;
+        break;
+      }
+    }
+    
+    if (isConsecutive) {
+      // Format as range: "1-6" or "5-6"
+      return '${sorted.first}-${sorted.last}';
+    } else {
+      // Format with commas: "2,4,5,6,8"
+      return sorted.join(',');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -161,16 +400,18 @@ class _MemberTile extends StatelessWidget {
     final borderColor = Colors.white.withOpacity(0.18);
 
     final statusText = switch (member.status) {
-      _Status.completed => 'Completed',
-      _Status.inProgress => 'In Progress',
-      _Status.cancelled => 'Cancelled',
+      _Status.completed => isArabic ? 'مكتمل' : 'Completed',
+      _Status.inProgress => isArabic ? 'قيد التقدم' : 'In Progress',
+      _Status.notStarted => isArabic ? 'لم يبدأ' : 'Not Started',
     };
 
     final statusColor = switch (member.status) {
       _Status.completed => Colors.white.withOpacity(0.85),
       _Status.inProgress => const Color(0xFFF1C40F),
-      _Status.cancelled => const Color(0xFFEF4444),
+      _Status.notStarted => const Color(0xFFEF4444),
     };
+    
+    final formattedJuz = _formatJuzNumbers(member.juzNumbers);
 
     return Container(
       decoration: BoxDecoration(
@@ -208,7 +449,7 @@ class _MemberTile extends StatelessWidget {
                     color: Colors.white.withOpacity(0.05),
                   ),
                   child: Text(
-                    'Juzz#${member.juz.toString().padLeft(2, '0')}',
+                    formattedJuz.isEmpty ? (isArabic ? 'غير مُعين' : 'Unassigned') : 'Juzz#$formattedJuz',
                     style: GoogleFonts.manrope(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
@@ -249,24 +490,13 @@ class _MemberTile extends StatelessWidget {
 }
 
 class _Member {
-  final int juz;
+  final List<int> juzNumbers;
   final String name;
   final _Status status;
   final String? avatarUrl;
-  const _Member({required this.juz, required this.name, required this.status, this.avatarUrl});
+  const _Member({required this.juzNumbers, required this.name, required this.status, this.avatarUrl});
 }
 
-enum _Status { completed, inProgress, cancelled }
+enum _Status { completed, inProgress, notStarted }
 
-// Placeholder avatars
-const _avatars = <String?>[
-  'https://i.pravatar.cc/150?img=1',
-  'https://i.pravatar.cc/150?img=2',
-  'https://i.pravatar.cc/150?img=3',
-  'https://i.pravatar.cc/150?img=4',
-  'https://i.pravatar.cc/150?img=5',
-  'https://i.pravatar.cc/150?img=6',
-  'https://i.pravatar.cc/150?img=7',
-  'https://i.pravatar.cc/150?img=8',
-];
 

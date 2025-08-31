@@ -301,6 +301,11 @@ class ApiClient {
     if (pagesRead != null) body['pages_read'] = pagesRead;
     return _request('PATCH', '/groups/$id/khitma/assignment', auth: true, body: jsonEncode(body));
   }
+
+  // Quran/Juz meta (Uthmani Hafs)
+  Future<_ApiResponse> khitmaJuzPages() {
+    return _request('GET', '/khitma/juz-pages', auth: true);
+  }
 }
 
 class _ApiResponse {
