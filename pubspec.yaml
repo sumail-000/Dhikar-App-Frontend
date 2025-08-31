@@ -35,3 +35,4 @@ flutter:
     - assets/background_elements/
     - assets/splash/
     - assets/surah_data.json
+    - assets/hafsData_v2-0.json

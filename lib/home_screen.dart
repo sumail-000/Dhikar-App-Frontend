@@ -109,28 +109,28 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Main content
                   SafeArea(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 18.0),
                       child: SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const SizedBox(height: 25),
+                            const SizedBox(height: 18),
                             // Profile & Notification
                             const _ProfileSection(),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 14),
                             // Overall Progress
                             _ProgressSection(),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 14),
                             // Personal Khitma (progress + continue button)
                             _PersonalKhitmaSection(),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 14),
                             // Current Streak
                             _StreakSection(),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 14),
                             // Motivational Verse
                             _MotivationalVerseSection(),
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 20),
                           ],
                         ),
                       ),
@@ -275,7 +275,7 @@ class _ProgressSection extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
@@ -336,9 +336,9 @@ class _PersonalKhitmaSection extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: themeProvider.cardBackgroundColor,
                 borderRadius: BorderRadius.circular(20),
@@ -372,7 +372,7 @@ class _PersonalKhitmaSection extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   // Progress bar
                   ClipRRect(
                     borderRadius: BorderRadius.circular(100),
@@ -383,7 +383,7 @@ class _PersonalKhitmaSection extends StatelessWidget {
                       valueColor: AlwaysStoppedAnimation<Color>(themeProvider.homeProgressColor),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   // Last read label
                   Text(
                     hasActive ? lastJuzLabel : (languageProvider.isArabic ? 'لا توجد ختمة نشطة' : 'No active khitma'),
@@ -392,10 +392,10 @@ class _PersonalKhitmaSection extends StatelessWidget {
                       fontSize: 12,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   // Continue button
                   SizedBox(
-                    height: 44,
+                    height: 40,
                     child: ElevatedButton(
                       onPressed: hasActive
                           ? () {
@@ -455,7 +455,7 @@ class _ProgressCard extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return Container(
-          padding: const EdgeInsets.all(5),
+          padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             color: themeProvider.cardBackgroundColor,
             borderRadius: BorderRadius.circular(20),
@@ -476,14 +476,14 @@ class _ProgressCard extends StatelessWidget {
               ),
               // const SizedBox(height: 8),
               SizedBox(
-                height: 80,
-                width: 80,
+                height: 70,
+                width: 70,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
                     CircularProgressIndicator(
                       value: progress,
-                      strokeWidth: 5,
+                      strokeWidth: 4,
                       valueColor: AlwaysStoppedAnimation<Color>(
                         themeProvider.homeProgressColor,
                       ),
@@ -539,9 +539,9 @@ class _StreakSection extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: themeProvider.cardBackgroundColor,
                 borderRadius: BorderRadius.circular(20),
@@ -556,7 +556,7 @@ class _StreakSection extends StatelessWidget {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           color: Colors.orange.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
@@ -564,10 +564,10 @@ class _StreakSection extends StatelessWidget {
                         child: const Icon(
                           Icons.local_fire_department,
                           color: Colors.orange,
-                          size: 24,
+                          size: 22,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -593,8 +593,8 @@ class _StreakSection extends StatelessWidget {
                   ),
                   Image.asset(
                     'assets/background_elements/4.png',
-                    width: 60,
-                    height: 60,
+                    width: 50,
+                    height: 50,
                     cacheWidth: 120, // Optimize memory usage
                     filterQuality: FilterQuality.medium,
                   ),
@@ -629,7 +629,7 @@ class _MotivationalVerseSection extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
@@ -655,28 +655,28 @@ class _MotivationalVerseSection extends StatelessWidget {
                 children: [
                   // Background images
                   Positioned(
-                    top: 8,
-                    left: 8,
+                    top: 6,
+                    left: 6,
                     child: Image.asset(
                       'assets/background_elements/9.png',
-                      width: 40,
-                      height: 40,
+                      width: 32,
+                      height: 32,
                       opacity: const AlwaysStoppedAnimation(0.6),
                     ),
                   ),
                   Positioned(
-                    bottom: 8,
-                    right: 8,
+                    bottom: 6,
+                    right: 6,
                     child: Image.asset(
                       'assets/background_elements/8.png',
-                      width: 40,
-                      height: 40,
+                      width: 32,
+                      height: 32,
                       opacity: const AlwaysStoppedAnimation(0.6),
                     ),
                   ),
                   // Main content
                   Padding(
-                    padding: const EdgeInsets.all(30),
+                    padding: const EdgeInsets.all(24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -693,7 +693,7 @@ class _MotivationalVerseSection extends StatelessWidget {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
                         // Decorative line with diamond
                         Row(
                           children: [
@@ -728,7 +728,7 @@ class _MotivationalVerseSection extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                         Text(
                           appLocalizations.surahAnNahl,
                           style: TextStyle(
