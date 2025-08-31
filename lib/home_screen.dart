@@ -122,6 +122,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             // Overall Progress
                             _ProgressSection(),
                             const SizedBox(height: 20),
+                            // Personal Khitma (progress + continue button)
+                            _PersonalKhitmaSection(),
+                            const SizedBox(height: 20),
                             // Current Streak
                             _StreakSection(),
                             const SizedBox(height: 20),
@@ -302,6 +305,140 @@ class _ProgressSection extends StatelessWidget {
 }
 
 // Optimized Progress Card
+class _PersonalKhitmaSection extends StatelessWidget {
+  const _PersonalKhitmaSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer2<ThemeProvider, LanguageProvider>(
+      builder: (context, themeProvider, languageProvider, child) {
+        // Placeholder values until wired to backend
+        final bool hasActive = true; // set to false to simulate no active khitma
+        final int completedJuz = 12; // TODO: wire
+        final int totalJuz = 30;
+        final double progress = (totalJuz == 0) ? 0.0 : (completedJuz / totalJuz).clamp(0.0, 1.0);
+        final String lastJuzLabel = languageProvider.isArabic
+            ? 'آخر قراءة: جزء ${completedJuz + 1}'
+            : 'Last read: Juz ${completedJuz + 1}';
+        final String title = languageProvider.isArabic ? 'ختمتي الشخصية' : 'Personal Khitma';
+        final String subtitle = languageProvider.isArabic
+            ? 'التقدم: $completedJuz/$totalJuz'
+            : 'Progress: $completedJuz/$totalJuz';
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                color: themeProvider.homeSectionTitleColor,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: themeProvider.cardBackgroundColor,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: themeProvider.homeBoxBorderColor,
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Progress text
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: themeProvider.homeBoxTextColor,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        '${(progress * 100).round()}%',
+                        style: TextStyle(
+                          color: themeProvider.homeBoxTextColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  // Progress bar
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(100),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 10,
+                      backgroundColor: themeProvider.progressBackgroundColor,
+                      valueColor: AlwaysStoppedAnimation<Color>(themeProvider.homeProgressColor),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Last read label
+                  Text(
+                    hasActive ? lastJuzLabel : (languageProvider.isArabic ? 'لا توجد ختمة نشطة' : 'No active khitma'),
+                    style: TextStyle(
+                      color: themeProvider.homeBoxTextColor,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Continue button
+                  SizedBox(
+                    height: 44,
+                    child: ElevatedButton(
+                      onPressed: hasActive
+                          ? () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    languageProvider.isArabic ? 'القراءة قادمة لاحقًا' : 'Reading coming soon',
+                                  ),
+                                ),
+                              );
+                            }
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: themeProvider.isDarkMode
+                            ? Colors.white.withOpacity(0.15)
+                            : const Color(0xFF2D5A27),
+                        foregroundColor: themeProvider.isDarkMode
+                            ? Colors.white
+                            : Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        languageProvider.isArabic ? 'متابعة القراءة' : 'Continue Reading',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _ProgressCard extends StatelessWidget {
   final String title;
   final double progress;

@@ -7,7 +7,7 @@ import 'profile_screen.dart';
 import 'bottom_nav_bar.dart';
 import 'dhikr_screen.dart' show DhikrScreen;
 import 'new_khitma_screen.dart';
-import 'daily_wered_screen.dart';
+import 'quran_wered_screen.dart';
 import 'khitma_group_screen.dart';
 
 class KhitmaScreen extends StatefulWidget {
