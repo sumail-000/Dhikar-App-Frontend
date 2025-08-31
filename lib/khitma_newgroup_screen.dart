@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
-import 'wered_screen.dart';
 import 'services/api_client.dart';
 
 class KhitmaNewgroupScreen extends StatefulWidget {

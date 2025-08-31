@@ -332,7 +332,7 @@ class _DhikrGroupDetailsScreenState extends State<DhikrGroupDetailsScreen> {
                                           isDarkMode: isDarkMode,
                                         ),
                                       if (_isAdmin) const SizedBox(height: 10),
-                                      if (_isAdmin)
+                                                                            if (_isAdmin)
                                         _actionButton(
                                           icon: Icons.assignment_ind_outlined,
                                           label: isArabic ? 'تعيين الأجزاء' : 'Assign Juz',

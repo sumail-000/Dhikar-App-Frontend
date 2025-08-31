@@ -5,9 +5,7 @@ import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'profile_provider.dart';
 import 'widgets/management_group_card.dart';
-import 'group_khitma_details_screen.dart';
-import 'group_khitma_assignments_screen.dart';
-import 'group_khitma_info_screen.dart';
+import 'group_khitma_admin_screen.dart';
 
 class GroupManagementGroupsScreen extends StatefulWidget {
   const GroupManagementGroupsScreen({super.key});
@@ -254,12 +252,12 @@ class _GroupManagementGroupsScreenState extends State<GroupManagementGroupsScree
                                   membersTarget: membersTarget,
                                   isPublic: (g['is_public'] == true),
                                   groupId: gid,
-                                  onOpen: () async {
-                                    if (isDhikr) return; // later
-                                    await Navigator.push(
+                                  // Open khitma group details
+                                  onOpen: () {
+                                    Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => DhikrGroupDetailsScreen(
+                                        builder: (_) => DhikrGroupDetailsScreen(
                                           groupId: gid,
                                           groupName: name,
                                         ),

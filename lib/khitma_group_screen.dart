@@ -12,7 +12,7 @@ import 'khitma_newgroup_screen.dart';
 import 'services/api_client.dart';
 import 'widgets/group_card.dart';
 import 'group_khitma_info_screen.dart';
-import 'group_khitma_details_screen.dart';
+import 'group_khitma_members_juzz_screen.dart';
 
 // Small chip helper for cozy density
 Widget _chip(String label, bool isLightMode, Color greenColor) {
@@ -131,6 +131,7 @@ Widget buildJoinedList({
         future: membersPreviewFetcher((g['id'] as int)),
         builder: (context, snap) {
           final avatars = snap.data ?? const <MemberAvatar>[];
+          final int gid = (g['id'] is int) ? g['id'] as int : int.parse('${g['id']}');
           return GroupCard(
             englishName: isArabicLocale ? '' : name,
             arabicName: isArabicLocale ? name : '',
@@ -139,11 +140,10 @@ Widget buildJoinedList({
             memberAvatars: avatars,
             plusCount: membersCount > 5 ? (membersCount - 5) : 0,
             onTap: () async {
-              final int gid = (g['id'] is int) ? g['id'] as int : int.parse('${g['id']}');
               await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => DhikrGroupDetailsScreen(
+                  builder: (_) => GroupKhitmaJuzzScreen(
                     groupId: gid,
                     groupName: name,
                   ),
@@ -696,16 +696,15 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
                                   membersPreviewFetcher: _membersPreview,
                                   isArabicLocale: languageProvider.isArabic,
                                   openGroup: (gid, name) async {
-                                    final changed = await Navigator.push(
+                                    await Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => GroupInfoScreen(groupId: gid, groupName: name),
+                                        builder: (_) => GroupInfoScreen(
+                                          groupId: gid,
+                                          groupName: name,
+                                        ),
                                       ),
                                     );
-                                    if (changed == true) {
-                                      setState(() => _memberInitialsCache.clear());
-                                      await _loadGroups();
-                                    }
                                   },
                                 ),
                         ),
