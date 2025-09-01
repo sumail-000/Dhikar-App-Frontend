@@ -4,16 +4,32 @@ import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
+import 'services/api_client.dart';
 import 'dart:math' as math;
 
 class WeredReadingScreen extends StatefulWidget {
   final List<String> selectedSurahs;
   final String pages;
+  final bool isPersonalKhitma;
+  final int? khitmaDays;
+  final int? personalKhitmaId; // ID of the personal khitma record
+  final int? startFromPage; // Page number to start from (for continuing khitma)
+  // Group reading mode properties
+  final bool isGroupKhitma; // Flag for group reading mode
+  final int? groupId; // ID of the group
+  final List<int>? assignedJuz; // List of assigned Juz numbers for group reading
 
   const WeredReadingScreen({
     super.key,
     required this.selectedSurahs,
     required this.pages,
+    this.isPersonalKhitma = false,
+    this.khitmaDays,
+    this.personalKhitmaId,
+    this.startFromPage,
+    this.isGroupKhitma = false,
+    this.groupId,
+    this.assignedJuz,
   });
 
   @override
@@ -283,48 +299,116 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
       print('🚀 DEBUG: Starting to load surah data...');
       print('🚀 DEBUG: Selected surahs: ${widget.selectedSurahs}');
       print('🚀 DEBUG: Requested pages: ${widget.pages}');
+      print('🚀 DEBUG: Is Personal Khitma: ${widget.isPersonalKhitma}');
+      print('🚀 DEBUG: Is Group Khitma: ${widget.isGroupKhitma}');
+      if (widget.isGroupKhitma) {
+        print('🚀 DEBUG: Assigned Juz: ${widget.assignedJuz}');
+      }
       
-      final String jsonString = await rootBundle.loadString(
-        'assets/hafsData_v2-0.json',
-      );
-      final List<dynamic> jsonData = json.decode(jsonString);
-      print('🚀 DEBUG: JSON data loaded, total entries: ${jsonData.length}');
-      
-      // Get the selected surah name and find its number
-      final selectedSurahName = widget.selectedSurahs.first;
-      final int? surahNumber = surahNameToNumber[selectedSurahName];
-      
-      print('🔍 DEBUG: Selected surah name: "$selectedSurahName"');
-      print('🔍 DEBUG: Mapped to surah number: $surahNumber');
-      
-      if (surahNumber == null) {
+      print('📁 DEBUG: Attempting to load asset: assets/hafsData_v2-0.json');
+      final String jsonString;
+      try {
+        jsonString = await rootBundle.loadString('assets/hafsData_v2-0.json');
+        print('📁 DEBUG: Asset loaded successfully, string length: ${jsonString.length}');
+      } catch (assetError) {
+        print('❌ DEBUG: Asset loading failed: $assetError');
         setState(() {
-          errorMessage = 'Could not find surah number for "$selectedSurahName". Please check the surah name.';
+          errorMessage = 'Failed to load Quran data file. Please ensure the app is properly installed and try restarting the app.';
           isLoading = false;
         });
         return;
       }
       
-      // Filter verses for the selected surah by number
-      final surahVerses = jsonData.where((verse) {
-        final Map<String, dynamic> v = verse as Map<String, dynamic>;
-        final int surahNo = v['sura_no'] as int;
-        return surahNo == surahNumber;
-      }).toList();
-      
-      print('🚀 DEBUG: Found ${surahVerses.length} verses for surah number $surahNumber');
-      
-      if (surahVerses.isEmpty) {
+      if (jsonString.isEmpty) {
+        print('❌ DEBUG: JSON string is empty');
         setState(() {
-          errorMessage = 'No verses found for surah "$selectedSurahName" (number: $surahNumber)';
+          errorMessage = 'Quran data file is empty. Please reinstall the app.';
+          isLoading = false;
+        });
+        return;
+      }
+      
+      print('📊 DEBUG: Parsing JSON data...');
+      final List<dynamic> jsonData;
+      try {
+        jsonData = json.decode(jsonString) as List<dynamic>;
+        print('📊 DEBUG: JSON data parsed successfully, total entries: ${jsonData.length}');
+      } catch (parseError) {
+        print('❌ DEBUG: JSON parsing failed: $parseError');
+        setState(() {
+          errorMessage = 'Failed to parse Quran data. The data file may be corrupted.';
+          isLoading = false;
+        });
+        return;
+      }
+      
+      List<dynamic> relevantVerses;
+      
+      if (widget.isPersonalKhitma) {
+        // Personal Khitma: Load all verses from all surahs (entire Quran)
+        print('📖 DEBUG: Loading entire Quran for Personal Khitma...');
+        relevantVerses = jsonData;
+      } else if (widget.isGroupKhitma) {
+        // Group Khitma: Load verses for assigned Juz only
+        print('🤝 DEBUG: Loading assigned Juz for Group Khitma...');
+        print('🤝 DEBUG: Assigned Juz: ${widget.assignedJuz}');
+        
+        if (widget.assignedJuz == null || widget.assignedJuz!.isEmpty) {
+          setState(() {
+            errorMessage = 'No assigned Juz found for group reading.';
+            isLoading = false;
+          });
+          return;
+        }
+        
+        // Filter verses for assigned Juz pages
+        final assignedPages = _getPagesForJuz(widget.assignedJuz!);
+        print('🤝 DEBUG: Assigned pages: ${assignedPages.take(10).toList()}${assignedPages.length > 10 ? '...' : ''}');
+        
+        relevantVerses = jsonData.where((verse) {
+          final Map<String, dynamic> v = verse as Map<String, dynamic>;
+          final int page = v['page'] as int;
+          return assignedPages.contains(page);
+        }).toList();
+      } else {
+        // Daily Wered: Load only selected surah
+        final selectedSurahName = widget.selectedSurahs.first;
+        final int? surahNumber = surahNameToNumber[selectedSurahName];
+        
+        print('🔍 DEBUG: Selected surah name: "$selectedSurahName"');
+        print('🔍 DEBUG: Mapped to surah number: $surahNumber');
+        
+        if (surahNumber == null) {
+          setState(() {
+            errorMessage = 'Could not find surah number for "$selectedSurahName". Please check the surah name.';
+            isLoading = false;
+          });
+          return;
+        }
+        
+        // Filter verses for the selected surah by number
+        relevantVerses = jsonData.where((verse) {
+          final Map<String, dynamic> v = verse as Map<String, dynamic>;
+          final int surahNo = v['sura_no'] as int;
+          return surahNo == surahNumber;
+        }).toList();
+      }
+      
+      print('🚀 DEBUG: Found ${relevantVerses.length} verses');
+      
+      if (relevantVerses.isEmpty) {
+        setState(() {
+          errorMessage = widget.isPersonalKhitma 
+              ? 'No Quran data found'
+              : 'No verses found for the selected surah';
           isLoading = false;
         });
         return;
       }
       
       // Debug: Show some sample verses
-      if (surahVerses.isNotEmpty) {
-        final sampleVerse = surahVerses.first;
+      if (relevantVerses.isNotEmpty) {
+        final sampleVerse = relevantVerses.first;
         print('🔍 DEBUG: Sample verse data:');
         print('   - Surah number: ${sampleVerse['sura_no']}');
         print('   - Surah name (EN): ${sampleVerse['sura_name_en']}');
@@ -335,7 +419,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
       
       // Group verses by page
       final Map<int, List<Map<String, dynamic>>> versesByPage = {};
-      for (final verse in surahVerses) {
+      for (final verse in relevantVerses) {
         final Map<String, dynamic> v = verse as Map<String, dynamic>;
         final int page = v['page'] as int;
         versesByPage.putIfAbsent(page, () => []).add(v);
@@ -344,17 +428,26 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
       print('🚀 DEBUG: Verses grouped into ${versesByPage.length} pages');
       print('🚀 DEBUG: Available pages: ${versesByPage.keys.toList()..sort()}');
       
-      // Sort pages and get requested number of pages
+      // Determine which pages to load
       final sortedPages = versesByPage.keys.toList()..sort();
-      final requestedPageCount = int.tryParse(widget.pages) ?? 1;
-      final requestedPages = sortedPages.take(requestedPageCount).toList();
+      List<int> requestedPages;
       
-      print('🚀 DEBUG: Requested $requestedPageCount pages');
-      print('🚀 DEBUG: Selected pages: $requestedPages');
+      if (widget.isPersonalKhitma) {
+        // Personal Khitma: Load all pages sequentially (1-604)
+        requestedPages = sortedPages;
+        print('📖 DEBUG: Personal Khitma - Loading all ${requestedPages.length} pages');
+      } else {
+        // Daily Wered: Load requested number of pages from selected surah
+        final requestedPageCount = int.tryParse(widget.pages) ?? 1;
+        requestedPages = sortedPages.take(requestedPageCount).toList();
+        print('📄 DEBUG: Daily Wered - Loading $requestedPageCount pages from selected surah');
+      }
+      
+      print('🚀 DEBUG: Selected pages: ${requestedPages.take(10).toList()}${requestedPages.length > 10 ? '...' : ''}');
       
       if (requestedPages.isEmpty) {
         setState(() {
-          errorMessage = 'No pages available for the requested number of pages ($requestedPageCount)';
+          errorMessage = 'No pages available for the requested configuration';
           isLoading = false;
         });
         return;
@@ -366,21 +459,28 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
         final verses = versesByPage[pageNum]!;
         verses.sort((a, b) => (a['aya_no'] as int).compareTo(b['aya_no'] as int));
         
-        print('🚀 DEBUG: Page $pageNum has ${verses.length} verses');
+        // Get the main surah for this page (first verse's surah)
+        final mainSurah = verses.first;
         
         pagesData.add({
           'pageNumber': pageNum,
           'verses': verses,
-          'surahName': verses.first['sura_name_en'],
-          'surahNameAr': verses.first['sura_name_ar'],
+          'surahName': mainSurah['sura_name_en'],
+          'surahNameAr': mainSurah['sura_name_ar'],
         });
       }
       
       print('✅ DEBUG: Successfully loaded ${pagesData.length} pages of data');
+      print('📊 DEBUG: Page range: ${pagesData.first['pageNumber']} to ${pagesData.last['pageNumber']}');
       
       setState(() {
         surahData = pagesData;
         isLoading = false;
+        
+        // Set starting page if specified
+        if (widget.startFromPage != null) {
+          _setInitialPageIndex(widget.startFromPage!);
+        }
       });
     } catch (e, stackTrace) {
       print('❌ DEBUG: Error loading surah data: $e');
@@ -411,6 +511,45 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
         currentPageIndex++;
       });
     }
+  }
+
+  /// Set initial page index based on page number from backend
+  void _setInitialPageIndex(int targetPageNumber) {
+    print('🎯 DEBUG: Looking for page $targetPageNumber in loaded data');
+    
+    // Find the index of the page with the target page number
+    for (int i = 0; i < surahData.length; i++) {
+      final pageData = surahData[i];
+      final int pageNumber = pageData['pageNumber'] as int;
+      
+      if (pageNumber == targetPageNumber) {
+        print('🎯 DEBUG: Found target page $targetPageNumber at index $i');
+        setState(() {
+          currentPageIndex = i;
+        });
+        return;
+      }
+    }
+    
+    // If target page not found, try to find the closest page
+    int closestIndex = 0;
+    int minDiff = ((surahData[0]['pageNumber'] as int) - targetPageNumber).abs();
+    
+    for (int i = 1; i < surahData.length; i++) {
+      final pageData = surahData[i];
+      final int pageNumber = pageData['pageNumber'] as int;
+      final int diff = (pageNumber - targetPageNumber).abs();
+      
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestIndex = i;
+      }
+    }
+    
+    print('🎯 DEBUG: Target page $targetPageNumber not found exactly, using closest page at index $closestIndex (page ${surahData[closestIndex]['pageNumber']})');
+    setState(() {
+      currentPageIndex = closestIndex;
+    });
   }
 
   /// Clean verse text by removing verse ending markers
@@ -556,6 +695,416 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
     return null;
   }
 
+  /// Determine if Bismillah should be shown for the current page
+  bool _shouldShowBismillah(Map<String, dynamic> pageContent) {
+    final verses = pageContent['verses'] as List<dynamic>;
+    if (verses.isEmpty) return false;
+    
+    final currentSurahNumber = verses.first['sura_no'] as int;
+    
+    // Special case: At-Tawbah (Surah 9) never has Bismillah
+    if (currentSurahNumber == 9) {
+      return false;
+    }
+    
+    // Check if this is the beginning of a new surah
+    // We show Bismillah if:
+    // 1. This is the first page of the session and we're starting from page 1
+    // 2. OR this page starts a new surah (first verse is verse 1 of the surah)
+    
+    final firstVerse = verses.first;
+    final firstVerseNumber = firstVerse['aya_no'] as int;
+    
+    // If the first verse on this page is verse 1, it's the start of a surah
+    if (firstVerseNumber == 1) {
+      print('📖 DEBUG: Showing Bismillah for start of Surah $currentSurahNumber');
+      return true;
+    }
+    
+    // For continuing khitma: Show Bismillah only if starting from page 1 of first surah
+    if (currentPageIndex == 0 && (widget.startFromPage == null || widget.startFromPage == 1)) {
+      print('📖 DEBUG: Showing Bismillah for first page of session');
+      return true;
+    }
+    
+    return false;
+  }
+
+  /// Calculate which Juzz (Para) the current page belongs to
+  int _getJuzzForPage(int page) {
+    // Approximate Juzz boundaries based on page numbers
+    // This is a rough mapping - for precise mapping, you'd use a proper Juzz-to-page lookup table
+    if (page <= 21) return 1;
+    if (page <= 41) return 2;
+    if (page <= 62) return 3;
+    if (page <= 82) return 4;
+    if (page <= 102) return 5;
+    if (page <= 122) return 6;
+    if (page <= 142) return 7;
+    if (page <= 162) return 8;
+    if (page <= 182) return 9;
+    if (page <= 202) return 10;
+    if (page <= 222) return 11;
+    if (page <= 242) return 12;
+    if (page <= 262) return 13;
+    if (page <= 282) return 14;
+    if (page <= 302) return 15;
+    if (page <= 322) return 16;
+    if (page <= 342) return 17;
+    if (page <= 362) return 18;
+    if (page <= 382) return 19;
+    if (page <= 402) return 20;
+    if (page <= 422) return 21;
+    if (page <= 442) return 22;
+    if (page <= 462) return 23;
+    if (page <= 482) return 24;
+    if (page <= 502) return 25;
+    if (page <= 522) return 26;
+    if (page <= 542) return 27;
+    if (page <= 562) return 28;
+    if (page <= 582) return 29;
+    return 30; // Pages 583-604
+  }
+
+  /// Get list of pages for given Juz numbers (for group reading mode)
+  List<int> _getPagesForJuz(List<int> juzNumbers) {
+    final Set<int> pages = <int>{};
+    
+    // Juz to page range mapping based on standard Mushaf
+    final Map<int, List<int>> juzPageRanges = {
+      1: List.generate(21, (i) => i + 1), // Pages 1-21
+      2: List.generate(20, (i) => i + 22), // Pages 22-41
+      3: List.generate(21, (i) => i + 42), // Pages 42-62
+      4: List.generate(20, (i) => i + 63), // Pages 63-82
+      5: List.generate(20, (i) => i + 83), // Pages 83-102
+      6: List.generate(20, (i) => i + 103), // Pages 103-122
+      7: List.generate(20, (i) => i + 123), // Pages 123-142
+      8: List.generate(20, (i) => i + 143), // Pages 143-162
+      9: List.generate(20, (i) => i + 163), // Pages 163-182
+      10: List.generate(20, (i) => i + 183), // Pages 183-202
+      11: List.generate(20, (i) => i + 203), // Pages 203-222
+      12: List.generate(20, (i) => i + 223), // Pages 223-242
+      13: List.generate(20, (i) => i + 243), // Pages 243-262
+      14: List.generate(20, (i) => i + 263), // Pages 263-282
+      15: List.generate(20, (i) => i + 283), // Pages 283-302
+      16: List.generate(20, (i) => i + 303), // Pages 303-322
+      17: List.generate(20, (i) => i + 323), // Pages 323-342
+      18: List.generate(20, (i) => i + 343), // Pages 343-362
+      19: List.generate(20, (i) => i + 363), // Pages 363-382
+      20: List.generate(20, (i) => i + 383), // Pages 383-402
+      21: List.generate(20, (i) => i + 403), // Pages 403-422
+      22: List.generate(20, (i) => i + 423), // Pages 423-442
+      23: List.generate(20, (i) => i + 443), // Pages 443-462
+      24: List.generate(20, (i) => i + 463), // Pages 463-482
+      25: List.generate(20, (i) => i + 483), // Pages 483-502
+      26: List.generate(20, (i) => i + 503), // Pages 503-522
+      27: List.generate(20, (i) => i + 523), // Pages 523-542
+      28: List.generate(20, (i) => i + 543), // Pages 543-562
+      29: List.generate(20, (i) => i + 563), // Pages 563-582
+      30: List.generate(22, (i) => i + 583), // Pages 583-604
+    };
+    
+    // Collect pages for all assigned Juz
+    for (final juzNumber in juzNumbers) {
+      if (juzPageRanges.containsKey(juzNumber)) {
+        pages.addAll(juzPageRanges[juzNumber]!);
+      }
+    }
+    
+    return pages.toList()..sort();
+  }
+
+  /// Save group khitma progress to backend
+  Future<void> _saveGroupKhitmaProgress() async {
+    if (!widget.isGroupKhitma || widget.groupId == null) {
+      print('❌ DEBUG: Not a group khitma or missing group ID');
+      return;
+    }
+
+    final currentPageContent = _getCurrentPageContent();
+    if (currentPageContent == null) {
+      print('❌ DEBUG: No current page content available');
+      return;
+    }
+
+    try {
+      print('💾 DEBUG: Saving group khitma progress...');
+      
+      final verses = currentPageContent['verses'] as List<dynamic>;
+      if (verses.isEmpty) {
+        print('❌ DEBUG: No verses found in current page');
+        return;
+      }
+
+      // Calculate progress details
+      final int currentPage = currentPageContent['pageNumber'] as int;
+      final int currentSurah = verses.first['sura_no'] as int;
+      final int currentJuzz = _getJuzzForPage(currentPage);
+      
+      // Get first and last verse numbers
+      final int? startVerse = verses.first['aya_no'] as int?;
+      final int? endVerse = verses.last['aya_no'] as int?;
+
+      print('📊 DEBUG: Group Progress details:');
+      print('   - Group ID: ${widget.groupId}');
+      print('   - Current Juzz: $currentJuzz');
+      print('   - Current Surah: $currentSurah');
+      print('   - Current Page: $currentPage');
+      print('   - Start/End Verses: $startVerse-$endVerse');
+      print('   - Assigned Juz: ${widget.assignedJuz}');
+
+      // For group khitma, we'll use a specific API method for saving group progress
+      // This method should be added to ApiClient
+      final response = await ApiClient.instance.saveGroupKhitmaProgress(
+        groupId: widget.groupId!,
+        juzzRead: currentJuzz,
+        surahRead: currentSurah,
+        pageRead: currentPage,
+        startVerse: startVerse,
+        endVerse: endVerse,
+        notes: null,
+      );
+
+      if (response.ok) {
+        print('✅ DEBUG: Group progress saved successfully!');
+        final responseData = response.data as Map<String, dynamic>;
+        
+        if (mounted) {
+          _showGroupProgressSavedSnackbar();
+        }
+      } else {
+        print('❌ DEBUG: Failed to save group progress: ${response.error}');
+        if (mounted) {
+          _showErrorSnackbar(response.error ?? 'Failed to save group progress');
+        }
+      }
+    } catch (e, stackTrace) {
+      print('❌ DEBUG: Exception while saving group progress: $e');
+      print('❌ DEBUG: Stack trace: $stackTrace');
+      if (mounted) {
+        _showErrorSnackbar('Failed to save group progress. Please try again.');
+      }
+    }
+  }
+
+  /// Save personal khitma progress to backend
+  Future<void> _savePersonalKhitmaProgress() async {
+    if (!widget.isPersonalKhitma || widget.personalKhitmaId == null) {
+      print('❌ DEBUG: Not a personal khitma or missing khitma ID');
+      return;
+    }
+
+    final currentPageContent = _getCurrentPageContent();
+    if (currentPageContent == null) {
+      print('❌ DEBUG: No current page content available');
+      return;
+    }
+
+    try {
+      print('💾 DEBUG: Saving personal khitma progress...');
+      
+      final verses = currentPageContent['verses'] as List<dynamic>;
+      if (verses.isEmpty) {
+        print('❌ DEBUG: No verses found in current page');
+        return;
+      }
+
+      // Calculate progress details
+      final int currentPage = currentPageContent['pageNumber'] as int;
+      final int currentSurah = verses.first['sura_no'] as int;
+      final int currentJuzz = _getJuzzForPage(currentPage);
+      
+      // For personal khitma, we track reading from first page of current session
+      final int startPage = currentPageIndex == 0 ? currentPage : currentPage;
+      final int endPage = currentPage;
+      
+      // Get first and last verse numbers
+      final int? startVerse = verses.first['aya_no'] as int?;
+      final int? endVerse = verses.last['aya_no'] as int?;
+
+      print('📊 DEBUG: Progress details:');
+      print('   - Khitma ID: ${widget.personalKhitmaId}');
+      print('   - Current Juzz: $currentJuzz');
+      print('   - Current Surah: $currentSurah');
+      print('   - Current Page: $currentPage');
+      print('   - Start/End Pages: $startPage-$endPage');
+      print('   - Start/End Verses: $startVerse-$endVerse');
+
+      final response = await ApiClient.instance.savePersonalKhitmaProgress(
+        khitmaId: widget.personalKhitmaId!,
+        juzzRead: currentJuzz,
+        surahRead: currentSurah,
+        startPage: startPage,
+        endPage: endPage,
+        startVerse: startVerse,
+        endVerse: endVerse,
+        readingDurationMinutes: null, // We don't track time in this simple implementation
+        notes: null,
+      );
+
+      if (response.ok) {
+        print('✅ DEBUG: Progress saved successfully!');
+        final responseData = response.data as Map<String, dynamic>;
+        final khitmaData = responseData['khitma'] as Map<String, dynamic>;
+        
+        // Check if khitma was completed
+        final bool isCompleted = khitmaData['is_completed'] == true;
+        final double completionPercentage = (khitmaData['completion_percentage'] as num?)?.toDouble() ?? 0.0;
+        
+        if (mounted) {
+          if (isCompleted) {
+            _showKhitmaCompletedDialog(completionPercentage);
+          } else {
+            _showProgressSavedSnackbar(completionPercentage);
+          }
+        }
+      } else {
+        print('❌ DEBUG: Failed to save progress: ${response.error}');
+        if (mounted) {
+          _showErrorSnackbar(response.error ?? 'Failed to save progress');
+        }
+      }
+    } catch (e, stackTrace) {
+      print('❌ DEBUG: Exception while saving progress: $e');
+      print('❌ DEBUG: Stack trace: $stackTrace');
+      if (mounted) {
+        _showErrorSnackbar('Failed to save progress. Please try again.');
+      }
+    }
+  }
+
+  /// Show khitma completed dialog
+  void _showKhitmaCompletedDialog(double completionPercentage) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Consumer<LanguageProvider>(
+        builder: (context, languageProvider, child) => AlertDialog(
+          title: Text(
+            languageProvider.isArabic ? '🎉 تهانينا!' : '🎉 Congratulations!',
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                languageProvider.isArabic
+                    ? 'لقد أكملت ختمة القرآن الكريم!'
+                    : 'You have completed your Quran Khitma!',
+                style: const TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '${completionPercentage.toStringAsFixed(1)}%',
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF4A148C),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                languageProvider.isArabic ? 'مكتملة' : 'Complete',
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+                Navigator.of(context).pop(); // Close reading screen
+              },
+              child: Text(
+                languageProvider.isArabic ? 'العودة للرئيسية' : 'Back to Home',
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Show group progress saved snackbar
+  void _showGroupProgressSavedSnackbar() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Consumer<LanguageProvider>(
+          builder: (context, languageProvider, child) => Text(
+            languageProvider.isArabic
+                ? 'تم حفظ تقدم الختمة الجماعية بنجاح!'
+                : 'Group khitma progress saved successfully!',
+            style: const TextStyle(
+              color: Color(0xFF2D1B69),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        backgroundColor: const Color(0xFFF7F3E8),
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  /// Show progress saved snackbar
+  void _showProgressSavedSnackbar(double completionPercentage) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Consumer<LanguageProvider>(
+          builder: (context, languageProvider, child) => Text(
+            languageProvider.isArabic
+                ? 'تم حفظ تقدم الختمة بنجاح! (${completionPercentage.toStringAsFixed(1)}% مكتمل)'
+                : 'Khitma progress saved successfully! (${completionPercentage.toStringAsFixed(1)}% complete)',
+            style: const TextStyle(
+              color: Color(0xFF2D1B69),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        backgroundColor: const Color(0xFFF7F3E8),
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  /// Show error snackbar
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        backgroundColor: const Color(0xFF8B3A3A), // Muted red that fits your palette
+        duration: const Duration(seconds: 4),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer2<ThemeProvider, LanguageProvider>(
@@ -594,31 +1143,81 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                 ),
               ),
               child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Color(0xFF4A148C),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      errorMessage!,
-                      style: const TextStyle(
-                        color: Color(0xFF4A148C),
-                        fontSize: 16,
+                child: Container(
+                  margin: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(
-                        languageProvider.isArabic ? 'العودة' : 'Go Back',
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red[600],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      Text(
+                        languageProvider.isArabic ? 'خطأ في التحميل' : 'Loading Error',
+                        style: TextStyle(
+                          color: Colors.red[700],
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        errorMessage!,
+                        style: TextStyle(
+                          color: Colors.grey[800],
+                          fontSize: 16,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                isLoading = true;
+                                errorMessage = null;
+                              });
+                              _loadSurahData();
+                            },
+                            icon: const Icon(Icons.refresh),
+                            label: Text(
+                              languageProvider.isArabic ? 'إعادة المحاولة' : 'Retry',
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF4A148C),
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                          OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text(
+                              languageProvider.isArabic ? 'العودة' : 'Go Back',
+                              style: const TextStyle(
+                                color: Color(0xFF4A148C),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -684,9 +1283,17 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                               ),
                               Expanded(
                                 child: Text(
-                                  languageProvider.isArabic
-                                      ? 'الورد اليومي'
-                                      : 'Daily Wered',
+                                  widget.isPersonalKhitma
+                                      ? (languageProvider.isArabic
+                                          ? 'الختمة الشخصية'
+                                          : 'Personal Khitma')
+                                      : widget.isGroupKhitma
+                                          ? (languageProvider.isArabic
+                                              ? 'الختمة الجماعية'
+                                              : 'Group Khitma')
+                                          : (languageProvider.isArabic
+                                              ? 'الورد اليومي'
+                                              : 'Daily Wered'),
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: themeProvider.isDarkMode
@@ -778,10 +1385,11 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                                     child: Column(
                                       mainAxisSize: MainAxisSize.min, // Make column size fit content
                                       children: [
+                                        const SizedBox(height: 6), // Minimal top spacing for maximum content area
                                         if (currentPageContent != null) ...[
-                                          // Surah title - using hardcoded Arabic name with proper typography
+                                          // Surah title - dynamically get from current page content
                                           Text(
-                                            _getArabicSurahName(widget.selectedSurahs.first) ?? currentPageContent!['surahNameAr'],
+                                            _getArabicSurahName(currentPageContent!['surahName']) ?? currentPageContent!['surahNameAr'],
                                             style: const TextStyle(
                                               fontFamily: 'Amiri',
                                               fontSize: 36,
@@ -793,10 +1401,10 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                                             textAlign: TextAlign.center,
                                             textDirection: TextDirection.rtl,
                                           ),
-                                          const SizedBox(height: 20), // Equal spacing before Bismillah
+                                          const SizedBox(height: 17), // Slightly reduced spacing before Bismillah
                                           
-                                          // Standard Bismillah - only show on first page
-                                          if (currentPageIndex == 0) const Text(
+                                          // Show Bismillah when appropriate
+                                          if (_shouldShowBismillah(currentPageContent!)) const Text(
                                             'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
                                             style: TextStyle(
                                               fontFamily: 'Amiri',
@@ -809,7 +1417,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                                             textAlign: TextAlign.center,
                                             textDirection: TextDirection.rtl,
                                           ),
-                                          const SizedBox(height: 20), // Equal spacing after Bismillah
+                                          if (_shouldShowBismillah(currentPageContent!)) const SizedBox(height: 20), // Equal spacing after Bismillah
                                           
                                           // Verses - continuous flow with inline numbers and center alignment
                                           RichText(
@@ -876,81 +1484,135 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                                     size: 45,
                                   ),
                                 ),
+                                
+                                // Juz information at bottom center
+                                if (currentPageContent != null) Positioned(
+                                  bottom: 2,
+                                  left: 0,
+                                  right: 0,
+                                  child: Consumer<LanguageProvider>(
+                                    builder: (context, langProvider, child) {
+                                      final currentPageNumber = currentPageContent!['pageNumber'] as int;
+                                      final currentJuz = _getJuzzForPage(currentPageNumber);
+                                      
+                                      return Text(
+                                        langProvider.isArabic
+                                            ? 'جُزْءُ $currentJuz'
+                                            : 'Juz $currentJuz',
+                                        style: const TextStyle(
+                                          fontFamily: 'Amiri',
+                                          fontSize: 12,
+                                          height: 1.2,
+                                          letterSpacing: 0,
+                                          color: Color(0xFF999999),
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                        textDirection: langProvider.isArabic ? TextDirection.rtl : TextDirection.ltr,
+                                      );
+                                    },
+                                  ),
+                                ),
                               ],
                             ),
                             ),
                           ),
                         ),
-                        // Action buttons - compact
+                        // Action buttons - conditional based on mode
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                           child: Row(
-                            children: [
-                              // Save Wered button - hidden but not removed
-                              // Expanded(
-                              //   child: SizedBox(
-                              //     height: 42,
-                              //     child: ElevatedButton(
-                              //       onPressed: () {
-                              //         // Handle save wered
-                              //         ScaffoldMessenger.of(context).showSnackBar(
-                              //           SnackBar(
-                              //             content: Text(
-                              //               languageProvider.isArabic
-                              //                   ? 'تم حفظ الورد بنجاح!'
-                              //                   : 'Wered saved successfully!',
-                              //             ),
-                              //           ),
-                              //         );
-                              //       },
-                              //       style: ElevatedButton.styleFrom(
-                              //         backgroundColor: const Color(0xFFF7F3E8),
-                              //         foregroundColor: const Color(0xFF2D1B69),
-                              //         shape: RoundedRectangleBorder(
-                              //           borderRadius: BorderRadius.circular(10),
-                              //         ),
-                              //       ),
-                              //       child: Text(
-                              //         languageProvider.isArabic
-                              //             ? 'حفظ الورد'
-                              //             : 'Save Wered',
-                              //         style: const TextStyle(
-                              //           fontSize: 14,
-                              //           fontWeight: FontWeight.w600,
-                              //         ),
-                              //       ),
-                              //     ),
-                              //   ),
-                              // ),
-                              // const SizedBox(width: 8),
-                              // Change Surah button - now takes full width
-                              Expanded(
-                                child: SizedBox(
-                                  height: 42,
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFFF7F3E8),
-                                      foregroundColor: const Color(0xFF2D1B69),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
+                            children: widget.isPersonalKhitma
+                                ? [
+                                    // Personal Khitma: Show Save Progress button only
+                                    Expanded(
+                                      child: SizedBox(
+                                        height: 42,
+                                        child: ElevatedButton(
+                                          onPressed: () async {
+                                            // Handle save personal khitma progress
+                                            await _savePersonalKhitmaProgress();
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: const Color(0xFFF7F3E8),
+                                            foregroundColor: const Color(0xFF2D1B69),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            languageProvider.isArabic
+                                                ? 'حفظ التقدم'
+                                                : 'Save Progress',
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                    child: Text(
-                                      languageProvider.isArabic
-                                          ? 'تغيير السورة'
-                                          : 'Change Surah',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
+                                  ]
+                                : widget.isGroupKhitma
+                                    ? [
+                                        // Group Khitma: Show Save Progress button only
+                                        Expanded(
+                                          child: SizedBox(
+                                            height: 42,
+                                            child: ElevatedButton(
+                                              onPressed: () async {
+                                                // Handle save group khitma progress
+                                                await _saveGroupKhitmaProgress();
+                                              },
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: const Color(0xFFF7F3E8),
+                                                foregroundColor: const Color(0xFF2D1B69),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(10),
+                                                ),
+                                              ),
+                                              child: Text(
+                                                languageProvider.isArabic
+                                                    ? 'حفظ التقدم'
+                                                    : 'Save Progress',
+                                                style: const TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ]
+                                    : [
+                                        // Daily Wered: Show Change Surah button only
+                                        Expanded(
+                                          child: SizedBox(
+                                            height: 42,
+                                            child: ElevatedButton(
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                              },
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: const Color(0xFFF7F3E8),
+                                                foregroundColor: const Color(0xFF2D1B69),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(10),
+                                                ),
+                                              ),
+                                              child: Text(
+                                                languageProvider.isArabic
+                                                    ? 'تغيير السورة'
+                                                    : 'Change Surah',
+                                                style: const TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                           ),
                         ),
                       ],

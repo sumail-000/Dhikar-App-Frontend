@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
+import 'wered_reading_screen.dart';
+import 'services/api_client.dart';
 
 class NewKhitmaScreen extends StatefulWidget {
   const NewKhitmaScreen({super.key});
@@ -30,6 +32,7 @@ class _NewKhitmaScreenState extends State<NewKhitmaScreen> {
   @override
   void initState() {
     super.initState();
+    _checkForActiveKhitma();
     // Listen to changes in custom input
     daysController.addListener(() {
       setState(() {
@@ -39,6 +42,186 @@ class _NewKhitmaScreenState extends State<NewKhitmaScreen> {
         }
       });
     });
+  }
+
+  /// Check if user already has an active personal khitma
+  Future<void> _checkForActiveKhitma() async {
+    try {
+      final response = await ApiClient.instance.getActivePersonalKhitma();
+      
+      if (response.ok && mounted) {
+        final activeKhitma = response.data['active_khitma'];
+        
+        if (activeKhitma != null) {
+          // User has an active khitma, show dialog
+          _showActiveKhitmaDialog(activeKhitma);
+        }
+      }
+    } catch (e) {
+      // Ignore errors for now, user can proceed with creating new khitma
+      print('Error checking for active khitma: $e');
+    }
+  }
+
+  /// Show dialog informing user about existing active khitma
+  void _showActiveKhitmaDialog(Map<String, dynamic> activeKhitma) {
+    if (!mounted) return;
+    
+    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    
+    final String khitmaName = activeKhitma['khitma_name'] ?? 'Personal Khitma';
+    final double completionPercentage = (activeKhitma['completion_percentage'] as num?)?.toDouble() ?? 0.0;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: themeProvider.isDarkMode
+            ? const Color(0xFF2D1B69)
+            : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          languageProvider.isArabic
+              ? '⚠️ ختمة جارية'
+              : '⚠️ Active Khitma',
+          style: TextStyle(
+            color: themeProvider.isDarkMode
+                ? Colors.white
+                : const Color(0xFF2D1B69),
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              languageProvider.isArabic
+                  ? 'لديك ختمة نشطة بالفعل:'
+                  : 'You already have an active khitma:',
+              style: TextStyle(
+                color: themeProvider.isDarkMode
+                    ? Colors.white.withOpacity(0.9)
+                    : Colors.grey[700],
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: themeProvider.isDarkMode
+                    ? Colors.white.withOpacity(0.1)
+                    : Colors.grey.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    khitmaName,
+                    style: TextStyle(
+                      color: themeProvider.isDarkMode
+                          ? Colors.white
+                          : const Color(0xFF2D1B69),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    languageProvider.isArabic
+                        ? 'مكتمل ${completionPercentage.toStringAsFixed(1)}%'
+                        : '${completionPercentage.toStringAsFixed(1)}% Complete',
+                    style: TextStyle(
+                      color: themeProvider.isDarkMode
+                          ? Colors.white.withOpacity(0.8)
+                          : Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              languageProvider.isArabic
+                  ? 'لا يمكنك بدء ختمة جديدة حتى تكمل الختمة الحالية أو توقفها مؤقتاً.'
+                  : 'You cannot start a new khitma until you complete or pause your current one.',
+              style: TextStyle(
+                color: themeProvider.isDarkMode
+                    ? Colors.white.withOpacity(0.9)
+                    : Colors.grey[700],
+                fontSize: 14,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close dialog
+              _continueActiveKhitma(activeKhitma);
+            },
+            child: Text(
+              languageProvider.isArabic
+                  ? 'متابعة القراءة'
+                  : 'Continue Reading',
+              style: TextStyle(
+                color: themeProvider.isDarkMode
+                    ? const Color(0xFF8B5CF6)
+                    : const Color(0xFF2D5A27),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close dialog
+              Navigator.of(context).pop(); // Go back to home
+            },
+            child: Text(
+              languageProvider.isArabic
+                  ? 'العودة للرئيسية'
+                  : 'Back to Home',
+              style: TextStyle(
+                color: themeProvider.isDarkMode
+                    ? Colors.white.withOpacity(0.7)
+                    : Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Navigate to continue reading the active khitma
+  void _continueActiveKhitma(Map<String, dynamic> activeKhitma) {
+    final int khitmaId = activeKhitma['id'] as int;
+    final int currentPage = activeKhitma['current_page'] as int;
+    final int totalDays = activeKhitma['total_days'] as int;
+    
+    // Navigate to WeredReadingScreen with current position
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WeredReadingScreen(
+          selectedSurahs: ['Al-Fatihah'], // Start from beginning (will be corrected by currentPage)
+          pages: '604', // Total Quran pages
+          isPersonalKhitma: true, // Personal Khitma mode
+          khitmaDays: totalDays, // Selected days
+          personalKhitmaId: khitmaId, // Pass the khitma ID
+          startFromPage: currentPage, // Continue from current page
+        ),
+      ),
+    );
   }
 
   @override
@@ -190,12 +373,15 @@ class _NewKhitmaScreenState extends State<NewKhitmaScreen> {
                             // Predefined options
                             ...khitmaOptions.map((option) {
                               final isSelected = selectedDays == option['days'];
+                              final isDisabled = isCustomInputActive && !isSelected;
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 8),
                                 child: InkWell(
-                                  onTap: () {
+                                  onTap: isDisabled ? null : () {
                                     setState(() {
                                       selectedDays = option['days'];
+                                      daysController.clear(); // Clear custom input
+                                      isCustomInputActive = false;
                                     });
                                   },
                                   child: Container(
@@ -307,19 +493,91 @@ class _NewKhitmaScreenState extends State<NewKhitmaScreen> {
                                     agreedToTerms &&
                                         (selectedDays != null ||
                                             daysController.text.isNotEmpty)
-                                    ? () {
-                                        // Handle start khitma
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
+                                        ? () async {
+                                        // Get selected days - either from preset or custom input
+                                        final int totalDays = selectedDays ?? 
+                                            (int.tryParse(daysController.text) ?? 30);
+                                        
+                                        // Show loading
+                                        ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
                                             content: Text(
                                               languageProvider.isArabic
-                                                  ? 'تم بدء الختمة بنجاح'
-                                                  : 'Khitma started successfully',
+                                                  ? 'جاري إنشاء الختمة...'
+                                                  : 'Creating khitma...',
                                             ),
+                                            duration: const Duration(seconds: 1),
                                           ),
                                         );
+                                        
+                                        try {
+                                          // Create personal khitma via API
+                                          final response = await ApiClient.instance.createPersonalKhitma(
+                                            khitmaName: languageProvider.isArabic
+                                                ? 'ختمة شخصية - $totalDays يوم'
+                                                : 'Personal Khitma - $totalDays days',
+                                            totalDays: totalDays,
+                                          );
+                                          
+                                          if (response.ok && mounted) {
+                                            final khitmaData = response.data['khitma'] as Map<String, dynamic>;
+                                            final int khitmaId = khitmaData['id'] as int;
+                                            
+                                            // Show success message
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  languageProvider.isArabic
+                                                      ? 'تم بدء الختمة بنجاح!'
+                                                      : 'Personal Khitma started successfully!',
+                                                ),
+                                                duration: const Duration(seconds: 2),
+                                                backgroundColor: const Color(0xFF4A148C),
+                                              ),
+                                            );
+                                            
+                                            // Navigate to WeredReadingScreen in Personal Khitma mode
+                                            Navigator.pushReplacement(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => WeredReadingScreen(
+                                                  selectedSurahs: ['Al-Fatihah'], // Start from beginning
+                                                  pages: '604', // Total Quran pages
+                                                  isPersonalKhitma: true, // Personal Khitma mode
+                                                  khitmaDays: totalDays, // Selected days
+                                                  personalKhitmaId: khitmaId, // Pass the created khitma ID
+                                                ),
+                                              ),
+                                            );
+                                          } else if (mounted) {
+                                            // Show error message
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  response.error ?? (languageProvider.isArabic
+                                                      ? 'فشل في إنشاء الختمة'
+                                                      : 'Failed to create khitma'),
+                                                ),
+                                                backgroundColor: Colors.red,
+                                                duration: const Duration(seconds: 3),
+                                              ),
+                                            );
+                                          }
+                                        } catch (e) {
+                                          if (mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  languageProvider.isArabic
+                                                      ? 'خطأ في الاتصال. يرجى المحاولة مرة أخرى.'
+                                                      : 'Connection error. Please try again.',
+                                                ),
+                                                backgroundColor: Colors.red,
+                                                duration: const Duration(seconds: 3),
+                                              ),
+                                            );
+                                          }
+                                        }
                                       }
                                     : null,
                                 style: ElevatedButton.styleFrom(
@@ -363,6 +621,101 @@ class _NewKhitmaScreenState extends State<NewKhitmaScreen> {
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+
+  void _showKhitmaInfoDialog(BuildContext context, ThemeProvider themeProvider, LanguageProvider languageProvider) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: themeProvider.isDarkMode
+              ? const Color(0xFF2D1B69)
+              : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            languageProvider.isArabic
+                ? 'معلومات الختمة الجديدة'
+                : 'New Khitma Information',
+            style: TextStyle(
+              color: themeProvider.isDarkMode
+                  ? Colors.white
+                  : const Color(0xFF2D1B69),
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  languageProvider.isArabic
+                      ? 'الختمة هي قراءة القرآن الكريم كاملاً في فترة زمنية محددة. يمكنك اختيار عدد الأيام أو إدخال رقم مخصص.'
+                      : 'A Khitma is completing the entire Quran within a specific time period. You can choose from preset days or enter a custom number.',
+                  style: TextStyle(
+                    color: themeProvider.isDarkMode
+                        ? Colors.white.withOpacity(0.9)
+                        : Colors.grey[700],
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  languageProvider.isArabic
+                      ? 'الخيارات المتاحة:'
+                      : 'Available Options:',
+                  style: TextStyle(
+                    color: themeProvider.isDarkMode
+                        ? Colors.white
+                        : const Color(0xFF2D1B69),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ...[
+                  {'days': '1', 'juzz': '30'},
+                  {'days': '2', 'juzz': '15'},
+                  {'days': '3', 'juzz': '10'},
+                  {'days': '30', 'juzz': '1'},
+                ].map((option) => Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        languageProvider.isArabic
+                            ? '• ${option['days']} ${option['days'] == '1' ? 'يوم' : 'أيام'}: ${option['juzz']} ${option['juzz'] == '1' ? 'جزء' : 'جزء'} يومياً'
+                            : '• ${option['days']} ${option['days'] == '1' ? 'Day' : 'Days'}: ${option['juzz']} Juzz daily',
+                        style: TextStyle(
+                          color: themeProvider.isDarkMode
+                              ? Colors.white.withOpacity(0.8)
+                              : Colors.grey[600],
+                          fontSize: 13,
+                        ),
+                      ),
+                    )),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                languageProvider.isArabic ? 'حسناً' : 'OK',
+                style: TextStyle(
+                  color: themeProvider.isDarkMode
+                      ? const Color(0xFF8B5CF6)
+                      : const Color(0xFF2D5A27),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
         );
       },
     );

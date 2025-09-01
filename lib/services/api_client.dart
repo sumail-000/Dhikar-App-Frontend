@@ -5,8 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiClient {
   ApiClient._();
   static final ApiClient instance = ApiClient._();
-
-  // TODO: adjust to your backend host when deploying
+  
   static const String baseUrl = String.fromEnvironment('API_BASE', defaultValue: 'http://192.168.1.5:8000/api');
 
   Future<String?> _getToken() async {
@@ -305,6 +304,110 @@ class ApiClient {
   // Quran/Juz meta (Uthmani Hafs)
   Future<_ApiResponse> khitmaJuzPages() {
     return _request('GET', '/khitma/juz-pages', auth: true);
+  }
+
+  // ===== Personal Khitma =====
+
+  /// Get all personal khitmas for current user
+  Future<_ApiResponse> getPersonalKhitmas() {
+    return _request('GET', '/personal-khitma', auth: true);
+  }
+
+  /// Create a new personal khitma
+  Future<_ApiResponse> createPersonalKhitma({
+    required String khitmaName,
+    required int totalDays,
+    String? startDate, // 'YYYY-MM-DD' format
+  }) {
+    final body = <String, dynamic>{
+      'khitma_name': khitmaName,
+      'total_days': totalDays,
+    };
+    if (startDate != null) body['start_date'] = startDate;
+    return _request('POST', '/personal-khitma', auth: true, body: jsonEncode(body));
+  }
+
+  /// Get specific personal khitma details
+  Future<_ApiResponse> getPersonalKhitma(int id) {
+    return _request('GET', '/personal-khitma/$id', auth: true);
+  }
+
+  /// Save reading progress for a personal khitma
+  Future<_ApiResponse> savePersonalKhitmaProgress({
+    required int khitmaId,
+    required int juzzRead,
+    required int surahRead,
+    required int startPage,
+    required int endPage,
+    int? startVerse,
+    int? endVerse,
+    int? readingDurationMinutes,
+    String? notes,
+  }) {
+    final body = <String, dynamic>{
+      'juzz_read': juzzRead,
+      'surah_read': surahRead,
+      'start_page': startPage,
+      'end_page': endPage,
+    };
+    if (startVerse != null) body['start_verse'] = startVerse;
+    if (endVerse != null) body['end_verse'] = endVerse;
+    if (readingDurationMinutes != null) body['reading_duration_minutes'] = readingDurationMinutes;
+    if (notes != null) body['notes'] = notes;
+
+    return _request('POST', '/personal-khitma/$khitmaId/progress', auth: true, body: jsonEncode(body));
+  }
+
+  /// Update personal khitma status (active/paused/completed)
+  Future<_ApiResponse> updatePersonalKhitmaStatus({
+    required int khitmaId,
+    required String status, // 'active', 'paused', or 'completed'
+  }) {
+    return _request('PATCH', '/personal-khitma/$khitmaId/status', auth: true, body: jsonEncode({
+      'status': status,
+    }));
+  }
+
+  /// Delete a personal khitma
+  Future<_ApiResponse> deletePersonalKhitma(int khitmaId) {
+    return _request('DELETE', '/personal-khitma/$khitmaId', auth: true);
+  }
+
+  /// Get reading statistics for a personal khitma
+  Future<_ApiResponse> getPersonalKhitmaStatistics(int khitmaId) {
+    return _request('GET', '/personal-khitma/$khitmaId/statistics', auth: true);
+  }
+
+  /// Get user's active personal khitma (if any)
+  Future<_ApiResponse> getActivePersonalKhitma() {
+    return _request('GET', '/personal-khitma/active', auth: true);
+  }
+
+  /// Save reading progress for a group khitma
+  Future<_ApiResponse> saveGroupKhitmaProgress({
+    required int groupId,
+    required int juzzRead,
+    required int surahRead,
+    required int pageRead,
+    int? startVerse,
+    int? endVerse,
+    String? notes,
+  }) {
+    final body = <String, dynamic>{
+      'juzz_read': juzzRead,
+      'surah_read': surahRead,
+      'page_read': pageRead,
+    };
+    if (startVerse != null) body['start_verse'] = startVerse;
+    if (endVerse != null) body['end_verse'] = endVerse;
+    if (notes != null) body['notes'] = notes;
+
+    return _request('POST', '/groups/$groupId/khitma/progress', auth: true, body: jsonEncode(body));
+  }
+
+  /// Get user's total group khitma statistics across all groups
+  Future<_ApiResponse> getUserGroupKhitmaStats() {
+    return _request('GET', '/user/group-khitma-stats', auth: true);
   }
 }
 

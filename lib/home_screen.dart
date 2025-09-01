@@ -10,6 +10,8 @@ import 'bottom_nav_bar.dart';
 import 'dhikr_screen.dart';
 import 'notification_screen.dart';
 import 'profile_provider.dart';
+import 'wered_reading_screen.dart';
+import 'services/api_client.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -254,15 +256,76 @@ class _ProfileSection extends StatelessWidget {
   }
 }
 
-// Optimized Progress Section
-class _ProgressSection extends StatelessWidget {
+// Optimized Progress Section with Group Khitma Data
+class _ProgressSection extends StatefulWidget {
   const _ProgressSection();
+
+  @override
+  State<_ProgressSection> createState() => _ProgressSectionState();
+}
+
+class _ProgressSectionState extends State<_ProgressSection> {
+  Map<String, dynamic>? groupKhitmaStats;
+  bool isLoadingGroupStats = true;
+  String? groupStatsError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGroupKhitmaStats();
+  }
+
+  Future<void> _loadGroupKhitmaStats() async {
+    try {
+      final response = await ApiClient.instance.getUserGroupKhitmaStats();
+      
+      if (response.ok && mounted) {
+        setState(() {
+          groupKhitmaStats = response.data['stats'];
+          isLoadingGroupStats = false;
+        });
+      } else {
+        if (mounted) {
+          setState(() {
+            groupStatsError = response.error ?? 'Failed to load group stats';
+            isLoadingGroupStats = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          groupStatsError = 'Network error loading group stats';
+          isLoadingGroupStats = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Consumer2<ThemeProvider, DhikrProvider>(
       builder: (context, themeProvider, dhikrProvider, child) {
         final appLocalizations = AppLocalizations.of(context)!;
+
+        // Calculate group khitma progress
+        double groupProgress = 0.0;
+        String groupSubtitle = '0 out of 0';
+        
+        if (!isLoadingGroupStats && groupStatsError == null && groupKhitmaStats != null) {
+          final int totalGroups = groupKhitmaStats!['total_groups'] ?? 0;
+          final int completedGroups = groupKhitmaStats!['completed_groups'] ?? 0;
+          final double averageProgress = (groupKhitmaStats!['average_progress'] ?? 0.0).toDouble();
+          
+          if (totalGroups > 0) {
+            groupProgress = averageProgress / 100; // Convert percentage to decimal
+            groupSubtitle = '$completedGroups out of $totalGroups';
+          }
+        } else if (isLoadingGroupStats) {
+          groupSubtitle = 'Loading...';
+        } else if (groupStatsError != null) {
+          groupSubtitle = 'Error loading';
+        }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -289,10 +352,18 @@ class _ProgressSection extends StatelessWidget {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: _ProgressCard(
-                    title: appLocalizations.khitmaGoal,
-                    progress: 0.0,
-                    subtitle: '0 out of 0',
+                  child: GestureDetector(
+                    onTap: () {
+                      // Navigate to group khitma screen or refresh data
+                      if (groupStatsError != null) {
+                        _loadGroupKhitmaStats();
+                      }
+                    },
+                    child: _ProgressCard(
+                      title: appLocalizations.khitmaGoal,
+                      progress: groupProgress,
+                      subtitle: groupSubtitle,
+                    ),
                   ),
                 ),
               ],
@@ -304,27 +375,100 @@ class _ProgressSection extends StatelessWidget {
   }
 }
 
-// Optimized Progress Card
-class _PersonalKhitmaSection extends StatelessWidget {
+// Personal Khitma Section with Real API Data
+class _PersonalKhitmaSection extends StatefulWidget {
   const _PersonalKhitmaSection();
+
+  @override
+  State<_PersonalKhitmaSection> createState() => _PersonalKhitmaSectionState();
+}
+
+class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
+  Map<String, dynamic>? activeKhitma;
+  bool isLoading = true;
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadActiveKhitma();
+  }
+
+  Future<void> _loadActiveKhitma() async {
+    try {
+      final response = await ApiClient.instance.getActivePersonalKhitma();
+      
+      if (response.ok) {
+        if (mounted) {
+          setState(() {
+            activeKhitma = response.data['active_khitma'];
+            isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            errorMessage = response.error;
+            isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          errorMessage = 'Failed to load khitma data';
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _continueReading() async {
+    if (activeKhitma == null) return;
+    
+    try {
+      final int khitmaId = activeKhitma!['id'] as int;
+      final int currentPage = activeKhitma!['current_page'] as int;
+      final int totalDays = activeKhitma!['total_days'] as int;
+      
+      // Navigate to WeredReadingScreen with current position
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => WeredReadingScreen(
+            selectedSurahs: ['Al-Fatihah'], // Start from beginning (will be corrected by currentPage)
+            pages: '604', // Total Quran pages
+            isPersonalKhitma: true, // Personal Khitma mode
+            khitmaDays: totalDays, // Selected days
+            personalKhitmaId: khitmaId, // Pass the khitma ID
+            startFromPage: currentPage, // Continue from current page
+          ),
+        ),
+      );
+      
+      // Refresh active khitma data when returning from reading screen
+      // This ensures the progress bar and completion percentage are updated in real-time
+      if (mounted) {
+        await _loadActiveKhitma();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to continue reading: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Consumer2<ThemeProvider, LanguageProvider>(
       builder: (context, themeProvider, languageProvider, child) {
-        // Placeholder values until wired to backend
-        final bool hasActive = true; // set to false to simulate no active khitma
-        final int completedJuz = 12; // TODO: wire
-        final int totalJuz = 30;
-        final double progress = (totalJuz == 0) ? 0.0 : (completedJuz / totalJuz).clamp(0.0, 1.0);
-        final String lastJuzLabel = languageProvider.isArabic
-            ? 'آخر قراءة: جزء ${completedJuz + 1}'
-            : 'Last read: Juz ${completedJuz + 1}';
         final String title = languageProvider.isArabic ? 'ختمتي الشخصية' : 'Personal Khitma';
-        final String subtitle = languageProvider.isArabic
-            ? 'التقدم: $completedJuz/$totalJuz'
-            : 'Progress: $completedJuz/$totalJuz';
-
+        
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -347,94 +491,179 @@ class _PersonalKhitmaSection extends StatelessWidget {
                   width: 1,
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Progress text
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          color: themeProvider.homeBoxTextColor,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        '${(progress * 100).round()}%',
-                        style: TextStyle(
-                          color: themeProvider.homeBoxTextColor,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // Progress bar
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(100),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      minHeight: 10,
-                      backgroundColor: themeProvider.progressBackgroundColor,
-                      valueColor: AlwaysStoppedAnimation<Color>(themeProvider.homeProgressColor),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  // Last read label
-                  Text(
-                    hasActive ? lastJuzLabel : (languageProvider.isArabic ? 'لا توجد ختمة نشطة' : 'No active khitma'),
-                    style: TextStyle(
-                      color: themeProvider.homeBoxTextColor,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  // Continue button
-                  SizedBox(
-                    height: 40,
-                    child: ElevatedButton(
-                      onPressed: hasActive
-                          ? () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    languageProvider.isArabic ? 'القراءة قادمة لاحقًا' : 'Reading coming soon',
-                                  ),
-                                ),
-                              );
-                            }
-                          : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: themeProvider.isDarkMode
-                            ? Colors.white.withOpacity(0.15)
-                            : const Color(0xFF2D5A27),
-                        foregroundColor: themeProvider.isDarkMode
-                            ? Colors.white
-                            : Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        languageProvider.isArabic ? 'متابعة القراءة' : 'Continue Reading',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              child: _buildKhitmaContent(themeProvider, languageProvider),
             ),
           ],
         );
       },
+    );
+  }
+  
+  Widget _buildKhitmaContent(ThemeProvider themeProvider, LanguageProvider languageProvider) {
+    if (isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+    
+    if (errorMessage != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            languageProvider.isArabic ? 'خطأ في تحميل البيانات' : 'Error loading data',
+            style: TextStyle(
+              color: themeProvider.homeBoxTextColor,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                isLoading = true;
+                errorMessage = null;
+              });
+              _loadActiveKhitma();
+            },
+            child: Text(
+              languageProvider.isArabic ? 'إعادة المحاولة' : 'Try Again',
+            ),
+          ),
+        ],
+      );
+    }
+    
+    if (activeKhitma == null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            languageProvider.isArabic ? 'لا توجد ختمة نشطة' : 'No active khitma',
+            style: TextStyle(
+              color: themeProvider.homeBoxTextColor,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            languageProvider.isArabic 
+                ? 'ابدأ ختمة جديدة للمتابعة'
+                : 'Start a new khitma to continue',
+            style: TextStyle(
+              color: themeProvider.homeBoxTextColor,
+              fontSize: 12,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      );
+    }
+    
+    // Active khitma exists - show progress and continue button
+    final double completionPercentage = (activeKhitma!['completion_percentage'] as num?)?.toDouble() ?? 0.0;
+    final int currentJuzz = activeKhitma!['current_juzz'] as int;
+    final int currentPage = activeKhitma!['current_page'] as int;
+    final String khitmaName = activeKhitma!['khitma_name'] as String;
+    
+    final String subtitle = languageProvider.isArabic
+        ? 'الصفحة $currentPage - الجزء $currentJuzz'
+        : 'Page $currentPage - Juz $currentJuzz';
+    final String lastReadLabel = languageProvider.isArabic
+        ? 'آخر قراءة: الصفحة $currentPage'
+        : 'Last read: Page $currentPage';
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Khitma name
+        Text(
+          khitmaName,
+          style: TextStyle(
+            color: themeProvider.homeBoxTextColor,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        // Progress text
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              subtitle,
+              style: TextStyle(
+                color: themeProvider.homeBoxTextColor,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              '${completionPercentage.toStringAsFixed(1)}%',
+              style: TextStyle(
+                color: themeProvider.homeBoxTextColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Progress bar
+        ClipRRect(
+          borderRadius: BorderRadius.circular(100),
+          child: LinearProgressIndicator(
+            value: (completionPercentage / 100).clamp(0.0, 1.0),
+            minHeight: 10,
+            backgroundColor: themeProvider.progressBackgroundColor,
+            valueColor: AlwaysStoppedAnimation<Color>(themeProvider.homeProgressColor),
+          ),
+        ),
+        const SizedBox(height: 10),
+        // Last read label
+        Text(
+          lastReadLabel,
+          style: TextStyle(
+            color: themeProvider.homeBoxTextColor,
+            fontSize: 12,
+          ),
+        ),
+        const SizedBox(height: 10),
+        // Continue button
+        SizedBox(
+          height: 40,
+          child: ElevatedButton(
+            onPressed: _continueReading,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: themeProvider.isDarkMode
+                  ? Colors.white.withOpacity(0.15)
+                  : const Color(0xFF2D5A27),
+              foregroundColor: themeProvider.isDarkMode
+                  ? Colors.white
+                  : Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+            child: Text(
+              languageProvider.isArabic ? 'متابعة القراءة' : 'Continue Reading',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -4,6 +4,7 @@ import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'services/api_client.dart';
 import 'profile_provider.dart';
+import 'wered_reading_screen.dart';
 
 class GroupKhitmaJuzzScreen extends StatefulWidget {
   final int? groupId;
@@ -190,6 +191,47 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
         return 'لم يبدأ';
       default:
         return status;
+    }
+  }
+
+  /// Navigate to WeredReadingScreen in Group Reading Mode
+  void _continueReading() async {
+    if (widget.groupId == null || _myAssignedJuz.isEmpty) return;
+    
+    final lang = context.read<LanguageProvider>();
+    final isArabic = lang.isArabic;
+    
+    try {
+      // Navigate to reading screen with group reading mode
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => WeredReadingScreen(
+            selectedSurahs: ['Al-Fatihah'], // Will be overridden by group mode
+            pages: '604', // Will be calculated based on assigned Juz
+            isPersonalKhitma: false, // Not personal khitma
+            isGroupKhitma: true, // Enable group reading mode
+            groupId: widget.groupId!,
+            assignedJuz: _myAssignedJuz, // Pass assigned Juz numbers
+          ),
+        ),
+      );
+      
+      // Refresh data when returning from reading screen
+      if (mounted) {
+        await _fetch();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isArabic ? 'فشل في فتح شاشة القراءة' : 'Failed to open reading screen',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -478,122 +520,39 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
                                         ),
                         ),
 
-                        // Bottom update status section
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // Header label
-                              Container(
-                                height: 24,
-                                alignment: Alignment.centerLeft,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFC2AEEA),
-                                  borderRadius: BorderRadius.circular(3),
+                        // Continue Reading Section for assigned members only
+                        if (_myAssignedJuz.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            child: SizedBox(
+                              width: double.infinity,
+                              height: 44,
+                              child: ElevatedButton.icon(
+                                onPressed: () => _continueReading(),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFF2EDE0),
+                                  foregroundColor: const Color(0xFF2D1B69),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(22),
+                                  ),
+                                  elevation: 0,
                                 ),
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
-                                margin: const EdgeInsets.only(bottom: 8),
-                                child: Text(
-                                  isArabic ? 'تحديث حالة الجزء' : 'Update Your Juz Status',
+                                icon: Icon(
+                                  Icons.book_outlined,
+                                  size: 20,
+                                  color: const Color(0xFF2D1B69),
+                                ),
+                                label: Text(
+                                  isArabic ? 'متابعة القراءة' : 'Continue Reading',
                                   style: const TextStyle(
-                                    fontFamily: 'Manrope',
-                                    fontWeight: FontWeight.w500,
                                     fontSize: 16,
-                                    height: 1.0,
-                                    letterSpacing: 0,
+                                    fontWeight: FontWeight.w600,
                                     color: Color(0xFF2D1B69),
                                   ),
                                 ),
                               ),
-                              // Juz selector
-                              Container(
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: const Color(0xFFCCCCCC), width: 1),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
-                                margin: const EdgeInsets.only(bottom: 8),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<int>(
-                                    value: _selectedJuzNumber,
-                                    isExpanded: true,
-                                    hint: Text(isArabic ? 'اختر الجزء' : 'Select Juz'),
-                                    items: _myAssignedJuz
-                                        .map((j) => DropdownMenuItem<int>(value: j, child: Text(j.toString())))
-                                        .toList(),
-                                    onChanged: (val) {
-                                      setState(() { _selectedJuzNumber = val; });
-                                    },
-                                  ),
-                                ),
-                              ),
-                              // Status selector
-                              Container(
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: const Color(0xFFCCCCCC), width: 1),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
-                                margin: const EdgeInsets.only(bottom: 8),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<String>(
-                                    value: _selectedStatus,
-                                    isExpanded: true,
-                                    items: <String>['Not Started', 'Completed', 'Pages Read']
-                                        .map((s) => DropdownMenuItem<String>(
-                                              value: s,
-                                              child: Text(isArabic
-                                                  ? (s == 'Not Started' ? 'لم يبدأ' : s == 'Completed' ? 'مكتمل' : 'صفحات مقروءة')
-                                                  : s),
-                                            ))
-                                        .toList(),
-                                    onChanged: (val) {
-                                      if (val == null) return;
-                                      setState(() { _selectedStatus = val; });
-                                    },
-                                  ),
-                                ),
-                              ),
-                              if (_selectedStatus == 'Pages Read')
-                                Container(
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: const Color(0xFFCCCCCC), width: 1),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                                  margin: const EdgeInsets.only(bottom: 8),
-                                  child: TextField(
-                                    controller: _pagesReadController,
-                                    keyboardType: TextInputType.number,
-                                    decoration: InputDecoration(
-                                      hintText: isArabic ? 'عدد الصفحات المقروءة' : 'Pages read',
-                                      border: InputBorder.none,
-                                    ),
-                                  ),
-                                ),
-                              // Save button
-                              SizedBox(
-                                height: 36,
-                                child: ElevatedButton(
-                                  onPressed: (_selectedJuzNumber == null || _saving) ? null : _saveStatus,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFF2EDE0),
-                                    foregroundColor: const Color(0xFF2D1B69),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                                    elevation: 0,
-                                  ),
-                                  child: _saving
-                                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                                      : Text(isArabic ? 'حفظ' : 'Save', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
