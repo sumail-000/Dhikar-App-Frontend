@@ -20,7 +20,7 @@ dependencies:
   google_fonts: ^6.2.1
   http: ^1.1.0
   image_picker: ^1.1.2
-  share_plus: ^8.0.3
+  share_plus: ^11.1.0
 
 dev_dependencies:
   flutter_test:
@@ -34,5 +34,4 @@ flutter:
   assets:
     - assets/background_elements/
     - assets/splash/
-    - assets/surah_data.json
     - assets/hafsData_v2-0.json

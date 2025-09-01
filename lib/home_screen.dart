@@ -22,6 +22,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  final GlobalKey<_ProgressSectionState> _progressKey = GlobalKey<_ProgressSectionState>();
+  final GlobalKey<_PersonalKhitmaSectionState> _personalKey = GlobalKey<_PersonalKhitmaSectionState>();
   
   @override
   void initState() {
@@ -112,28 +114,38 @@ class _HomeScreenState extends State<HomeScreen> {
                   SafeArea(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 18.0),
-                      child: SingleChildScrollView(
-                        physics: const BouncingScrollPhysics(),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 18),
-                            // Profile & Notification
-                            const _ProfileSection(),
-                            const SizedBox(height: 14),
-                            // Overall Progress
-                            _ProgressSection(),
-                            const SizedBox(height: 14),
-                            // Personal Khitma (progress + continue button)
-                            _PersonalKhitmaSection(),
-                            const SizedBox(height: 14),
-                            // Current Streak
-                            _StreakSection(),
-                            const SizedBox(height: 14),
-                            // Motivational Verse
-                            _MotivationalVerseSection(),
-                            const SizedBox(height: 20),
-                          ],
+                      child: RefreshIndicator(
+                        onRefresh: () async {
+                          await Future.wait([
+                            _progressKey.currentState?.refresh() ?? Future.value(),
+                            _personalKey.currentState?.refresh() ?? Future.value(),
+                            // Optionally refresh profile in place
+                            context.read<ProfileProvider?>()?.refresh() ?? Future.value(),
+                          ]);
+                        },
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 18),
+                              // Profile & Notification
+                              const _ProfileSection(),
+                              const SizedBox(height: 14),
+                              // Overall Progress
+                              _ProgressSection(key: _progressKey),
+                              const SizedBox(height: 14),
+                              // Personal Khitma (progress + continue button)
+                              _PersonalKhitmaSection(key: _personalKey),
+                              const SizedBox(height: 14),
+                              // Current Streak
+                              _StreakSection(),
+                              const SizedBox(height: 14),
+                              // Motivational Verse
+                              _MotivationalVerseSection(),
+                              const SizedBox(height: 20),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -258,7 +270,7 @@ class _ProfileSection extends StatelessWidget {
 
 // Optimized Progress Section with Group Khitma Data
 class _ProgressSection extends StatefulWidget {
-  const _ProgressSection();
+  const _ProgressSection({Key? key}) : super(key: key);
 
   @override
   State<_ProgressSection> createState() => _ProgressSectionState();
@@ -300,6 +312,10 @@ class _ProgressSectionState extends State<_ProgressSection> {
         });
       }
     }
+  }
+
+  Future<void> refresh() async {
+    await _loadGroupKhitmaStats();
   }
 
   @override
@@ -377,7 +393,7 @@ class _ProgressSectionState extends State<_ProgressSection> {
 
 // Personal Khitma Section with Real API Data
 class _PersonalKhitmaSection extends StatefulWidget {
-  const _PersonalKhitmaSection();
+  const _PersonalKhitmaSection({Key? key}) : super(key: key);
 
   @override
   State<_PersonalKhitmaSection> createState() => _PersonalKhitmaSectionState();
@@ -461,6 +477,10 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
         );
       }
     }
+  }
+
+  Future<void> refresh() async {
+    await _loadActiveKhitma();
   }
 
   @override

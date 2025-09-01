@@ -58,16 +58,16 @@ class ApiClient {
       print('🌐 Making HTTP request...');
       switch (method) {
         case 'GET':
-          resp = await http.get(url, headers: defaultHeaders).timeout(Duration(seconds: 10));
+          resp = await http.get(url, headers: defaultHeaders).timeout(Duration(seconds: 60));
           break;
         case 'POST':
-          resp = await http.post(url, headers: defaultHeaders, body: body).timeout(Duration(seconds: 10));
+          resp = await http.post(url, headers: defaultHeaders, body: body).timeout(Duration(seconds: 60));
           break;
         case 'PATCH':
-          resp = await http.patch(url, headers: defaultHeaders, body: body).timeout(Duration(seconds: 10));
+          resp = await http.patch(url, headers: defaultHeaders, body: body).timeout(Duration(seconds: 60));
           break;
         case 'DELETE':
-          resp = await http.delete(url, headers: defaultHeaders, body: body).timeout(Duration(seconds: 10));
+          resp = await http.delete(url, headers: defaultHeaders, body: body).timeout(Duration(seconds: 60));
           break;
         default:
           throw Exception('Unsupported method');
@@ -424,126 +424,6 @@ class ApiClient {
 
   // ===== Network Diagnostics =====
   
-  /// Test basic connectivity to the server
-  Future<Map<String, dynamic>> testConnectivity() async {
-    final stopwatch = Stopwatch()..start();
-    print('🔍 Testing network connectivity...');
-    
-    final results = <String, dynamic>{
-      'timestamp': DateTime.now().toIso8601String(),
-      'baseUrl': baseUrl,
-    };
-    
-    // Test 1: Basic URL parsing
-    try {
-      final url = Uri.parse('$baseUrl/auth/register');
-      results['urlParsing'] = {
-        'success': true,
-        'host': url.host,
-        'port': url.port,
-        'scheme': url.scheme,
-      };
-      print('✅ URL parsing: ${url.host}:${url.port}');
-    } catch (e) {
-      results['urlParsing'] = {
-        'success': false,
-        'error': e.toString(),
-      };
-      print('❌ URL parsing failed: $e');
-    }
-    
-    // Test 2: Socket connection
-    try {
-      print('🔌 Testing socket connection to 192.168.1.5:8000...');
-      final socket = await Socket.connect('192.168.1.5', 8000, timeout: Duration(seconds: 5));
-      await socket.close();
-      results['socketConnection'] = {
-        'success': true,
-        'latency': stopwatch.elapsedMilliseconds,
-      };
-      print('✅ Socket connection successful (${stopwatch.elapsedMilliseconds}ms)');
-    } catch (e) {
-      results['socketConnection'] = {
-        'success': false,
-        'error': e.toString(),
-        'latency': stopwatch.elapsedMilliseconds,
-      };
-      print('❌ Socket connection failed: $e');
-    }
-    
-    // Test 3: Simple HTTP GET
-    stopwatch.reset();
-    try {
-      print('🌐 Testing HTTP GET request...');
-      final response = await http.get(
-        Uri.parse('http://192.168.1.5:8000/api/auth/register'),
-        headers: {'Accept': 'application/json'}
-      ).timeout(Duration(seconds: 10));
-      results['httpTest'] = {
-        'success': true,
-        'statusCode': response.statusCode,
-        'latency': stopwatch.elapsedMilliseconds,
-        'contentLength': response.body.length,
-        'headers': response.headers,
-      };
-      print('✅ HTTP test: ${response.statusCode} (${stopwatch.elapsedMilliseconds}ms)');
-    } catch (e) {
-      results['httpTest'] = {
-        'success': false,
-        'error': e.toString(),
-        'errorType': e.runtimeType.toString(),
-        'latency': stopwatch.elapsedMilliseconds,
-      };
-      print('❌ HTTP test failed: $e (Type: ${e.runtimeType})');
-    }
-    
-    stopwatch.stop();
-    results['totalTime'] = stopwatch.elapsedMilliseconds;
-    print('🏁 Network diagnostic completed in ${stopwatch.elapsedMilliseconds}ms');
-    
-    return results;
-  }
-  
-  /// Test authentication endpoints specifically
-  Future<Map<String, dynamic>> testAuthEndpoints() async {
-    print('🔐 Testing authentication endpoints...');
-    final results = <String, dynamic>{};
-    
-    // Test register endpoint with invalid data (should get validation error, not network error)
-    try {
-      print('📝 Testing registration endpoint...');
-      final response = await http.post(
-        Uri.parse('http://192.168.1.5:8000/api/auth/register'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode({
-          'username': 'test',
-          'email': 'invalid-email', // This should trigger validation error
-          'password': '123' // Too short, should trigger validation error
-        })
-      ).timeout(Duration(seconds: 10));
-      
-      results['registerTest'] = {
-        'success': true,
-        'statusCode': response.statusCode,
-        'body': response.body,
-        'reachable': true,
-      };
-      print('✅ Register endpoint reachable: ${response.statusCode}');
-    } catch (e) {
-      results['registerTest'] = {
-        'success': false,
-        'error': e.toString(),
-        'errorType': e.runtimeType.toString(),
-        'reachable': false,
-      };
-      print('❌ Register endpoint failed: $e');
-    }
-    
-    return results;
-  }
 }
 
 class _ApiResponse {

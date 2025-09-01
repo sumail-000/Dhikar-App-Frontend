@@ -207,9 +207,12 @@ class _DhikrGroupDetailsScreenState extends State<DhikrGroupDetailsScreen> {
                           Expanded(child: Center(child: Text(isArabic ? 'معرّف المجموعة مفقود' : 'Missing group ID', style: TextStyle(color: textColor))))
                         else
                           Expanded(
-                            child: SingleChildScrollView(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                              child: Column(
+                            child: RefreshIndicator(
+                              onRefresh: _fetch,
+                              child: SingleChildScrollView(
+                                physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
 // Hero Card (modern, frosted glass)
@@ -413,8 +416,8 @@ class _DhikrGroupDetailsScreenState extends State<DhikrGroupDetailsScreen> {
                               ),
                             ),
                           ),
-                      ],
-                    ),
+                        ],
+                      ),
                   ),
                 ],
               ),

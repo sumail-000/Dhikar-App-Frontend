@@ -22,10 +22,6 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
   List<_MemberRow> _rows = [];
   // Member controls
   List<int> _myAssignedJuz = [];
-  int? _selectedJuzNumber;
-  String _selectedStatus = 'Not Started';
-  final TextEditingController _pagesReadController = TextEditingController();
-  bool _saving = false;
 
   @override
   void initState() {
@@ -137,16 +133,12 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
     setState(() {
       _rows = rows;
       _myAssignedJuz = myAssigned ?? [];
-      if (_myAssignedJuz.isNotEmpty && (_selectedJuzNumber == null || !_myAssignedJuz.contains(_selectedJuzNumber))) {
-        _selectedJuzNumber = _myAssignedJuz.first;
-      }
       _loading = false;
     });
   }
 
   @override
   void dispose() {
-    _pagesReadController.dispose();
     super.dispose();
   }
 
@@ -233,59 +225,6 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
         );
       }
     }
-  }
-
-  Future<void> _saveStatus() async {
-    if (_selectedJuzNumber == null) return;
-    final lang = context.read<LanguageProvider>();
-    final isArabic = lang.isArabic;
-
-    int? pagesRead;
-    String mappedStatus;
-    switch (_selectedStatus) {
-      case 'Completed':
-        mappedStatus = 'completed';
-        pagesRead = null;
-        break;
-      case 'Pages Read':
-        mappedStatus = 'assigned';
-        final val = int.tryParse(_pagesReadController.text.trim());
-        if (val == null || val < 0) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(isArabic ? 'أدخل عدد الصفحات' : 'Enter pages read')),
-          );
-          return;
-        }
-        pagesRead = val;
-        break;
-      case 'Not Started':
-      default:
-        mappedStatus = 'assigned';
-        pagesRead = 0;
-        break;
-    }
-
-    setState(() { _saving = true; });
-    final resp = await ApiClient.instance.khitmaUpdateAssignment(
-      widget.groupId!,
-      juzNumber: _selectedJuzNumber!,
-      status: mappedStatus,
-      pagesRead: pagesRead,
-    );
-    if (!mounted) return;
-    setState(() { _saving = false; });
-
-    if (!resp.ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(resp.error ?? (isArabic ? 'فشل الحفظ' : 'Save failed'))),
-      );
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(isArabic ? 'تم الحفظ' : 'Saved')),
-    );
-    await _fetch();
   }
 
   @override
