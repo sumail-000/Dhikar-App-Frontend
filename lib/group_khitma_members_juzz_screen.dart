@@ -24,6 +24,7 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
   List<int> _myAssignedJuz = [];
   int _myPagesRead = 0;
   int? _myLastSavedAbsolutePage;
+  bool _myAllCompleted = false;
 
   @override
   void initState() {
@@ -33,7 +34,7 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
 
   Future<void> _fetch() async {
     if (widget.groupId == null) return;
-    setState(() { _loading = true; _error = null; _rows = []; _myPagesRead = 0; _myAssignedJuz = []; _myLastSavedAbsolutePage = null; });
+    setState(() { _loading = true; _error = null; _rows = []; _myPagesRead = 0; _myAssignedJuz = []; _myLastSavedAbsolutePage = null; _myAllCompleted = false; });
 
     final groupResp = await ApiClient.instance.getGroup(widget.groupId!);
     if (!mounted) return;
@@ -84,22 +85,26 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
       final items = byUser[uid]!..sort((a, b) => ((a['juz_number'] as int).compareTo(b['juz_number'] as int)));
       // Collect assigned juz numbers
       final List<int> juz = [];
-      bool allCompleted = true;
       bool anyAssigned = false;
       int pagesSum = 0;
       int? lastAbsPage;
+      // Determine completion for display: status==completed OR pages_read >= required pages per Juz
+      bool completedDisplay = true;
       for (final it in items) {
         final status = (it['status'] as String?) ?? '';
         final int jn = it['juz_number'] as int;
+        final prRaw = it['pages_read'];
+        final int pr = (prRaw is int) ? prRaw : 0;
         if (status == 'assigned' || status == 'completed') {
           anyAssigned = true;
           juz.add(jn);
         }
-        if (status != 'completed') {
-          allCompleted = false;
+        final int required = _pagesInJuz(jn);
+        final bool doneThisJuz = (status == 'completed') || (pr >= required);
+        if (!doneThisJuz && (status == 'assigned' || status == 'completed')) {
+          completedDisplay = false;
         }
-        final pr = it['pages_read'];
-        if (pr is int && pr > 0) {
+        if (pr > 0) {
           pagesSum += pr;
           // Compute absolute last page within this juz
           final int? start = _getJuzStartPage(jn);
@@ -113,6 +118,16 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
         myAssigned = List<int>.from(juz);
         _myPagesRead = pagesSum;
         _myLastSavedAbsolutePage = lastAbsPage;
+        // My completion across all my assigned Juz in this group
+        bool allDone = true;
+        for (final it in items) {
+          final status = (it['status'] as String?) ?? '';
+          final int jz = it['juz_number'] as int;
+          final int pr = (it['pages_read'] is int) ? (it['pages_read'] as int) : 0;
+          final int required = _pagesInJuz(jz);
+          if (!(status == 'completed' || pr >= required)) { allDone = false; break; }
+        }
+        _myAllCompleted = allDone && (myAssigned?.isNotEmpty ?? false);
       }
 
       final isArabic = context.read<LanguageProvider>().isArabic;
@@ -120,7 +135,7 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
       String status;
       if (!anyAssigned || juz.isEmpty) {
         status = isArabic ? 'غير مُعين' : 'Not Assigned';
-      } else if (allCompleted) {
+      } else if (completedDisplay) {
         status = isArabic ? 'مكتمل' : 'Completed';
       } else if (pagesSum > 0) {
         status = isArabic ? '$pagesSum صفحات مقروءة' : '$pagesSum Pages Read';
@@ -495,32 +510,53 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
                             child: SizedBox(
                               width: double.infinity,
                               height: 44,
-                              child: ElevatedButton.icon(
-                                onPressed: () => _continueReading(),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFF2EDE0),
-                                  foregroundColor: const Color(0xFF2D1B69),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(22),
-                                  ),
-                                  elevation: 0,
-                                ),
-                                icon: Icon(
-                                  Icons.book_outlined,
-                                  size: 20,
-                                  color: const Color(0xFF2D1B69),
-                                ),
-                                label: Text(
-                                  _myPagesRead > 0
-                                      ? (isArabic ? 'متابعة القراءة' : 'Continue Reading')
-                                      : (isArabic ? 'ابدأ القراءة' : 'Start Reading'),
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF2D1B69),
-                                  ),
-                                ),
-                              ),
+                              child: _myAllCompleted
+                                  ? ElevatedButton.icon(
+                                      onPressed: null,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xFFC2E7C9),
+                                        disabledForegroundColor: const Color(0xFF2D1B69),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(22),
+                                        ),
+                                        elevation: 0,
+                                      ),
+                                      icon: const Icon(Icons.check_circle_outline, size: 20, color: Color(0xFF2D1B69)),
+                                      label: Text(
+                                        isArabic ? 'مكتمل' : 'Completed',
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF2D1B69),
+                                        ),
+                                      ),
+                                    )
+                                  : ElevatedButton.icon(
+                                      onPressed: () => _continueReading(),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xFFF2EDE0),
+                                        foregroundColor: const Color(0xFF2D1B69),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(22),
+                                        ),
+                                        elevation: 0,
+                                      ),
+                                      icon: const Icon(
+                                        Icons.book_outlined,
+                                        size: 20,
+                                        color: Color(0xFF2D1B69),
+                                      ),
+                                      label: Text(
+                                        _myPagesRead > 0
+                                            ? (isArabic ? 'متابعة القراءة' : 'Continue Reading')
+                                            : (isArabic ? 'ابدأ القراءة' : 'Start Reading'),
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF2D1B69),
+                                        ),
+                                      ),
+                                    ),
                             ),
                           ),
                       ],
@@ -542,6 +578,17 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
       27: 523, 28: 543, 29: 563, 30: 583,
     };
     return starts[j];
+  }
+
+  int _pagesInJuz(int j) {
+    switch (j) {
+      case 1:
+        return 21;
+      case 30:
+        return 22;
+      default:
+        return 20;
+    }
   }
 
   // Map Juz numbers to Mushaf page numbers

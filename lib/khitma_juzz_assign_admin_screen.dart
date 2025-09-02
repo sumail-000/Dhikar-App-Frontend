@@ -23,10 +23,33 @@ class _WeredScreenState extends State<WeredScreen> {
     if (widget.groupId == null) return false;
     // Fetch group to detect current mode
     final resp = await ApiClient.instance.getGroup(widget.groupId!);
-    if (!resp.ok) return true; // If cannot fetch, default to confirm silently
+    if (!resp.ok) return true; // If cannot fetch, default to allow
     final g = (resp.data['group'] as Map?)?.cast<String, dynamic>();
     final autoEnabled = (g != null && g['auto_assign_enabled'] == true);
-    if (autoEnabled) return true; // no manual customizations active
+
+    // If auto-assign is currently enabled, there are no manual customizations to reset
+    if (autoEnabled) return true;
+
+    // Auto-assign not enabled. Determine if manual customization actually exists.
+    // We only warn if there are assigned Juz to users already (manual or prior customization),
+    // otherwise this could be a fresh group with all Juz unassigned.
+    bool manualCustomized = false;
+    final assigns = await ApiClient.instance.khitmaAssignments(widget.groupId!);
+    if (assigns.ok && assigns.data is Map<String, dynamic>) {
+      final List<dynamic> list = (assigns.data['assignments'] as List?) ?? const [];
+      for (final it in list) {
+        final m = (it as Map).cast<String, dynamic>();
+        final user = (m['user'] as Map?)?.cast<String, dynamic>();
+        final String status = (m['status'] as String?) ?? 'unassigned';
+        // Consider it customized if any juz is assigned to a user (not unassigned)
+        if (user != null && status != 'unassigned') { manualCustomized = true; break; }
+      }
+    }
+
+    if (!manualCustomized) {
+      // No manual customization to reset; proceed silently
+      return true;
+    }
 
     final proceed = await showDialog<bool>(
       context: context,

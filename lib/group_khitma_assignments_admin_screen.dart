@@ -15,6 +15,18 @@ class GroupKhitmaAssignmentsAdminScreen extends StatefulWidget {
 }
 
 class _GroupKhitmaAssignmentsAdminScreenState extends State<GroupKhitmaAssignmentsAdminScreen> {
+  // Juz that are locked due to being completed or having pages_read > 0
+  final Set<int> _lockedJuz = <int>{};
+  int _pagesInJuz(int j) {
+    switch (j) {
+      case 1:
+        return 21;
+      case 30:
+        return 22;
+      default:
+        return 20;
+    }
+  }
   bool _loading = false;
   bool _saving = false;
   String? _error;
@@ -84,11 +96,21 @@ class _GroupKhitmaAssignmentsAdminScreenState extends State<GroupKhitmaAssignmen
 
         final List<int> juz = items.map((it) => it['juz_number'] as int).toList();
         int pagesSum = 0; bool anyPages = false;
-        for (final it in items) { final pr = it['pages_read']; if (pr is int && pr > 0) { anyPages = true; pagesSum += pr; } }
+        for (final it in items) {
+          final pr = it['pages_read'];
+          if (pr is int && pr > 0) { anyPages = true; pagesSum += pr; }
+        }
+
+        // Completed if every assigned Juz is done by status or pages threshold
+        final allCompleted = items.isNotEmpty && items.every((it) {
+          final s = (it['status'] as String?) ?? '';
+          final int jz = it['juz_number'] as int;
+          final int pr = (it['pages_read'] is int) ? (it['pages_read'] as int) : 0;
+          return s == 'completed' || pr >= _pagesInJuz(jz);
+        });
 
         String statusType;
         String statusText;
-        final allCompleted = items.isNotEmpty && items.every((it) => (it['status'] as String?) == 'completed');
         if (uidKey == 'unassigned') { statusType = 'not_assigned'; statusText = 'Not Assigned'; }
         else if (allCompleted) { statusType = 'completed'; statusText = 'Completed'; }
         else if (anyPages) { statusType = 'pages_read'; statusText = pagesSum > 0 ? '$pagesSum Pages Read' : 'Pages Read'; }
@@ -115,6 +137,7 @@ class _GroupKhitmaAssignmentsAdminScreenState extends State<GroupKhitmaAssignmen
     final Map<int, Set<int>> sel = { for (final m in membersList) m.id: <int>{} };
     final Map<int, int?> owner = { for (int j=1; j<=30; j++) j: null };
     final Map<int, List<_AssignEntry>> entries = { for (final m in membersList) m.id: <_AssignEntry>[] };
+    _lockedJuz.clear();
 
     for (final e in list) {
       final m = (e as Map).cast<String, dynamic>();
@@ -122,6 +145,9 @@ class _GroupKhitmaAssignmentsAdminScreenState extends State<GroupKhitmaAssignmen
       final user = (m['user'] as Map?)?.cast<String, dynamic>();
       final status = (m['status'] as String?) ?? 'unassigned';
       final pages = m['pages_read'];
+      if (status == 'completed' || (pages is int && pages > 0)) {
+        _lockedJuz.add(jn);
+      }
       final uid = (user != null) ? ((user['id'] is int) ? user['id'] as int : int.tryParse('${user['id'] ?? ''}')) : null;
       owner[jn] = uid;
       if (uid != null) {
@@ -291,17 +317,18 @@ class _GroupKhitmaAssignmentsAdminScreenState extends State<GroupKhitmaAssignmen
                             itemBuilder: (c3, i) {
                               final j = i + 1;
                               final selected = localSel.contains(j);
+                              final bool locked = _lockedJuz.contains(j);
                               return ChoiceChip(
                                 label: Text(
                                   j.toString(),
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: selected ? Colors.white : textColor,
+                                    color: selected ? Colors.white : (locked ? Colors.grey : textColor),
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                                 selected: selected,
-                                onSelected: (sel) {
+                                onSelected: locked ? null : (sel) {
                                   setLocal(() {
                                     if (sel) {
                                       for (final e in _selectedByUser.entries) {
@@ -314,9 +341,10 @@ class _GroupKhitmaAssignmentsAdminScreenState extends State<GroupKhitmaAssignmen
                                   });
                                 },
                                 selectedColor: const Color(0xFF8B5CF6),
+                                disabledColor: chipBg,
                                 backgroundColor: chipBg,
                                 pressElevation: 0,
-                                side: BorderSide(color: borderColor),
+                                side: BorderSide(color: locked ? Colors.grey.shade400 : borderColor),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 showCheckmark: false,
                               );
@@ -686,7 +714,7 @@ class _GroupKhitmaAssignmentsAdminScreenState extends State<GroupKhitmaAssignmen
                                             final selected = _selectedByUser[m.id] ?? <int>{};
                                             // Compute status based on current entries for this user
                                             final entries = _userEntries[m.id] ?? const <_AssignEntry>[];
-                                            final allCompleted = entries.isNotEmpty && entries.every((e) => e.status == 'completed');
+                                            final allCompleted = entries.isNotEmpty && entries.every((e) => e.status == 'completed' || e.pagesRead >= _pagesInJuz(e.juz));
                                             final anyPages = entries.any((e) => e.pagesRead > 0);
                                             String statusText = entries.isEmpty ? 'Not Assigned' : (allCompleted ? 'Completed' : (anyPages ? 'Pages Read' : 'Not Started'));
                                             final statusColor = _statusColor(statusText == 'Completed' ? 'completed' : statusText == 'Pages Read' ? 'pages_read' : statusText == 'Not Assigned' ? 'not_assigned' : 'not_started');

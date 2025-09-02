@@ -287,22 +287,92 @@ class _ProgressSectionState extends State<_ProgressSection> {
     _loadGroupKhitmaStats();
   }
 
+  int _pagesInJuz(int j) {
+    const Map<int, int> sizes = {
+      1: 21, 2: 20, 3: 21, 4: 20, 5: 20, 6: 20, 7: 20, 8: 20, 9: 20, 10: 20,
+      11: 20, 12: 20, 13: 20, 14: 20, 15: 20, 16: 20, 17: 20, 18: 20, 19: 20,
+      20: 20, 21: 20, 22: 20, 23: 20, 24: 20, 25: 20, 26: 20, 27: 20, 28: 20,
+      29: 20, 30: 22,
+    };
+    return sizes[j] ?? 20;
+  }
+
   Future<void> _loadGroupKhitmaStats() async {
+    setState(() { isLoadingGroupStats = true; groupStatsError = null; });
     try {
-      final response = await ApiClient.instance.getUserGroupKhitmaStats();
-      
-      if (response.ok && mounted) {
-        setState(() {
-          groupKhitmaStats = response.data['stats'];
-          isLoadingGroupStats = false;
-        });
-      } else {
+      // 1) Fetch user's joined groups
+      final resp = await ApiClient.instance.getGroups();
+      if (!resp.ok || resp.data is! Map) {
         if (mounted) {
           setState(() {
-            groupStatsError = response.error ?? 'Failed to load group stats';
+            groupStatsError = resp.error ?? 'Failed to load groups';
             isLoadingGroupStats = false;
           });
         }
+        return;
+      }
+
+      final myId = context.read<ProfileProvider?>()?.id;
+      final List<dynamic> list = (resp.data['groups'] as List?) ?? const [];
+      final groups = list
+          .map((e) => (e as Map).cast<String, dynamic>())
+          .where((g) => (g['type'] as String?) == 'khitma')
+          .toList();
+
+      int totalRelevantGroups = 0;
+      int completedContributions = 0;
+
+      // 2) For each khitma group, load assignments and compute my contribution status
+      for (final g in groups) {
+        final gidRaw = g['id'];
+        final int? gid = (gidRaw is int) ? gidRaw : int.tryParse('${gidRaw ?? ''}');
+        if (gid == null) continue;
+
+        final assigns = await ApiClient.instance.khitmaAssignments(gid);
+        if (!assigns.ok || assigns.data is! Map) continue;
+        final List<dynamic> a = (assigns.data['assignments'] as List?) ?? const [];
+
+        // Filter assignments for me
+        final myAsn = a.where((e) {
+          final m = (e as Map).cast<String, dynamic>();
+          final u = (m['user'] as Map?)?.cast<String, dynamic>();
+          final uid = (u != null)
+              ? ((u['id'] is int) ? u['id'] as int : int.tryParse('${u['id'] ?? ''}'))
+              : null;
+          return myId != null && uid == myId;
+        }).map((e) => (e as Map).cast<String, dynamic>()).toList();
+
+        if (myAsn.isEmpty) {
+          // No contribution assigned in this group; skip from denominator
+          continue;
+        }
+
+        totalRelevantGroups++;
+
+        // Determine if my contribution is completed in this group
+        bool allDone = true;
+        for (final m in myAsn) {
+          final status = (m['status'] as String?) ?? '';
+          final int juz = (m['juz_number'] as int);
+          final int pr = (m['pages_read'] is int) ? (m['pages_read'] as int) : 0;
+          final int required = _pagesInJuz(juz);
+          final bool done = (status == 'completed') || (pr >= required);
+          if (!done) { allDone = false; break; }
+        }
+        if (allDone) completedContributions++;
+      }
+
+      if (mounted) {
+        setState(() {
+          groupKhitmaStats = {
+            'total_groups': totalRelevantGroups,
+            'completed_groups': completedContributions,
+            'average_progress': totalRelevantGroups > 0
+                ? (completedContributions * 100.0 / totalRelevantGroups)
+                : 0.0,
+          };
+          isLoadingGroupStats = false;
+        });
       }
     } catch (e) {
       if (mounted) {

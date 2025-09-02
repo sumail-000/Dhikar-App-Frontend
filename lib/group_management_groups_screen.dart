@@ -262,7 +262,15 @@ class _GroupManagementGroupsScreenState extends State<GroupManagementGroupsScree
                                           groupName: name,
                                         ),
                                       ),
-                                    );
+                                    ).then((_) {
+                                      if (!mounted) return;
+                                      // Refresh the current tab so privacy/status reflect immediately
+                                      if (_categoryTab == 1) {
+                                        _loadKhitma();
+                                      } else {
+                                        _loadDhikr();
+                                      }
+                                    });
                                   },
                                   onDelete: () {
                                     // Remove the deleted group from list and refresh UI

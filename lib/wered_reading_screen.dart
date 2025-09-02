@@ -37,6 +37,7 @@ class WeredReadingScreen extends StatefulWidget {
 }
 
 class _WeredReadingScreenState extends State<WeredReadingScreen> {
+  bool _saving = false;
   int currentPageIndex = 0;
   List<Map<String, dynamic>> surahData = [];
   bool isLoading = true;
@@ -873,26 +874,75 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
         print('✅ DEBUG: Group progress saved successfully!');
         final responseData = response.data as Map<String, dynamic>;
 
-        // Immediately update assignment pages_read for this Juz on backend
+        // Immediately update assignment pages_read across ALL assigned Juz up to current page
         try {
-          final List<int> pagesInThisJuz = _getPagesForJuz([currentJuzz]);
-          final int pos = pagesInThisJuz.indexOf(currentPage);
-          if (pos >= 0) {
-            final int pagesReadInJuz = pos + 1; // 1-based
-            print('🧮 DEBUG: Updating pages_read for Juz $currentJuzz => $pagesReadInJuz');
-            final upd = await ApiClient.instance.khitmaUpdateAssignment(
-              widget.groupId!,
-              juzNumber: currentJuzz,
-              pagesRead: pagesReadInJuz,
-            );
-            if (!upd.ok) {
-              print('⚠️ DEBUG: khitmaUpdateAssignment failed: ${upd.error}');
-            }
+          final List<int> assigned = (widget.assignedJuz ?? const <int>[]).toList()..sort();
+          if (assigned.isEmpty) {
+            print('ℹ️ DEBUG: No assigned Juz available on reading screen to update.');
           } else {
-            print('⚠️ DEBUG: Current page $currentPage not found within Juz $currentJuzz page list');
+            print('🧮 DEBUG: Reconciling pages_read for assigned Juz: $assigned up to page $currentPage');
+            for (final j in assigned) {
+              final List<int> pagesInJuz = _getPagesForJuz([j]);
+              if (pagesInJuz.isEmpty) continue;
+              final int first = pagesInJuz.first;
+              final int last = pagesInJuz.last;
+              if (currentPage < first) {
+                // No progress into this Juz yet — leave as is
+                continue;
+              }
+              if (currentPage >= last) {
+                // Fully covered this Juz — set pages_read to full length and mark completed
+                final int pagesRead = pagesInJuz.length;
+                print('🧮 DEBUG: Juz $j fully covered. Setting pages_read=$pagesRead and status=completed');
+                final upd = await ApiClient.instance.khitmaUpdateAssignment(
+                  widget.groupId!,
+                  juzNumber: j,
+                  pagesRead: pagesRead,
+                );
+                if (!upd.ok) {
+                  print('⚠️ DEBUG: khitmaUpdateAssignment (full) failed for Juz $j: ${upd.error}');
+                }
+                final comp = await ApiClient.instance.khitmaUpdateAssignment(
+                  widget.groupId!,
+                  juzNumber: j,
+                  status: 'completed',
+                );
+                if (!comp.ok) {
+                  print('⚠️ DEBUG: Failed to set status completed for Juz $j: ${comp.error}');
+                }
+              } else {
+                // Within this Juz — set partial pages_read up to current page
+                final int pos = pagesInJuz.indexOf(currentPage);
+                if (pos >= 0) {
+                  final int pagesRead = pos + 1; // 1-based
+                  print('🧮 DEBUG: Juz $j partial coverage. Setting pages_read=$pagesRead');
+                  final upd = await ApiClient.instance.khitmaUpdateAssignment(
+                    widget.groupId!,
+                    juzNumber: j,
+                    pagesRead: pagesRead,
+                  );
+                  if (!upd.ok) {
+                    print('⚠️ DEBUG: khitmaUpdateAssignment (partial) failed for Juz $j: ${upd.error}');
+                  }
+                  if (pagesRead >= pagesInJuz.length) {
+                    print('✅ DEBUG: Juz $j now complete from partial path. Marking as completed.');
+                    final comp = await ApiClient.instance.khitmaUpdateAssignment(
+                      widget.groupId!,
+                      juzNumber: j,
+                      status: 'completed',
+                    );
+                    if (!comp.ok) {
+                      print('⚠️ DEBUG: Failed to set status completed for Juz $j: ${comp.error}');
+                    }
+                  }
+                } else {
+                  print('⚠️ DEBUG: Current page $currentPage not found in page list for Juz $j');
+                }
+              }
+            }
           }
         } catch (e, st) {
-          print('⚠️ DEBUG: Exception while updating assignment pages_read: $e');
+          print('⚠️ DEBUG: Exception while updating assignments across Juz: $e');
           print(st);
         }
         
@@ -1556,9 +1606,14 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                                       child: SizedBox(
                                         height: 42,
                                         child: ElevatedButton(
-                                          onPressed: () async {
-                                            // Handle save personal khitma progress
-                                            await _savePersonalKhitmaProgress();
+                                          onPressed: _saving ? null : () async {
+                                            if (_saving) return;
+                                            setState(() { _saving = true; });
+                                            try {
+                                              await _savePersonalKhitmaProgress();
+                                            } finally {
+                                              if (mounted) setState(() { _saving = false; });
+                                            }
                                           },
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: const Color(0xFFF7F3E8),
@@ -1587,9 +1642,14 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                                           child: SizedBox(
                                             height: 42,
                                             child: ElevatedButton(
-                                              onPressed: () async {
-                                                // Handle save group khitma progress
-                                                await _saveGroupKhitmaProgress();
+                                              onPressed: _saving ? null : () async {
+                                                if (_saving) return;
+                                                setState(() { _saving = true; });
+                                                try {
+                                                  await _saveGroupKhitmaProgress();
+                                                } finally {
+                                                  if (mounted) setState(() { _saving = false; });
+                                                }
                                               },
                                               style: ElevatedButton.styleFrom(
                                                 backgroundColor: const Color(0xFFF7F3E8),
@@ -1598,15 +1658,21 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                                                   borderRadius: BorderRadius.circular(10),
                                                 ),
                                               ),
-                                              child: Text(
-                                                languageProvider.isArabic
-                                                    ? 'حفظ التقدم'
-                                                    : 'Save Progress',
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
+                                              child: _saving
+                                                  ? const SizedBox(
+                                                      height: 18,
+                                                      width: 18,
+                                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                                    )
+                                                  : Text(
+                                                      languageProvider.isArabic
+                                                          ? 'حفظ التقدم'
+                                                          : 'Save Progress',
+                                                      style: const TextStyle(
+                                                        fontSize: 14,
+                                                        fontWeight: FontWeight.w600,
+                                                      ),
+                                                    ),
                                             ),
                                           ),
                                         ),
