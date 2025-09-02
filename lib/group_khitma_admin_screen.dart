@@ -199,15 +199,14 @@ class _DhikrGroupDetailsScreenState extends State<DhikrGroupDetailsScreen> {
                           ),
                         ),
 
-                        if (_loading)
-                          const Expanded(child: Center(child: CircularProgressIndicator()))
-                        else if (_error != null)
-                          Expanded(child: Center(child: Text(_error!, style: TextStyle(color: textColor))))
-                        else if (widget.groupId == null)
-                          Expanded(child: Center(child: Text(isArabic ? 'معرّف المجموعة مفقود' : 'Missing group ID', style: TextStyle(color: textColor))))
-                        else
-                          Expanded(
-                            child: RefreshIndicator(
+                        Expanded(
+                          child: _loading
+                              ? const Center(child: CircularProgressIndicator())
+                              : (_error != null
+                                  ? Center(child: Text(_error!, style: TextStyle(color: textColor)))
+                                  : (widget.groupId == null
+                                      ? Center(child: Text(isArabic ? 'معرّف المجموعة مفقود' : 'Missing group ID', style: TextStyle(color: textColor)))
+                                      : RefreshIndicator(
                               onRefresh: _fetch,
                               child: SingleChildScrollView(
                                 physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
@@ -415,7 +414,8 @@ class _DhikrGroupDetailsScreenState extends State<DhikrGroupDetailsScreen> {
                                 ],
                               ),
                             ),
-                          ),
+                          ))),
+                        ),
                         ],
                       ),
                   ),

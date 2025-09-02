@@ -436,6 +436,10 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
         // Personal Khitma: Load all pages sequentially (1-604)
         requestedPages = sortedPages;
         print('📖 DEBUG: Personal Khitma - Loading all ${requestedPages.length} pages');
+      } else if (widget.isGroupKhitma) {
+        // Group Khitma: Load all assigned pages
+        requestedPages = sortedPages;
+        print('🤝 DEBUG: Group Khitma - Loading all assigned ${requestedPages.length} pages');
       } else {
         // Daily Wered: Load requested number of pages from selected surah
         final requestedPageCount = int.tryParse(widget.pages) ?? 1;
@@ -868,6 +872,29 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
       if (response.ok) {
         print('✅ DEBUG: Group progress saved successfully!');
         final responseData = response.data as Map<String, dynamic>;
+
+        // Immediately update assignment pages_read for this Juz on backend
+        try {
+          final List<int> pagesInThisJuz = _getPagesForJuz([currentJuzz]);
+          final int pos = pagesInThisJuz.indexOf(currentPage);
+          if (pos >= 0) {
+            final int pagesReadInJuz = pos + 1; // 1-based
+            print('🧮 DEBUG: Updating pages_read for Juz $currentJuzz => $pagesReadInJuz');
+            final upd = await ApiClient.instance.khitmaUpdateAssignment(
+              widget.groupId!,
+              juzNumber: currentJuzz,
+              pagesRead: pagesReadInJuz,
+            );
+            if (!upd.ok) {
+              print('⚠️ DEBUG: khitmaUpdateAssignment failed: ${upd.error}');
+            }
+          } else {
+            print('⚠️ DEBUG: Current page $currentPage not found within Juz $currentJuzz page list');
+          }
+        } catch (e, st) {
+          print('⚠️ DEBUG: Exception while updating assignment pages_read: $e');
+          print(st);
+        }
         
         if (mounted) {
           _showGroupProgressSavedSnackbar();

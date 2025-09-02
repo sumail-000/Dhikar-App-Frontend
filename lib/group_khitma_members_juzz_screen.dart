@@ -22,6 +22,8 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
   List<_MemberRow> _rows = [];
   // Member controls
   List<int> _myAssignedJuz = [];
+  int _myPagesRead = 0;
+  int? _myLastSavedAbsolutePage;
 
   @override
   void initState() {
@@ -31,7 +33,7 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
 
   Future<void> _fetch() async {
     if (widget.groupId == null) return;
-    setState(() { _loading = true; _error = null; _rows = []; });
+    setState(() { _loading = true; _error = null; _rows = []; _myPagesRead = 0; _myAssignedJuz = []; _myLastSavedAbsolutePage = null; });
 
     final groupResp = await ApiClient.instance.getGroup(widget.groupId!);
     if (!mounted) return;
@@ -84,39 +86,51 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
       final List<int> juz = [];
       bool allCompleted = true;
       bool anyAssigned = false;
-      bool anyPages = false;
+      int pagesSum = 0;
+      int? lastAbsPage;
       for (final it in items) {
         final status = (it['status'] as String?) ?? '';
+        final int jn = it['juz_number'] as int;
         if (status == 'assigned' || status == 'completed') {
           anyAssigned = true;
-          juz.add(it['juz_number'] as int);
+          juz.add(jn);
         }
         if (status != 'completed') {
           allCompleted = false;
         }
         final pr = it['pages_read'];
-        if (pr is int && pr > 0) anyPages = true;
+        if (pr is int && pr > 0) {
+          pagesSum += pr;
+          // Compute absolute last page within this juz
+          final int? start = _getJuzStartPage(jn);
+          if (start != null) {
+            final cand = start + pr - 1;
+            if (lastAbsPage == null || cand > lastAbsPage) lastAbsPage = cand;
+          }
+        }
       }
       if (myId != null && uid == myId) {
         myAssigned = List<int>.from(juz);
+        _myPagesRead = pagesSum;
+        _myLastSavedAbsolutePage = lastAbsPage;
       }
 
-      // Determine status label
+      final isArabic = context.read<LanguageProvider>().isArabic;
+      // Determine status label (localized with count when applicable)
       String status;
       if (!anyAssigned || juz.isEmpty) {
-        status = 'Not Assigned';
+        status = isArabic ? 'غير مُعين' : 'Not Assigned';
       } else if (allCompleted) {
-        status = 'Completed';
-      } else if (anyPages) {
-        status = 'Pages Read';
+        status = isArabic ? 'مكتمل' : 'Completed';
+      } else if (pagesSum > 0) {
+        status = isArabic ? '$pagesSum صفحات مقروءة' : '$pagesSum Pages Read';
       } else {
-        status = 'Not Started';
+        status = isArabic ? 'لم يبدأ' : 'Not Started';
       }
 
       // Member name with (You)
       String displayName = info.name.isNotEmpty ? info.name : '—';
       if (myId != null && uid == myId) {
-        final isArabic = context.read<LanguageProvider>().isArabic;
         displayName = isArabic ? '$displayName (أنت)' : '$displayName (You)';
       }
 
@@ -124,6 +138,7 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
         name: displayName,
         assignedJuz: _condenseJuz(juz),
         status: status,
+        pagesRead: pagesSum,
       ));
     });
 
@@ -157,17 +172,18 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
   }
 
   Color _statusColor(String status) {
-    switch (status) {
-      case 'Completed':
-        return const Color(0xFFC2AEEA);
-      case 'Pages Read':
-        return const Color(0xFFD4D400);
-      case 'Not Assigned':
-        return const Color(0xFFE65A5A);
-      case 'Not Started':
-      default:
-        return const Color(0xFF8B8B8B);
+    // Handle both English and Arabic variants, and count-containing strings
+    if (status.contains('Completed') || status.contains('مكتمل')) {
+      return const Color(0xFFC2AEEA);
     }
+    if (status.contains('Pages Read') || status.contains('صفحات')) {
+      return const Color(0xFFD4D400);
+    }
+    if (status.contains('Not Assigned') || status.contains('غير مُعين')) {
+      return const Color(0xFFE65A5A);
+    }
+    // Not Started / default
+    return const Color(0xFF8B8B8B);
   }
 
   String _localizedStatus(LanguageProvider lang, String status) {
@@ -194,17 +210,30 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
     final isArabic = lang.isArabic;
     
     try {
+      // Determine start page based on saved progress from backend
+      final assignedPages = _getPagesForJuz(_myAssignedJuz);
+      final int startFromPage;
+      if (_myLastSavedAbsolutePage != null) {
+        // Clamp to assigned pages just in case
+        startFromPage = assignedPages.contains(_myLastSavedAbsolutePage!)
+            ? _myLastSavedAbsolutePage!
+            : assignedPages.first;
+      } else {
+        startFromPage = assignedPages.first;
+      }
+
       // Navigate to reading screen with group reading mode
       final result = await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => WeredReadingScreen(
-            selectedSurahs: ['Al-Fatihah'], // Will be overridden by group mode
-            pages: '604', // Will be calculated based on assigned Juz
-            isPersonalKhitma: false, // Not personal khitma
-            isGroupKhitma: true, // Enable group reading mode
+            selectedSurahs: const ['Al-Fatihah'], // ignored in group mode
+            pages: '0', // ignored in group mode
+            isPersonalKhitma: false,
+            isGroupKhitma: true,
             groupId: widget.groupId!,
-            assignedJuz: _myAssignedJuz, // Pass assigned Juz numbers
+            assignedJuz: _myAssignedJuz,
+            startFromPage: startFromPage,
           ),
         ),
       );
@@ -459,7 +488,7 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
                                         ),
                         ),
 
-                        // Continue Reading Section for assigned members only
+                        // Continue/Start Reading Section for assigned members only
                         if (_myAssignedJuz.isNotEmpty)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -482,7 +511,9 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
                                   color: const Color(0xFF2D1B69),
                                 ),
                                 label: Text(
-                                  isArabic ? 'متابعة القراءة' : 'Continue Reading',
+                                  _myPagesRead > 0
+                                      ? (isArabic ? 'متابعة القراءة' : 'Continue Reading')
+                                      : (isArabic ? 'ابدأ القراءة' : 'Start Reading'),
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -503,6 +534,58 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
       },
     );
   }
+  int? _getJuzStartPage(int j) {
+    const Map<int, int> starts = {
+      1: 1, 2: 22, 3: 42, 4: 63, 5: 83, 6: 103, 7: 123, 8: 143, 9: 163, 10: 183,
+      11: 203, 12: 223, 13: 243, 14: 263, 15: 283, 16: 303, 17: 323, 18: 343,
+      19: 363, 20: 383, 21: 403, 22: 423, 23: 443, 24: 463, 25: 483, 26: 503,
+      27: 523, 28: 543, 29: 563, 30: 583,
+    };
+    return starts[j];
+  }
+
+  // Map Juz numbers to Mushaf page numbers
+  List<int> _getPagesForJuz(List<int> juzNumbers) {
+    final Map<int, List<int>> juzPageRanges = {
+      1: List.generate(21, (i) => i + 1),
+      2: List.generate(20, (i) => i + 22),
+      3: List.generate(21, (i) => i + 42),
+      4: List.generate(20, (i) => i + 63),
+      5: List.generate(20, (i) => i + 83),
+      6: List.generate(20, (i) => i + 103),
+      7: List.generate(20, (i) => i + 123),
+      8: List.generate(20, (i) => i + 143),
+      9: List.generate(20, (i) => i + 163),
+      10: List.generate(20, (i) => i + 183),
+      11: List.generate(20, (i) => i + 203),
+      12: List.generate(20, (i) => i + 223),
+      13: List.generate(20, (i) => i + 243),
+      14: List.generate(20, (i) => i + 263),
+      15: List.generate(20, (i) => i + 283),
+      16: List.generate(20, (i) => i + 303),
+      17: List.generate(20, (i) => i + 323),
+      18: List.generate(20, (i) => i + 343),
+      19: List.generate(20, (i) => i + 363),
+      20: List.generate(20, (i) => i + 383),
+      21: List.generate(20, (i) => i + 403),
+      22: List.generate(20, (i) => i + 423),
+      23: List.generate(20, (i) => i + 443),
+      24: List.generate(20, (i) => i + 463),
+      25: List.generate(20, (i) => i + 483),
+      26: List.generate(20, (i) => i + 503),
+      27: List.generate(20, (i) => i + 523),
+      28: List.generate(20, (i) => i + 543),
+      29: List.generate(20, (i) => i + 563),
+      30: List.generate(22, (i) => i + 583),
+    };
+    final Set<int> pages = {};
+    for (final j in juzNumbers) {
+      final p = juzPageRanges[j];
+      if (p != null) pages.addAll(p);
+    }
+    final list = pages.toList()..sort();
+    return list;
+  }
 }
 
 class _MemberInfo {
@@ -514,6 +597,7 @@ class _MemberInfo {
 class _MemberRow {
   final String name;
   final String assignedJuz;
-  final String status; // Completed | Not Started | Pages Read | Not Assigned
-  _MemberRow({required this.name, required this.assignedJuz, required this.status});
+  final String status; // localized display string, may include pages count
+  final int pagesRead;
+  _MemberRow({required this.name, required this.assignedJuz, required this.status, required this.pagesRead});
 }
