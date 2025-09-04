@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'dhikr_provider.dart';
+import 'dart:math';
+import 'services/api_client.dart';
 
 class StartDhikrScreen extends StatefulWidget {
   final String dhikrTitle;
@@ -11,6 +13,9 @@ class StartDhikrScreen extends StatefulWidget {
   final String dhikrSubtitleArabic;
   final String dhikrArabic;
   final int target;
+  final bool isGroupMode;
+  final int? groupId;
+  final int? initialCount;
 
   const StartDhikrScreen({
     super.key,
@@ -20,6 +25,9 @@ class StartDhikrScreen extends StatefulWidget {
     required this.dhikrSubtitleArabic,
     required this.dhikrArabic,
     required this.target,
+    this.isGroupMode = false,
+    this.groupId,
+    this.initialCount,
   });
 
   @override
@@ -51,11 +59,36 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
     });
   }
 
-  void _saveDhikr() {
-    final dhikrProvider = Provider.of<DhikrProvider>(context, listen: false);
+  Future<void> _saveDhikr() async {
     final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
-    
-    dhikrProvider.saveDhikr(
+
+    if (widget.isGroupMode && widget.groupId != null) {
+      final resp = await ApiClient.instance.saveDhikrGroupProgress(widget.groupId!, _currentCount);
+      if (!mounted) return;
+      if (resp.ok) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              languageProvider.isArabic ? 'تم الحفظ في المجموعة' : 'Saved to group',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context, true);
+        return;
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(resp.error ?? (languageProvider.isArabic ? 'فشل الحفظ' : 'Save failed')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    final dhikrProvider = Provider.of<DhikrProvider>(context, listen: false);
+    await dhikrProvider.saveDhikr(
       title: widget.dhikrTitle,
       titleArabic: widget.dhikrTitleArabic,
       subtitle: widget.dhikrSubtitle,
@@ -64,7 +97,7 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
       target: widget.target,
       currentCount: _currentCount,
     );
-    
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -75,6 +108,15 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
         backgroundColor: Colors.green,
       ),
     );
+    Navigator.pop(context, true);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.isGroupMode && widget.initialCount != null) {
+      _currentCount = widget.initialCount!.clamp(0, widget.target);
+    }
   }
 
   @override
@@ -175,137 +217,123 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
                         // Content
                         Expanded(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20.0,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 20.0),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                // Dhikr Card
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.all(24),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFE8F5E8),
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
+                                // Dhikr Card (cream with four corner decorations)
+                                LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final s = constraints.maxWidth / 408.0;
+                                    final corner = 45 * s;
+                                    final offset = -8 * s;
+                                    return Container(
+                                      width: double.infinity,
+                                      padding: EdgeInsets.zero,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF7F3E8),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
                                       ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      // Arabic text
-                                      Text(
-                                        widget.dhikrArabic,
-                                        style: TextStyle(
-                                          fontSize: 32,
-                                          fontFamily: 'Amiri',
-                                          color: isLightMode ? const Color(0xFF1F1F1F) : const Color(0xFF392852),
-                                          height: 1.5,
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(20),
+                                        child: Stack(
+                                          clipBehavior: Clip.none,
+                                          children: [
+                                            Positioned(
+                                              top: offset,
+                                              left: offset,
+                                              child: Image.asset('assets/background_elements/9.png', width: corner, height: corner, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
+                                            ),
+                                            Positioned(
+                                              top: offset,
+                                              right: offset,
+                                              child: Transform.rotate(
+                                                angle: pi / 2,
+                                                child: Image.asset('assets/background_elements/9.png', width: corner, height: corner, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
+                                              ),
+                                            ),
+                                            Positioned(
+                                              bottom: offset,
+                                              left: offset,
+                                              child: Transform.rotate(
+                                                angle: -pi / 2,
+                                                child: Image.asset('assets/background_elements/9.png', width: corner, height: corner, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
+                                              ),
+                                            ),
+                                            Positioned(
+                                              bottom: offset,
+                                              right: offset,
+                                              child: Transform.rotate(
+                                                angle: pi,
+                                                child: Image.asset('assets/background_elements/9.png', width: corner, height: corner, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
+                                              ),
+                                            ),
+                                            // Center the card content both vertically and horizontally
+                                            Center(
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(24),
+                                                child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                                  children: [
+                                                    Text(
+                                                      widget.dhikrArabic,
+                                                      style: TextStyle(
+                                                        fontSize: 32,
+                                                        fontFamily: 'Amiri',
+                                                        color: isLightMode ? const Color(0xFF1F1F1F) : const Color(0xFF392852),
+                                                        height: 1.5,
+                                                      ),
+                                                      textAlign: TextAlign.center,
+                                                      textDirection: TextDirection.rtl,
+                                                    ),
+                                                    const SizedBox(height: 16),
+                                                    Text(
+                                                      isArabic ? widget.dhikrTitleArabic : widget.dhikrTitle,
+                                                      style: TextStyle(
+                                                        fontSize: 20,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: isLightMode ? const Color(0xFF1F1F1F) : const Color(0xFF392852),
+                                                        fontFamily: amiriFont,
+                                                      ),
+                                                      textAlign: TextAlign.center,
+                                                    ),
+                                                    const SizedBox(height: 8),
+                                                    Text(
+                                                      isArabic ? widget.dhikrSubtitleArabic : widget.dhikrSubtitle,
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        color: isLightMode ? const Color(0xFF1F1F1F).withOpacity(0.7) : const Color(0xFF392852).withOpacity(0.7),
+                                                        fontFamily: amiriFont,
+                                                      ),
+                                                      textAlign: TextAlign.center,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        textAlign: TextAlign.center,
-                                        textDirection: TextDirection.rtl,
                                       ),
-                                      const SizedBox(height: 16),
-                                      // Title
-                                      Text(
-                                        isArabic
-                                            ? widget.dhikrTitleArabic
-                                            : widget.dhikrTitle,
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: isLightMode ? const Color(0xFF1F1F1F) : const Color(0xFF392852),
-                                          fontFamily: amiriFont,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      const SizedBox(height: 8),
-                                      // Subtitle
-                                      Text(
-                                        isArabic
-                                            ? widget.dhikrSubtitleArabic
-                                            : widget.dhikrSubtitle,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: isLightMode ? const Color(0xFF1F1F1F).withOpacity(0.7) : const Color(0xFF392852).withOpacity(0.7),
-                                          fontFamily: amiriFont,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ],
-                                  ),
+                                    );
+                                  },
                                 ),
                                 const SizedBox(height: 40),
                                 // Counter
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    // Minus button
                                     Container(
-                                      decoration: BoxDecoration(
-                                        color: isLightMode ? const Color(0xFF051F20) : Colors.white,
-                                        borderRadius: BorderRadius.circular(12),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(
-                                              0.1,
-                                            ),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: IconButton(
-                                        onPressed: _decrementCounter,
-                                        icon: Icon(
-                                          Icons.remove,
-                                          color: isLightMode ? Colors.white : const Color(0xFF392852),
-                                          size: 24,
-                                        ),
-                                        padding: const EdgeInsets.all(16),
-                                      ),
+                                      decoration: BoxDecoration(color: isLightMode ? const Color(0xFF051F20) : Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: Offset(0, 2))]),
+                                      child: IconButton(onPressed: _decrementCounter, icon: Icon(Icons.remove, color: isLightMode ? Colors.white : const Color(0xFF392852), size: 24), padding: const EdgeInsets.all(16)),
                                     ),
                                     const SizedBox(width: 40),
-                                    // Counter display
-                                    Text(
-                                      _currentCount.toString(),
-                                      style: TextStyle(
-                                        fontSize: 48,
-                                        fontWeight: FontWeight.bold,
-                                        color: isLightMode ? const Color(0xFF1F1F1F) : Colors.white,
-                                        fontFamily: amiriFont,
-                                      ),
-                                    ),
+                                    Text(_currentCount.toString(), style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: isLightMode ? const Color(0xFF1F1F1F) : Colors.white, fontFamily: amiriFont)),
                                     const SizedBox(width: 40),
-                                    // Plus button
                                     Container(
-                                      decoration: BoxDecoration(
-                                        color: isLightMode ? const Color(0xFF051F20) : Colors.white,
-                                        borderRadius: BorderRadius.circular(12),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(
-                                              0.1,
-                                            ),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: IconButton(
-                                        onPressed: _incrementCounter,
-                                        icon: Icon(
-                                          Icons.add,
-                                          color: isLightMode ? Colors.white : const Color(0xFF392852),
-                                          size: 24,
-                                        ),
-                                        padding: const EdgeInsets.all(16),
-                                      ),
+                                      decoration: BoxDecoration(color: isLightMode ? const Color(0xFF051F20) : Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: Offset(0, 2))]),
+                                      child: IconButton(onPressed: _incrementCounter, icon: Icon(Icons.add, color: isLightMode ? Colors.white : const Color(0xFF392852), size: 24), padding: const EdgeInsets.all(16)),
                                     ),
                                   ],
                                 ),
@@ -336,8 +364,9 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
                       ),
                     ),
                                     const SizedBox(height: 12),
-                                    // Reset button
-                                    OutlinedButton(
+                                    // Reset button (hide in group mode)
+                                    if (!widget.isGroupMode)
+                                      OutlinedButton(
                                       style: OutlinedButton.styleFrom(
                                         side: BorderSide(
                                           color: isLightMode ? const Color(0xFF051F20) : Colors.white,

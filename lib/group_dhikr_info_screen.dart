@@ -1,26 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'language_provider.dart';
 import 'profile_provider.dart';
 import 'services/api_client.dart';
 
-// Manage Members screen (UI only, compact, Figma-style) now wired to real data
-class GroupManageMembersScreen extends StatefulWidget {
-  const GroupManageMembersScreen({super.key, required this.groupId, this.groupName, this.isDhikr = false});
+class GroupDhikrInfoScreen extends StatefulWidget {
+  const GroupDhikrInfoScreen({super.key, required this.groupId, this.groupName});
   final int groupId;
   final String? groupName;
-  final bool isDhikr;
 
   @override
-  State<GroupManageMembersScreen> createState() => _GroupManageMembersScreenState();
+  State<GroupDhikrInfoScreen> createState() => _GroupDhikrInfoScreenState();
 }
 
-class _GroupManageMembersScreenState extends State<GroupManageMembersScreen> {
+class _GroupDhikrInfoScreenState extends State<GroupDhikrInfoScreen> {
   bool _loading = false;
   String? _error;
   String? _resolvedGroupName;
-  final List<_Member> _members = [];
+  int _membersCount = 0;
   int? _myUserId;
+
+  final List<_Member> _members = [];
 
   @override
   void initState() {
@@ -31,33 +32,48 @@ class _GroupManageMembersScreenState extends State<GroupManageMembersScreen> {
   }
 
   Future<void> _fetch() async {
-    setState(() { _loading = true; _error = null; });
-    final resp = widget.isDhikr
-        ? await ApiClient.instance.getDhikrGroup(widget.groupId)
-        : await ApiClient.instance.getGroup(widget.groupId);
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    final resp = await ApiClient.instance.getDhikrGroup(widget.groupId);
     if (!mounted) return;
     if (!resp.ok || resp.data is! Map<String, dynamic>) {
-      setState(() { _loading = false; _error = resp.error ?? 'Failed to load group'; });
+      setState(() {
+        _loading = false;
+        _error = resp.error ?? 'Failed to load group';
+      });
       return;
     }
+
     final g = ((resp.data as Map)['group'] as Map).cast<String, dynamic>();
     final name = (g['name'] as String?) ?? _resolvedGroupName;
     final list = (g['members'] as List?)?.cast<dynamic>() ?? const [];
+
     final members = <_Member>[];
     for (final it in list) {
       final m = (it as Map).cast<String, dynamic>();
       final userId = (m['id'] is int) ? m['id'] as int : int.tryParse('${m['id'] ?? ''}') ?? 0;
       final username = (m['username'] as String?)?.trim();
-      final email = (m['email'] as String?)?.trim();
       final avatar = (m['avatar_url'] as String?)?.trim();
-      final String? avatarUrl = (avatar != null && avatar.isNotEmpty) ? avatar : null;
-      members.add(_Member(userId, username ?? '—', email ?? '', avatarUrl));
+      final contrib = (m['dhikr_contribution'] is int)
+          ? m['dhikr_contribution'] as int
+          : int.tryParse('${m['dhikr_contribution'] ?? ''}') ?? 0;
+      members.add(_Member(
+        userId: userId,
+        name: username?.isNotEmpty == true ? username! : 'User',
+        avatarUrl: (avatar != null && avatar.isNotEmpty) ? avatar : null,
+        contribution: contrib,
+      ));
     }
+
     setState(() {
       _resolvedGroupName = name;
       _members
         ..clear()
         ..addAll(members);
+      _membersCount = _members.length;
       _loading = false;
     });
   }
@@ -65,6 +81,7 @@ class _GroupManageMembersScreenState extends State<GroupManageMembersScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isArabic = context.watch<LanguageProvider>().isArabic;
 
     return Scaffold(
       body: Container(
@@ -81,20 +98,20 @@ class _GroupManageMembersScreenState extends State<GroupManageMembersScreen> {
           image: const DecorationImage(
             image: AssetImage('assets/background_elements/3_background.png'),
             fit: BoxFit.cover,
-            opacity: 0.25,
+            opacity: 0.20,
           ),
         ),
         child: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header (compact)
+              // Header (back only)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6),
                 child: Row(
                   children: [
                     _CircleIconButton(
-                      icon: Icons.arrow_back_ios_new_rounded,
+                      icon: isArabic ? Icons.arrow_forward_ios_rounded : Icons.arrow_back_ios_new_rounded,
                       onTap: () => Navigator.of(context).maybePop(),
                     ),
                     const Spacer(),
@@ -109,7 +126,7 @@ class _GroupManageMembersScreenState extends State<GroupManageMembersScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      'Group Info.',
+                      isArabic ? 'معلومات المجموعة' : 'Group Info.',
                       style: GoogleFonts.manrope(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -119,7 +136,7 @@ class _GroupManageMembersScreenState extends State<GroupManageMembersScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      _resolvedGroupName ?? "",
+                      _resolvedGroupName ?? (isArabic ? 'دائرة القرآن' : "The Qur'an Circle"),
                       style: GoogleFonts.manrope(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -133,14 +150,14 @@ class _GroupManageMembersScreenState extends State<GroupManageMembersScreen> {
 
               const SizedBox(height: 10),
 
-              // Section header with count on right
+              // Members List header with count on right
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Members List',
+                      isArabic ? 'قائمة الأعضاء' : 'Members List',
                       style: GoogleFonts.manrope(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -148,7 +165,7 @@ class _GroupManageMembersScreenState extends State<GroupManageMembersScreen> {
                       ),
                     ),
                     Text(
-                      '${_members.length} Members',
+                      isArabic ? '$_membersCount عضو' : '$_membersCount Members',
                       style: GoogleFonts.manrope(
                         fontSize: 12,
                         color: Colors.white.withOpacity(0.9),
@@ -160,17 +177,28 @@ class _GroupManageMembersScreenState extends State<GroupManageMembersScreen> {
 
               const SizedBox(height: 6),
 
+              // Members list
               Expanded(
                 child: _loading
-                    ? const Center(child: CircularProgressIndicator())
-                    : (_error != null)
-                        ? Center(child: Text(_error!, style: const TextStyle(color: Colors.white)))
+                    ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                    : _error != null
+                        ? Center(
+                            child: Text(
+                              _error!,
+                              style: GoogleFonts.manrope(color: Colors.white.withOpacity(0.85)),
+                            ),
+                          )
                         : ListView.separated(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                            itemBuilder: (_, i) => _MemberRow(
-                              member: _members[i],
-                              isSelf: _myUserId != null && _members[i].userId == _myUserId,
-                            ),
+                            itemBuilder: (context, index) {
+                              final m = _members[index];
+                              final isYou = _myUserId != null && _myUserId == m.userId;
+                              return _MemberRow(
+                                name: isYou ? '${m.name} (${isArabic ? 'أنت' : 'You'})' : m.name,
+                                avatarUrl: m.avatarUrl,
+                                contribution: m.contribution,
+                              );
+                            },
                             separatorBuilder: (_, __) => const SizedBox(height: 10),
                             itemCount: _members.length,
                           ),
@@ -184,9 +212,10 @@ class _GroupManageMembersScreenState extends State<GroupManageMembersScreen> {
 }
 
 class _MemberRow extends StatelessWidget {
-  const _MemberRow({required this.member, required this.isSelf});
-  final _Member member;
-  final bool isSelf;
+  const _MemberRow({required this.name, required this.avatarUrl, required this.contribution});
+  final String name;
+  final String? avatarUrl;
+  final int contribution;
 
   @override
   Widget build(BuildContext context) {
@@ -206,118 +235,47 @@ class _MemberRow extends StatelessWidget {
           CircleAvatar(
             radius: 20,
             backgroundColor: Colors.white.withOpacity(0.18),
-            backgroundImage: (member.avatarUrl != null && member.avatarUrl!.isNotEmpty)
-                ? NetworkImage(member.avatarUrl!)
-                : null,
-            child: (member.avatarUrl == null || member.avatarUrl!.isEmpty)
+            backgroundImage: avatarUrl != null && avatarUrl!.isNotEmpty ? NetworkImage(avatarUrl!) : null,
+            child: (avatarUrl == null || avatarUrl!.isEmpty)
                 ? Icon(Icons.person, color: Colors.white.withOpacity(0.9), size: 18)
                 : null,
           ),
           const SizedBox(width: 12),
 
-          // Name + email
+          // Name only (no email in this design)
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  member.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.manrope(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  member.email,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.manrope(
-                    fontSize: 12,
-                    color: Colors.white.withOpacity(0.9),
-                  ),
-                ),
-              ],
+            child: Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.manrope(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
             ),
           ),
 
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
 
-          // Actions: delete (red) and reminder (bell) — hidden for self
-          if (!isSelf)
-            _IconBadgeButton(
-              icon: Icons.delete_outline,
-              color: const Color(0xFFEF4444),
-              onTap: () async {
-              final ok = await showDialog<bool>(
-                context: context,
-                builder: (_) => AlertDialog(
-                  title: const Text('Remove member?'),
-                  content: Text('Remove ${member.name} from the group?'),
-                  actions: [
-                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-                    TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Remove')),
-                  ],
-                ),
-              );
-              if (ok != true) return;
-              final state = context.findAncestorStateOfType<_GroupManageMembersScreenState>();
-              if (state == null) return;
-              final resp = state.widget.isDhikr
-                  ? await ApiClient.instance.removeDhikrGroupMember(state.widget.groupId, member.userId)
-                  : await ApiClient.instance.removeGroupMember(state.widget.groupId, member.userId);
-              if (resp.ok) {
-                state._fetch();
-              } else {
-                // ignore: use_build_context_synchronously
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(resp.error ?? 'Failed to remove member')),
-                );
-              }
-              },
+          // Contribution badge on right
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.10),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.white.withOpacity(0.45), width: 1),
             ),
-          if (!isSelf) const SizedBox(width: 10),
-          if (!isSelf)
-            _IconBadgeButton(
-              icon: Icons.notifications_none_rounded,
-              color: Colors.white,
-              onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Send reminder (not wired yet)')),
-              );
-            },
+            child: Text(
+              '$contribution',
+              style: GoogleFonts.manrope(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _IconBadgeButton extends StatelessWidget {
-  const _IconBadgeButton({required this.icon, required this.color, required this.onTap});
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        width: 28,
-        height: 28,
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.10),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3), width: 1),
-        ),
-        alignment: Alignment.center,
-        child: Icon(icon, size: 16, color: color),
       ),
     );
   }
@@ -349,8 +307,8 @@ class _CircleIconButton extends StatelessWidget {
 class _Member {
   final int userId;
   final String name;
-  final String email;
   final String? avatarUrl;
-  const _Member(this.userId, this.name, this.email, this.avatarUrl);
+  final int contribution;
+  const _Member({required this.userId, required this.name, required this.avatarUrl, required this.contribution});
 }
 

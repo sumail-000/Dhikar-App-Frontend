@@ -13,6 +13,7 @@ class ManagementGroupCard extends StatelessWidget {
   final int membersTarget; // reserved for future use
   final bool isPublic;
   final int groupId;
+  final String groupType; // 'dhikr' or 'khitma'
   final VoidCallback? onDelete;
   final VoidCallback? onOpen;
 
@@ -26,6 +27,7 @@ class ManagementGroupCard extends StatelessWidget {
     required this.membersTarget,
     required this.isPublic,
     required this.groupId,
+    required this.groupType,
     this.onDelete,
     this.onOpen,
   });
@@ -165,7 +167,7 @@ class ManagementGroupCard extends StatelessWidget {
                             ),
                             const SizedBox(height: 2), // Reduced from 4 to 2
                             Text(
-                              isArabic ? 'مجموعة الختمة' : 'Khitma Group',
+                              isArabic ? (groupType == 'khitma' ? 'مجموعة الختمة' : 'مجموعة الذكر') : (groupType == 'khitma' ? 'Khitma Group' : 'Dhikr Group'),
                               style: TextStyle(
                                 fontSize: 11, // Reduced from 13 to 11
                                 fontWeight: FontWeight.w500,
@@ -430,7 +432,10 @@ class ManagementGroupCard extends StatelessWidget {
 
   Future<void> _handleInvite(BuildContext context) async {
     // Fetch invite token and show same dialog UX as creation flow
-    final inviteResp = await ApiClient.instance.getGroupInvite(groupId);
+    final isDhikr = (groupType == 'dhikr');
+    final inviteResp = isDhikr
+        ? await ApiClient.instance.getDhikrGroupInvite(groupId)
+        : await ApiClient.instance.getGroupInvite(groupId);
     if (!inviteResp.ok) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(inviteResp.error ?? (isArabic ? 'خطأ الدعوة' : 'Invite error'))),
@@ -441,8 +446,8 @@ class ManagementGroupCard extends StatelessWidget {
     final invite = (inviteResp.data['invite'] as Map).cast<String, dynamic>();
     final token = (invite['token'] as String).trim();
     final message = isArabic
-        ? 'استخدم هذا الرمز للانضمام إلى مجموعة الختمة: $token'
-        : 'Use this token to join the Khitma group: $token';
+        ? 'استخدم هذا الرمز للانضمام إلى مجموعة ${groupType == 'khitma' ? 'الختمة' : 'الذكر'}: $token'
+        : 'Use this token to join the ${groupType == 'khitma' ? 'Khitma' : 'Dhikr'} group: $token';
 
     final isDark = !isLightMode;
     await showDialog(
@@ -583,7 +588,10 @@ class ManagementGroupCard extends StatelessWidget {
 
     if (confirmed != true) return;
 
-    final resp = await ApiClient.instance.deleteGroup(groupId);
+    final isDhikr = (groupType == 'dhikr');
+    final resp = isDhikr
+        ? await ApiClient.instance.deleteDhikrGroup(groupId)
+        : await ApiClient.instance.deleteGroup(groupId);
     if (!resp.ok) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(resp.error ?? (isArabic ? 'فشل الحذف' : 'Delete failed'))),

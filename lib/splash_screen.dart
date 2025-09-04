@@ -55,6 +55,9 @@ class _SplashScreenState extends State<SplashScreen>
         if (mounted) {
           context.read<ProfileProvider?>()?.setFromMap(resp.data as Map<String, dynamic>);
         }
+        // Fire-and-forget activity ping
+        // ignore: unawaited_futures
+        ApiClient.instance.activityPing();
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomeScreen()),

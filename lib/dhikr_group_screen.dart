@@ -8,6 +8,15 @@ import 'khitma_screen.dart';
 import 'dhikr_screen.dart';
 import 'bottom_nav_bar.dart';
 import 'dhikr_newgroup_screen.dart';
+import 'services/api_client.dart';
+import 'widgets/management_group_card.dart';
+import 'group_dhikr_admin_screen.dart';
+import 'group_dhikr_details_screen.dart';
+import 'group_dhikr_info_screen.dart';
+import 'dhikr_presets.dart';
+import 'widgets/group_card.dart';
+import 'profile_provider.dart';
+import 'group_khitma_info_screen.dart';
 
 class DhikrGroupScreen extends StatefulWidget {
   const DhikrGroupScreen({super.key});
@@ -19,6 +28,13 @@ class DhikrGroupScreen extends StatefulWidget {
 class _DhikrGroupScreenState extends State<DhikrGroupScreen> {
   int _selectedIndex = 1;
   int _selectedTab = 0; // 0 for Joined, 1 for Explore
+  bool _loading = false;
+  String? _error;
+  List<Map<String, dynamic>> _joined = [];
+  List<Map<String, dynamic>> _explore = [];
+
+  // Cache for member avatars preview per group
+  final Map<int, List<MemberAvatar>> _memberAvatarsCache = {};
 
   void _onItemTapped(int index) {
     if (_selectedIndex != index) {
@@ -57,6 +73,226 @@ class _DhikrGroupScreenState extends State<DhikrGroupScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _loadJoined();
+    _loadExplore();
+  }
+
+  Future<void> _loadJoined() async {
+    setState(() { _loading = true; _error = null; });
+final resp = await ApiClient.instance.getDhikrGroups();
+    if (!mounted) return;
+    if (!resp.ok || resp.data is! Map) {
+      setState(() { _error = resp.error ?? 'Failed to load groups'; _loading = false; });
+      return;
+    }
+final list = (resp.data['groups'] as List).cast<dynamic>();
+    final groups = list.map((e) => (e as Map).cast<String, dynamic>()).toList();
+    setState(() { _joined = groups; _loading = false; });
+  }
+
+  Future<void> _loadExplore() async {
+final resp = await ApiClient.instance.getDhikrGroupsExplore();
+    if (!mounted) return;
+    if (!resp.ok || resp.data is! Map) {
+      // keep joined visible even if explore fails
+      return;
+    }
+    final list = (resp.data['groups'] as List).cast<dynamic>();
+final groups = list.map((e) => (e as Map).cast<String, dynamic>()).toList();
+    setState(() { _explore = groups; });
+  }
+
+  Future<List<MemberAvatar>> _membersPreview(int groupId) async {
+    if (_memberAvatarsCache.containsKey(groupId)) {
+      return _memberAvatarsCache[groupId]!;
+    }
+final resp = await ApiClient.instance.getDhikrGroup(groupId);
+    if (resp.ok && resp.data is Map && (resp.data['group'] is Map)) {
+      final group = (resp.data['group'] as Map).cast<String, dynamic>();
+      final members = (group['members'] as List?)?.cast<dynamic>() ?? [];
+      List<MemberAvatar> items = members
+          .map((m) => (m as Map).cast<String, dynamic>())
+          .map((m) {
+            final avatar = (m['avatar_url'] as String?) ?? (m['avatar'] as String?);
+            if (avatar != null && avatar.trim().isNotEmpty) {
+              return MemberAvatar(imageUrl: avatar.trim());
+            }
+            final username = (m['username'] as String?)?.trim() ?? '';
+            final initials = username.isNotEmpty ? username[0].toUpperCase() : '?';
+            return MemberAvatar(initials: initials);
+          })
+          .toList();
+      if (items.length > 5) items = items.sublist(0, 5);
+      _memberAvatarsCache[groupId] = items;
+      return items;
+    }
+    return const <MemberAvatar>[];
+  }
+
+  Future<void> _showJoinByCodeDialog() async {
+    final lang = context.read<LanguageProvider>();
+    final theme = context.read<ThemeProvider>();
+    final isArabic = lang.isArabic;
+    final isDark = theme.isDarkMode;
+    final TextEditingController codeCtrl = TextEditingController();
+    String? errorText;
+    bool loading = false;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: !loading,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setLocal) {
+            Future<void> doJoin() async {
+              final token = codeCtrl.text.trim();
+              if (token.isEmpty) {
+                setLocal(() {
+                  errorText = isArabic ? 'الرجاء إدخال الرمز' : 'Please enter the code';
+                });
+                return;
+              }
+              setLocal(() {
+                loading = true;
+                errorText = null;
+              });
+final resp = await ApiClient.instance.joinDhikrGroup(token: token);
+              if (!mounted) return;
+              if (!resp.ok) {
+                final msg = resp.error?.toLowerCase() ?? '';
+                String friendly;
+                if (msg.contains('already')) {
+                  friendly = isArabic ? 'أنت عضو بالفعل في هذه المجموعة' : 'You are already a member of this group';
+                } else if (msg.contains('full') || msg.contains('limit') || msg.contains('complete')) {
+                  friendly = isArabic ? 'اكتمل عدد أعضاء المجموعة' : 'Group members are complete';
+                } else if (msg.contains('invalid') || msg.contains('expired') || msg.contains('not found') || msg.contains('token')) {
+                  friendly = isArabic ? 'رمز الدعوة غير صالح' : 'Invalid invite code';
+                } else {
+                  friendly = resp.error ?? (isArabic ? 'حدث خطأ' : 'Error');
+                }
+                setLocal(() {
+                  loading = false;
+                  errorText = friendly;
+                });
+                return;
+              }
+              if (ctx.mounted) Navigator.of(ctx).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(isArabic ? 'تم الانضمام إلى المجموعة بنجاح' : 'Joined group successfully')),
+              );
+              setState(() {
+                _selectedTab = 0;
+              });
+              await _loadJoined();
+            }
+
+            final Color bg = isDark ? const Color(0xFF2D1B69) : Colors.white;
+            final Color fg = isDark ? Colors.white : const Color(0xFF2D1B69);
+
+            return AlertDialog(
+              backgroundColor: bg,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              titlePadding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              contentPadding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              title: Text(
+                isArabic ? 'الانضمام برمز' : 'Join by Code',
+                style: TextStyle(color: fg, fontWeight: FontWeight.w700, fontSize: 16),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: codeCtrl,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: isArabic ? 'أدخل رمز الدعوة' : 'Enter invite code',
+                      hintStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 14),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      filled: true,
+                      fillColor: isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFF2F2F2),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: isDark ? Colors.white12 : const Color(0xFFE0E0E0)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: isDark ? Colors.white12 : const Color(0xFFE0E0E0)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: isDark ? Colors.white70 : const Color(0xFF205C3B)),
+                      ),
+                      errorText: errorText,
+                    ),
+                    style: TextStyle(color: fg, fontSize: 14),
+                    onSubmitted: (_) => loading ? null : doJoin(),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+              actionsPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+              actions: [
+                TextButton(
+                  onPressed: loading ? null : () => Navigator.of(ctx).pop(),
+                  child: Text(isArabic ? 'إلغاء' : 'Cancel', style: TextStyle(color: fg)),
+                ),
+                ElevatedButton.icon(
+                  onPressed: loading ? null : doJoin,
+                  icon: loading
+                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.vpn_key_rounded, size: 18, color: Colors.white),
+                  label: Text(isArabic ? 'انضم' : 'Join', style: const TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isDark ? const Color(0xFF8B5CF6) : const Color(0xFF205C3B),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    minimumSize: const Size(0, 40),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _joinByToken(BuildContext context) async {
+    final controller = TextEditingController();
+    final isArabic = context.read<LanguageProvider>().isArabic;
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(isArabic ? 'انضمام عبر رمز الدعوة' : 'Join by invite token'),
+        content: TextField(
+          controller: controller,
+          decoration: InputDecoration(hintText: isArabic ? 'أدخل الرمز' : 'Enter token'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(isArabic ? 'إلغاء' : 'Cancel')),
+          TextButton(onPressed: () async {
+            final token = controller.text.trim();
+            if (token.isEmpty) return;
+            final resp = await ApiClient.instance.joinGroup(token: token);
+            if (!mounted) return;
+            Navigator.pop(ctx);
+            if (!resp.ok) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(resp.error ?? (isArabic ? 'فشل الانضمام' : 'Join failed'))));
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(isArabic ? 'تم الانضمام' : 'Joined')));
+              await _loadJoined();
+            }
+          }, child: Text(isArabic ? 'انضمام' : 'Join')),
+        ],
+      ),
+    );
+  }
+
   Widget build(BuildContext context) {
     return Consumer2<ThemeProvider, LanguageProvider>(
       builder: (context, themeProvider, languageProvider, child) {
@@ -125,39 +361,41 @@ class _DhikrGroupScreenState extends State<DhikrGroupScreen> {
                                 ),
                               ),
                             ),
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const DhikrNewGroupScreen(),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const DhikrNewGroupScreen(),
+                                      ),
+                                    ).then((_) {
+                                      if (mounted) _loadJoined();
+                                    });
+                                  },
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.add,
+                                        color: isLightMode ? greenColor : creamColor,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        isArabic ? 'إضافة جديد' : 'Add New',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: isLightMode ? greenColor : creamColor,
+                                          fontFamily: amiriFont,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                );
-                              },
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.add,
-                                    color: isLightMode
-                                        ? greenColor
-                                        : creamColor,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    isArabic ? 'إضافة جديد' : 'Add New',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: isLightMode
-                                          ? greenColor
-                                          : creamColor,
-                                      fontFamily: amiriFont,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -314,11 +552,92 @@ class _DhikrGroupScreenState extends State<DhikrGroupScreen> {
                         ),
 
                         const SizedBox(height: 16),
-                        // Empty space for future content
+                        // Content list by tab
                         Expanded(
-                          child: Container(
-                            // Empty container for future content
-                          ),
+                          child: _loading
+                              ? const Center(child: CircularProgressIndicator())
+                              : (_error != null)
+                                  ? Center(child: Text(_error!))
+                                  : RefreshIndicator(
+                                      onRefresh: () async { await _loadJoined(); await _loadExplore(); },
+                                      child: ListView.separated(
+                                        padding: const EdgeInsets.symmetric(vertical: 8),
+                                        itemCount: (_selectedTab == 0 ? _joined : _explore).length,
+                                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                                        itemBuilder: (context, index) {
+                                          final g = (_selectedTab == 0 ? _joined : _explore)[index];
+                                          final name = (g['name'] as String?) ?? '';
+                                          final gid = g['id'] is int ? g['id'] as int : int.tryParse('${g['id']}') ?? 0;
+                                              final membersCount = (g['members_count'] as int?) ?? 0;
+                                              final membersTarget = (g['members_target'] as int?) ?? 0;
+                                              final dhikrCount = (g['dhikr_count'] as int?) ?? 0;
+                                              final dhikrTarget = (g['dhikr_target'] as int?) ?? 0;
+                                              return FutureBuilder<List<MemberAvatar>>(
+                                                future: _membersPreview(gid),
+                                                builder: (context, snap) {
+                                                  final avatars = snap.data ?? const <MemberAvatar>[];
+final String? dhikrArabic = (g['dhikr_title_arabic'] as String?);
+                                                  return GroupCard(
+                                                    englishName: languageProvider.isArabic ? '' : name,
+                                                    arabicName: languageProvider.isArabic ? name : '',
+                                                    completed: dhikrCount,
+                                                    total: dhikrTarget,
+                                                    memberAvatars: avatars,
+                                                    plusCount: membersCount > 5 ? (membersCount - 5) : 0,
+                                                    dhikrArabicRight: dhikrArabic,
+                                                    onTap: () async {
+                                                  if (_selectedTab == 0) {
+                                                    // Joined tab: open Dhikr details (counter) using local list data
+                                                    final String title = (g['dhikr_title'] as String?)?.trim() ?? name;
+                                                    final String titleAr = (g['dhikr_title_arabic'] as String?)?.trim() ?? (dhikrArabic ?? '');
+                                                    final int target = (g['dhikr_target'] as int?) ?? 0;
+                                                    final int current = (g['dhikr_count'] as int?) ?? 0;
+                                                    String subtitle = '';
+                                                    try {
+                                                      final match = DhikrPresets.presets.firstWhere(
+                                                        (p) => (p['title'] == title) || (p['titleArabic'] == titleAr),
+                                                      );
+                                                      subtitle = (match['subtitle'] ?? '').toString();
+                                                    } catch (_) {}
+                                                    await Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (_) => GroupDhikrDetailsScreen(
+                                                          groupId: gid,
+                                                          dhikrTitle: title,
+                                                          dhikrTitleArabic: titleAr.isNotEmpty ? titleAr : title,
+                                                          dhikrSubtitle: subtitle,
+                                                          dhikrArabic: titleAr.isNotEmpty ? titleAr : title,
+                                                          target: target,
+                                                          currentCount: current,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  } else {
+                                                    // Explore tab: show read-only info screen with Join option
+                                                    final joined = await Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (_) => GroupDhikrInfoScreen(
+                                                          groupId: gid,
+                                                          groupName: name,
+                                                        ),
+                                                      ),
+                                                    );
+                                                    if (!mounted) return;
+                                                    if (joined == true) {
+                                                      // Switch to Joined tab and refresh
+                                                      setState(() { _selectedTab = 0; });
+                                                      await _loadJoined();
+                                                    }
+                                                  }
+                                                },
+                                              );
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    ),
                         ),
                       ],
                     ),
@@ -326,6 +645,14 @@ class _DhikrGroupScreenState extends State<DhikrGroupScreen> {
                 ),
               ],
             ),
+            floatingActionButton: _selectedTab == 0
+                ? FloatingActionButton.small(
+                    onPressed: _showJoinByCodeDialog,
+                    backgroundColor: isLightMode ? const Color(0xFF205C3B) : const Color(0xFF8B5CF6),
+                    foregroundColor: Colors.white,
+                    child: const Icon(Icons.vpn_key_rounded, size: 18),
+                  )
+                : null,
             bottomNavigationBar: BottomNavBar(
               selectedIndex: _selectedIndex,
               onItemTapped: _onItemTapped,

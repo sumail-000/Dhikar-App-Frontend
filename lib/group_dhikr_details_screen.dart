@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
+import 'services/api_client.dart';
+import 'start_dhikr_screen.dart';
 
 class GroupDhikrDetailsScreen extends StatefulWidget {
+  final int? groupId; // optional for backward-compat
   final String dhikrTitle;
   final String dhikrTitleArabic;
   final String dhikrSubtitle;
@@ -14,6 +17,7 @@ class GroupDhikrDetailsScreen extends StatefulWidget {
 
   const GroupDhikrDetailsScreen({
     super.key,
+    this.groupId,
     required this.dhikrTitle,
     required this.dhikrTitleArabic,
     required this.dhikrSubtitle,
@@ -29,15 +33,57 @@ class GroupDhikrDetailsScreen extends StatefulWidget {
 
 class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
   late int _currentCount;
+  int _target = 0;
   final TextEditingController _addRepetitionsController =
       TextEditingController();
   final TextEditingController _yourRepetitionsController =
       TextEditingController();
 
+  Future<void> _addRepetitions() async {
+    final isArabic = Provider.of<LanguageProvider>(context, listen: false).isArabic;
+    final text = _yourRepetitionsController.text.trim();
+    final repetitions = int.tryParse(text);
+    if (repetitions == null || repetitions <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(isArabic ? 'أدخل رقمًا صالحًا' : 'Enter a valid number')),
+      );
+      return;
+    }
+
+    if (widget.groupId != null) {
+      final resp = await ApiClient.instance.saveDhikrGroupProgress(widget.groupId!, repetitions);
+      if (!mounted) return;
+      if (resp.ok && resp.data is Map && (resp.data['group'] is Map)) {
+        final g = (resp.data['group'] as Map).cast<String, dynamic>();
+        final int newCount = (g['dhikr_count'] as int?) ?? _currentCount;
+        final int newTarget = (g['dhikr_target'] as int?) ?? _target;
+        setState(() {
+          _target = newTarget;
+          _currentCount = newCount.clamp(0, _target);
+        });
+        _yourRepetitionsController.clear();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(isArabic ? 'تمت الإضافة' : 'Repetitions added')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(resp.error ?? (isArabic ? 'فشل الحفظ' : 'Failed to save'))),
+        );
+      }
+    } else {
+      // Fallback local update if no groupId
+      setState(() {
+        _currentCount = (_currentCount + repetitions).clamp(0, _target);
+      });
+      _yourRepetitionsController.clear();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _currentCount = widget.currentCount;
+    _target = widget.target;
   }
 
   @override
@@ -47,10 +93,10 @@ class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
     super.dispose();
   }
 
-  double get _progress => _currentCount / widget.target;
+  double get _progress => _target > 0 ? _currentCount / _target : 0.0;
   int get _progressPercentage => (_progress * 100).round();
 
-  void _showAddRepetitionsDialog() {
+  Future<void> _showAddRepetitionsDialog() async {
     showDialog(
       context: context,
       builder: (context) => Consumer2<ThemeProvider, LanguageProvider>(
@@ -120,19 +166,39 @@ class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
                 ),
               ),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   final repetitions = int.tryParse(
                     _addRepetitionsController.text,
                   );
                   if (repetitions != null && repetitions > 0) {
-                    setState(() {
-                      _currentCount = (_currentCount + repetitions).clamp(
-                        0,
-                        widget.target,
-                      );
-                    });
-                    Navigator.of(context).pop();
-                    _addRepetitionsController.clear();
+                    if (widget.groupId != null) {
+                      final resp = await ApiClient.instance.saveDhikrGroupProgress(widget.groupId!, repetitions);
+                      if (!mounted) return;
+                      if (resp.ok && resp.data is Map && (resp.data['group'] is Map)) {
+                        final g = (resp.data['group'] as Map).cast<String, dynamic>();
+                        final int newCount = (g['dhikr_count'] as int?) ?? _currentCount;
+                        final int newTarget = (g['dhikr_target'] as int?) ?? _target;
+                        setState(() {
+                          _target = newTarget;
+                          _currentCount = newCount.clamp(0, _target);
+                        });
+                        Navigator.of(context).pop();
+                        _addRepetitionsController.clear();
+                      } else {
+                        final isArabic = Provider.of<LanguageProvider>(context, listen: false).isArabic;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(isArabic ? 'فشل الحفظ' : 'Failed to save')),
+                        );
+                      }
+                    } else {
+                      // Fallback: local-only update when groupId not provided
+                      setState(() {
+                        _currentCount = (_currentCount + repetitions).clamp(0, widget.target);
+                      });
+                      if (!mounted) return;
+                      Navigator.of(context).pop();
+                      _addRepetitionsController.clear();
+                    }
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -206,7 +272,7 @@ class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
                       children: [
                         // Header with back button and title
                         Padding(
-                          padding: const EdgeInsets.all(16.0),
+                          padding: const EdgeInsets.all(12.0),
                           child: Row(
                             children: [
                               IconButton(
@@ -250,8 +316,8 @@ class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
                           child: SingleChildScrollView(
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 20.0,
-                                vertical: 20.0,
+                                horizontal: 16.0,
+                                vertical: 12.0,
                               ),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.start,
@@ -260,132 +326,120 @@ class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
                                   // Dhikr card
                                   Container(
                                     width: double.infinity,
-                                    padding: const EdgeInsets.all(24),
+                                    padding: EdgeInsets.zero,
                                     decoration: BoxDecoration(
-                                      color: isDarkMode
-                                          ? const Color(0xFFF7F3E8)
-                                          : const Color(0xFFE8F5E8),
-                                      borderRadius: BorderRadius.circular(16),
+                                      color: const Color(0xFFF7F3E8),
+                                      borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                        color: const Color(0xFF2E7D32),
-                                        width: 2,
+                                        color: const Color(0xFFE5E7EB),
+                                        width: 1,
                                       ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.1),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
                                     ),
-                                    child: Column(
-                                      children: [
-                                        // Top decorative element
-                                        Align(
-                                          alignment: Alignment.topLeft,
-                                          child: Container(
-                                            width: 30,
-                                            height: 30,
-                                            decoration: BoxDecoration(
-                                              color: const Color(
-                                                0xFF2E7D32,
-                                              ).withOpacity(0.2),
-                                              borderRadius:
-                                                  BorderRadius.circular(15),
-                                            ),
-                                            child: const Icon(
-                                              Icons.auto_awesome,
-                                              color: Color(0xFF2E7D32),
-                                              size: 16,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 16),
+                                    child: LayoutBuilder(
+                                      builder: (context, constraints) {
+                                        final s = constraints.maxWidth / 408.0; // scale similar to GroupCard
+                                        final corner = 45 * s;
+                                        final offset = -8 * s;
+                                        return ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: Stack(
+                                            clipBehavior: Clip.none,
+                                            children: [
+                                              // Corner decorations like GroupCard
+                                              Positioned(
+                                                top: offset,
+                                                left: offset,
+                                                child: Image.asset(
+                                                  'assets/background_elements/9.png',
+                                                  width: corner,
+                                                  height: corner,
+                                                  fit: BoxFit.contain,
+                                                  filterQuality: FilterQuality.medium,
+                                                ),
+                                              ),
+                                              Positioned(
+                                                bottom: offset,
+                                                right: offset,
+                                                child: Transform.rotate(
+                                                  angle: pi,
+                                                  child: Image.asset(
+                                                    'assets/background_elements/9.png',
+                                                    width: corner,
+                                                    height: corner,
+                                                    fit: BoxFit.contain,
+                                                    filterQuality: FilterQuality.medium,
+                                                  ),
+                                                ),
+                                              ),
 
-                                        // Arabic text
-                                        Text(
-                                          widget.dhikrArabic,
-                                          style: const TextStyle(
-                                            fontSize: 28,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFF2D1B69),
-                                            fontFamily: 'Amiri',
-                                          ),
-                                          textAlign: TextAlign.center,
-                                          textDirection: TextDirection.rtl,
-                                        ),
-                                        const SizedBox(height: 12),
+                                              // Centered content with inner padding like card content
+                                              Padding(
+                                                padding: const EdgeInsets.all(16),
+                                                child: Center(
+                                                  child: Column(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                                    children: [
+                                                    // Arabic text
+                                                    Text(
+                                                      widget.dhikrArabic,
+                                                      style: const TextStyle(
+                                                        fontSize: 24,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: Color(0xFF2D1B69),
+                                                        fontFamily: 'Amiri',
+                                                      ),
+                                                      textAlign: TextAlign.center,
+                                                      textDirection: TextDirection.rtl,
+                                                    ),
+                                                    const SizedBox(height: 8),
 
-                                        // Title
-                                        Text(
-                                          isArabic
-                                              ? widget.dhikrTitleArabic
-                                              : widget.dhikrTitle,
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.w600,
-                                            color: const Color(0xFF2D1B69),
-                                            fontFamily: isArabic
-                                                ? 'Amiri'
-                                                : null,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                        const SizedBox(height: 8),
+                                                    // English/transliteration title
+                                                    Text(
+                                                      widget.dhikrTitle,
+                                                      style: const TextStyle(
+                                                        fontSize: 16,
+                                                        fontWeight: FontWeight.w600,
+                                                        color: Color(0xFF2D1B69),
+                                                      ),
+                                                      textAlign: TextAlign.center,
+                                                    ),
+                                                    const SizedBox(height: 4),
 
-                                        // Subtitle
-                                        Text(
-                                          widget.dhikrSubtitle,
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            color: const Color(
-                                              0xFF2D1B69,
-                                            ).withOpacity(0.7),
-                                            fontFamily: isArabic
-                                                ? 'Amiri'
-                                                : null,
+                                                    // Subtitle if available
+                                                    if (widget.dhikrSubtitle.trim().isNotEmpty)
+                                                      Text(
+                                                        widget.dhikrSubtitle,
+                                                        style: const TextStyle(
+                                                          fontSize: 12,
+                                                          color: Color(0xFF2D1B69),
+                                                        ),
+                                                        textAlign: TextAlign.center,
+                                                      ),
+                                                  ],
+                                                ),
+                                              ),
+                                              ),
+                                            ],
                                           ),
-                                          textAlign: TextAlign.center,
-                                        ),
-
-                                        const SizedBox(height: 16),
-                                        // Bottom decorative element
-                                        Align(
-                                          alignment: Alignment.bottomRight,
-                                          child: Container(
-                                            width: 30,
-                                            height: 30,
-                                            decoration: BoxDecoration(
-                                              color: const Color(
-                                                0xFF2E7D32,
-                                              ).withOpacity(0.2),
-                                              borderRadius:
-                                                  BorderRadius.circular(15),
-                                            ),
-                                            child: const Icon(
-                                              Icons.auto_awesome,
-                                              color: Color(0xFF2E7D32),
-                                              size: 16,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                        );
+                                      },
                                     ),
                                   ),
 
-                                  const SizedBox(height: 50),
+                                  const SizedBox(height: 24),
 
                                   // Progress circle
                                   SizedBox(
-                                    width: 200,
-                                    height: 200,
+                                    width: 160,
+                                    height: 160,
                                     child: Stack(
                                       alignment: Alignment.center,
                                       children: [
                                         // Background circle
                                         Container(
-                                          width: 200,
-                                          height: 200,
+                                          width: 160,
+                                          height: 160,
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
                                             border: Border.all(
@@ -400,11 +454,11 @@ class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
                                         ),
                                         // Progress circle
                                         SizedBox(
-                                          width: 200,
-                                          height: 200,
+                                          width: 160,
+                                          height: 160,
                                           child: CircularProgressIndicator(
                                             value: _progress,
-                                            strokeWidth: 8,
+                                            strokeWidth: 6,
                                             backgroundColor: Colors.transparent,
                                             valueColor:
                                                 AlwaysStoppedAnimation<Color>(
@@ -421,7 +475,7 @@ class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
                                             Text(
                                               '$_progressPercentage%',
                                               style: TextStyle(
-                                                fontSize: 48,
+                                                fontSize: 32,
                                                 fontWeight: FontWeight.bold,
                                                 color: isDarkMode
                                                     ? Colors.white
@@ -434,13 +488,13 @@ class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
                                     ),
                                   ),
 
-                                  const SizedBox(height: 20),
+                                  const SizedBox(height: 12),
 
                                   // Progress text
                                   Text(
-                                    '${_currentCount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} out of ${widget.target.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+'${_currentCount.toString().replaceAllMapped(RegExp(r'(\\d{1,3})(?=(\\d{3})+(?!\\d))'), (Match m) => '${m[1]},')} out of ${_target.toString().replaceAllMapped(RegExp(r'(\\d{1,3})(?=(\\d{3})+(?!\\d))'), (Match m) => '${m[1]},')}',
                                     style: TextStyle(
-                                      fontSize: 16,
+                                      fontSize: 14,
                                       color: isDarkMode
                                           ? Colors.white
                                           : Colors.grey[600],
@@ -449,16 +503,16 @@ class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
                                     textAlign: TextAlign.center,
                                   ),
 
-                                  const SizedBox(height: 50),
+                                  const SizedBox(height: 20),
 
                                   // Your Repetitions text field
                                   Container(
                                     margin: const EdgeInsets.symmetric(
-                                      horizontal: 20,
+                                      horizontal: 12,
                                     ),
                                     decoration: BoxDecoration(
                                       color: Colors.transparent,
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(10),
                                       border: Border.all(
                                         color: isDarkMode
                                             ? Colors.white.withOpacity(0.3)
@@ -470,7 +524,7 @@ class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
                                       controller: _yourRepetitionsController,
                                       keyboardType: TextInputType.number,
                                       style: TextStyle(
-                                        fontSize: 16,
+                                        fontSize: 14,
                                         color: isDarkMode
                                             ? Colors.white
                                             : Colors.black,
@@ -497,8 +551,8 @@ class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
                                         ),
                                         border: InputBorder.none,
                                         contentPadding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 16,
+                                          horizontal: 12,
+                                          vertical: 10,
                                         ),
                                       ),
                                     ),
@@ -509,12 +563,12 @@ class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
                                   // Add Repetitions button
                                   Container(
                                     width: double.infinity,
-                                    height: 50,
+                                    height: 44,
                                     margin: const EdgeInsets.symmetric(
-                                      horizontal: 20,
+                                      horizontal: 12,
                                     ),
-                                    child: ElevatedButton(
-                                      onPressed: _showAddRepetitionsDialog,
+                                      child: ElevatedButton(
+                                      onPressed: _addRepetitions,
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: isDarkMode
                                             ? const Color(0xFFF2EDE0)
@@ -525,7 +579,7 @@ class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
                                         elevation: 2,
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(
-                                            25,
+                                            20,
                                           ),
                                         ),
                                       ),
@@ -534,7 +588,7 @@ class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
                                             ? 'إضافة تكرارات'
                                             : 'Add Repetitions',
                                         style: TextStyle(
-                                          fontSize: 16,
+                                          fontSize: 14,
                                           fontWeight: FontWeight.w600,
                                           color: isDarkMode
                                             ? const Color(0xFF392852)
@@ -544,6 +598,80 @@ class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
                                       ),
                                     ),
                                   ),
+
+                                  const SizedBox(height: 10),
+
+                                  if (widget.groupId != null)
+                                    Container(
+                                      width: double.infinity,
+                                      height: 44,
+                                      margin: const EdgeInsets.symmetric(horizontal: 12),
+                                      child: OutlinedButton(
+                                        onPressed: () async {
+                                          final res = await Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => StartDhikrScreen(
+                                                dhikrTitle: widget.dhikrTitle,
+                                                dhikrTitleArabic: widget.dhikrTitleArabic,
+                                                dhikrSubtitle: widget.dhikrSubtitle,
+                                                dhikrSubtitleArabic: widget.dhikrSubtitle,
+                                                dhikrArabic: widget.dhikrArabic,
+                                                target: _target,
+                                                isGroupMode: true,
+                                                groupId: widget.groupId,
+                                              ),
+                                            ),
+                                          );
+                                          if (!mounted) return;
+                                          if (res == true && widget.groupId != null) {
+                                            // Refresh progress from server
+                                            final pr = await ApiClient.instance.getDhikrGroupProgress(widget.groupId!);
+                                            if (pr.ok && pr.data is Map && (pr.data['group'] is Map)) {
+                                              final gg = (pr.data['group'] as Map).cast<String, dynamic>();
+                                              final int newCount = (gg['dhikr_count'] as int?) ?? _currentCount;
+                                              final int newTarget = (gg['dhikr_target'] as int?) ?? _target;
+                                              setState(() {
+                                                _target = newTarget;
+                                                _currentCount = newCount.clamp(0, _target);
+                                              });
+                                            }
+                                          }
+                                        },
+                                        style: OutlinedButton.styleFrom(
+                                          side: BorderSide(
+                                            color: isDarkMode ? const Color(0xFFF2EDE0) : const Color(0xFF235347),
+                                            width: 1.2,
+                                          ),
+                                          foregroundColor: isDarkMode ? const Color(0xFFF2EDE0) : const Color(0xFF235347),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                        ),
+                                        child: Text(
+                                          isArabic ? 'ابدأ الذكر' : 'Start Dhikr',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w700,
+                                            fontFamily: isArabic ? 'Amiri' : null,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+
+                                  const SizedBox(height: 8),
+
+                                  if (widget.groupId != null)
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                                      child: Text(
+                                        isArabic ? 'استخدم الشاشة التالية لعد الذكر، ثم احفظ للزيادة في تقدم المجموعة' : 'Use the next screen to count dhikr, then Save to add to group progress',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: isDarkMode ? Colors.white70 : Colors.white.withOpacity(0.85),
+                                          fontFamily: isArabic ? 'Amiri' : null,
+                                        ),
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),

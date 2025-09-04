@@ -232,6 +232,95 @@ class ApiClient {
     return _request('GET', '/groups', auth: true);
   }
 
+  // ===== Dhikr Groups =====
+  Future<_ApiResponse> getDhikrGroups() {
+    return _request('GET', '/dhikr-groups', auth: true);
+  }
+
+  Future<_ApiResponse> getDhikrGroupsExplore() {
+    return _request('GET', '/dhikr-groups/explore', auth: true);
+  }
+
+  Future<_ApiResponse> createDhikrGroup({
+    required String name,
+    int? daysToComplete,
+    int? membersTarget,
+    int? dhikrTarget,
+    String? dhikrTitle,
+    String? dhikrTitleArabic,
+    bool isPublic = true,
+  }) {
+    final body = <String, dynamic>{
+      'name': name,
+      'is_public': isPublic,
+    };
+    if (daysToComplete != null) body['days_to_complete'] = daysToComplete;
+    if (membersTarget != null) body['members_target'] = membersTarget;
+    if (dhikrTarget != null) body['dhikr_target'] = dhikrTarget;
+    if (dhikrTitle != null && dhikrTitle.trim().isNotEmpty) body['dhikr_title'] = dhikrTitle.trim();
+    if (dhikrTitleArabic != null && dhikrTitleArabic.trim().isNotEmpty) body['dhikr_title_arabic'] = dhikrTitleArabic.trim();
+    return _request('POST', '/dhikr-groups', auth: true, body: jsonEncode(body));
+  }
+
+  Future<_ApiResponse> getDhikrGroup(int id) {
+    return _request('GET', '/dhikr-groups/$id', auth: true);
+  }
+
+  Future<_ApiResponse> updateDhikrGroupPrivacy(int id, bool isPublic) {
+    return _request('PATCH', '/dhikr-groups/$id', auth: true, body: jsonEncode({'is_public': isPublic}));
+  }
+
+  Future<_ApiResponse> getDhikrGroupInvite(int id) {
+    return _request('GET', '/dhikr-groups/$id/invite', auth: true);
+  }
+
+  Future<_ApiResponse> joinDhikrGroup({required String token}) {
+    return _request('POST', '/dhikr-groups/join', auth: true, body: jsonEncode({'token': token}));
+  }
+
+  Future<_ApiResponse> joinPublicDhikrGroup(int id) {
+    return _request('POST', '/dhikr-groups/$id/join', auth: true);
+  }
+
+  Future<_ApiResponse> leaveDhikrGroup(int id) {
+    return _request('POST', '/dhikr-groups/$id/leave', auth: true);
+  }
+
+  Future<_ApiResponse> removeDhikrGroupMember(int id, int userId) {
+    return _request('DELETE', '/dhikr-groups/$id/members/$userId', auth: true);
+  }
+
+  Future<_ApiResponse> deleteDhikrGroup(int id) {
+    return _request('DELETE', '/dhikr-groups/$id', auth: true);
+  }
+
+  // Dhikr progress
+  Future<_ApiResponse> saveDhikrGroupProgress(int id, int count) {
+    return _request('POST', '/dhikr-groups/$id/progress', auth: true, body: jsonEncode({'count': count}));
+  }
+
+  Future<_ApiResponse> getDhikrGroupProgress(int id) {
+    return _request('GET', '/dhikr-groups/$id/progress', auth: true);
+  }
+
+  // ===== Motivation =====
+  Future<_ApiResponse> getMotivation() {
+    return _request('GET', '/motivation', auth: true);
+  }
+
+  // ===== Activity / Streak =====
+  Future<_ApiResponse> activityPing() {
+    return _request('POST', '/activity/ping', auth: true);
+  }
+
+  Future<_ApiResponse> activityReading() {
+    return _request('POST', '/activity/reading', auth: true);
+  }
+
+  Future<_ApiResponse> getStreak() {
+    return _request('GET', '/streak', auth: true);
+  }
+
   Future<_ApiResponse> getGroupsExplore() {
     return _request('GET', '/groups/explore', auth: true);
   }
@@ -420,6 +509,53 @@ class ApiClient {
   /// Get user's total group khitma statistics across all groups
   Future<_ApiResponse> getUserGroupKhitmaStats() {
     return _request('GET', '/user/group-khitma-stats', auth: true);
+  }
+
+  // ===== Custom Dhikr =====
+  Future<_ApiResponse> getCustomDhikr() {
+    return _request('GET', '/custom-dhikr', auth: true);
+  }
+
+  Future<_ApiResponse> createCustomDhikr({
+    required String title,
+    required String titleArabic,
+    String? subtitle,
+    String? subtitleArabic,
+    required String arabic,
+  }) {
+    return _request(
+      'POST',
+      '/custom-dhikr',
+      auth: true,
+      body: jsonEncode({
+        'title': title,
+        'title_arabic': titleArabic,
+        'subtitle': subtitle ?? '',
+        'subtitle_arabic': subtitleArabic ?? subtitle ?? '',
+        'arabic_text': arabic,
+      }),
+    );
+  }
+
+  Future<_ApiResponse> updateCustomDhikr({
+    required int id,
+    String? title,
+    String? titleArabic,
+    String? subtitle,
+    String? subtitleArabic,
+    String? arabic,
+  }) {
+    final body = <String, dynamic>{};
+    if (title != null) body['title'] = title;
+    if (titleArabic != null) body['title_arabic'] = titleArabic;
+    if (subtitle != null) body['subtitle'] = subtitle;
+    if (subtitleArabic != null) body['subtitle_arabic'] = subtitleArabic;
+    if (arabic != null) body['arabic_text'] = arabic;
+    return _request('PATCH', '/custom-dhikr/$id', auth: true, body: jsonEncode(body));
+  }
+
+  Future<_ApiResponse> deleteCustomDhikr(int id) {
+    return _request('DELETE', '/custom-dhikr/$id', auth: true);
   }
 
   // ===== Network Diagnostics =====

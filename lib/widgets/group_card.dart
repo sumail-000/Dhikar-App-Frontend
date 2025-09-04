@@ -15,6 +15,7 @@ class GroupCard extends StatelessWidget {
   final List<MemberAvatar> memberAvatars;
   final int plusCount;
   final VoidCallback? onTap;
+  final String? dhikrArabicRight;
 
   const GroupCard({
     super.key,
@@ -25,6 +26,7 @@ class GroupCard extends StatelessWidget {
     required this.memberAvatars,
     this.plusCount = 0,
     this.onTap,
+    this.dhikrArabicRight,
   });
 
   double get _percent => total > 0 ? (completed / total).clamp(0.0, 1.0) : 0.0;
@@ -42,6 +44,37 @@ class GroupCard extends StatelessWidget {
       }
     }
     return buf.toString().split('').reversed.join();
+  }
+
+  // Safely truncate by Unicode code points (runes), adding an ellipsis when needed
+  String _truncateByRunes(String text, int maxRunes) {
+    if (text.runes.length <= maxRunes) return text;
+    return String.fromCharCodes(text.runes.take(maxRunes)) + '…';
+  }
+
+  // Format Arabic dhikr text for the right-side badge: keep it concise on one line.
+  // - If short, return as-is.
+  // - If long, try to truncate at a word boundary within a limit; otherwise fall back to rune truncation.
+  String _formatDhikrArabic(String input) {
+    final t = input.trim();
+    if (t.isEmpty) return t;
+
+    const limit = 22; // tune for the badge width and font size
+    if (t.runes.length <= limit) return t;
+
+    final words = t.split(RegExp(r'\s+'));
+    final buf = StringBuffer();
+    for (final w in words) {
+      final next = buf.isEmpty ? w : ' ' + w;
+      final candidate = buf.toString() + next;
+      if (candidate.runes.length > limit) break;
+      buf.write(next);
+    }
+    final result = buf.toString().trim();
+    if (result.isEmpty) {
+      return _truncateByRunes(t, limit);
+    }
+    return result + '…';
   }
 
   @override
@@ -130,8 +163,8 @@ class GroupCard extends StatelessWidget {
                           textAlign: TextAlign.left,
                           style: TextStyle(
                             fontFamily: 'Manrope',
-                            fontWeight: FontWeight.w500,
-                            fontSize: 22 * s,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18 * s,
                             color: titleColor,
                           ),
                         ),
@@ -151,8 +184,31 @@ class GroupCard extends StatelessWidget {
                             textAlign: TextAlign.right,
                             style: TextStyle(
                               fontFamily: 'Amiri',
-                              fontWeight: FontWeight.w400,
-                              fontSize: 24 * s,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 20 * s,
+                              color: titleColor,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    // Dhikr Arabic badge on the opposite side (always on right against left title)
+                    if (!isArabicName && (dhikrArabicRight != null && dhikrArabicRight!.trim().isNotEmpty))
+                      Positioned(
+                        right: 16 * s,
+                        top: 28 * s,
+                        width: 200 * s,
+                        child: Directionality(
+                          textDirection: TextDirection.rtl,
+                          child: Text(
+                            _formatDhikrArabic(dhikrArabicRight!),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                              fontFamily: 'Amiri',
+                              fontWeight: FontWeight.w600,
+                              fontSize: 20 * s,
                               color: titleColor,
                             ),
                           ),

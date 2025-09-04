@@ -714,14 +714,14 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
                 ),
               ],
             ),
-            floatingActionButton: FloatingActionButton.extended(
-              onPressed: _showJoinByCodeDialog,
-              backgroundColor: isLightMode ? const Color(0xFF205C3B) : const Color(0xFF8B5CF6),
-              foregroundColor: Colors.white,
-              icon: const Icon(Icons.vpn_key_rounded),
-              label: Text(languageProvider.isArabic ? 'انضم برمز' : 'Join by Code'),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
+            floatingActionButton: _selectedTab == 0
+                ? FloatingActionButton.small(
+                    onPressed: _showJoinByCodeDialog,
+                    backgroundColor: isLightMode ? const Color(0xFF205C3B) : const Color(0xFF8B5CF6),
+                    foregroundColor: Colors.white,
+                    child: const Icon(Icons.vpn_key_rounded, size: 18),
+                  )
+                : null,
             bottomNavigationBar: BottomNavBar(
               selectedIndex: _selectedIndex,
               onItemTapped: _onItemTapped,

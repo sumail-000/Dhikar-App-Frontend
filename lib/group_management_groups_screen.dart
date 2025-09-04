@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 import 'services/api_client.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'profile_provider.dart';
 import 'widgets/management_group_card.dart';
 import 'group_khitma_admin_screen.dart';
+import 'group_dhikr_admin_screen.dart';
 
 class GroupManagementGroupsScreen extends StatefulWidget {
   const GroupManagementGroupsScreen({super.key});
@@ -33,22 +35,38 @@ class _GroupManagementGroupsScreenState extends State<GroupManagementGroupsScree
     return int.tryParse('${cid ?? ''}') == myId;
   }
 
+  Timer? _refreshTimer;
+
   @override
   void initState() {
     super.initState();
     _loadDhikr();
     _loadKhitma();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 20), (_) => _refreshCurrent());
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _refreshCurrent() async {
+    if (!mounted) return;
+    if (_categoryTab == 0) {
+      await _loadDhikr();
+    } else {
+      await _loadKhitma();
+    }
   }
 
   Future<void> _loadDhikr() async {
     setState(() { _loadingDhikr = true; _errorDhikr = null; });
-    final resp = await ApiClient.instance.getGroups();
+    final resp = await ApiClient.instance.getDhikrGroups();
     if (!mounted) return;
     if (resp.ok && resp.data is Map) {
       final list = (resp.data['groups'] as List).cast<dynamic>();
-      final joined = list.map((e) => (e as Map).cast<String, dynamic>())
-          .where((g) => (g['type'] as String?) == 'dhikr')
-          .toList();
+      final joined = list.map((e) => (e as Map).cast<String, dynamic>()).toList();
       // filter admin-owned (created by me)
       final myId = context.read<ProfileProvider?>()?.id;
       final mine = joined.where((g) => _createdByMe(g, myId)).toList();
@@ -231,55 +249,71 @@ class _GroupManagementGroupsScreenState extends State<GroupManagementGroupsScree
                           )
                         else
                           Expanded(
-                            child: ListView.separated(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              itemCount: groups.length,
-                              separatorBuilder: (_, __) => const SizedBox(height: 12),
-                              itemBuilder: (context, index) {
-                                final g = groups[index];
-                                final String name = (g['name'] as String?) ?? '';
-                                final int membersCount = (g['members_count'] as int?) ?? 0;
-                                final int membersTarget = (g['members_target'] as int?) ?? 0;
-                                final int gid = (g['id'] is int) ? g['id'] as int : int.tryParse('${g['id']}') ?? 0;
+                            child: RefreshIndicator(
+                              onRefresh: _refreshCurrent,
+                              child: ListView.separated(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                itemCount: groups.length,
+                                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                                itemBuilder: (context, index) {
+                                  final g = groups[index];
+                                  final String name = (g['name'] as String?) ?? '';
+                                  final int membersCount = (g['members_count'] as int?) ?? 0;
+                                  final int membersTarget = (g['members_target'] as int?) ?? 0;
+                                  final int gid = (g['id'] is int) ? g['id'] as int : int.tryParse('${g['id']}') ?? 0;
 
-                                // Admin management card with actions
-                                return ManagementGroupCard(
-                                  isArabic: languageProvider.isArabic,
-                                  isLightMode: isLightMode,
-                                  titleEnglish: name,
-                                  titleArabic: name,
-                                  membersCount: membersCount,
-                                  membersTarget: membersTarget,
-                                  isPublic: (g['is_public'] == true),
-                                  groupId: gid,
-                                  // Open khitma group details
-                                  onOpen: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => DhikrGroupDetailsScreen(
-                                          groupId: gid,
-                                          groupName: name,
+                                  // Admin management card with actions
+                                  return ManagementGroupCard(
+                                    isArabic: languageProvider.isArabic,
+                                    isLightMode: isLightMode,
+                                    titleEnglish: name,
+                                    titleArabic: name,
+                                    membersCount: membersCount,
+                                    membersTarget: membersTarget,
+                                    isPublic: (g['is_public'] == true),
+                                    groupId: gid,
+                                    groupType: (g['type'] as String?) ?? 'khitma',
+                                    // Open group details
+                                    onOpen: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => (_categoryTab == 1)
+                                              ? DhikrGroupDetailsScreen(
+                                                  groupId: gid,
+                                                  groupName: name,
+                                                )
+                                              : GroupDhikrAdminScreen(
+                                                  groupId: gid,
+                                                  groupName: name,
+                                                ),
                                         ),
-                                      ),
-                                    ).then((_) {
-                                      if (!mounted) return;
-                                      // Refresh the current tab so privacy/status reflect immediately
-                                      if (_categoryTab == 1) {
-                                        _loadKhitma();
-                                      } else {
-                                        _loadDhikr();
-                                      }
-                                    });
-                                  },
-                                  onDelete: () {
-                                    // Remove the deleted group from list and refresh UI
-                                    setState(() {
-                                      _khitmaGroups.removeWhere((x) => (x['id'] as int) == gid);
-                                    });
-                                  },
-                                );
-                              },
+                                      ).then((_) {
+                                        if (!mounted) return;
+                                        // Refresh the current tab so privacy/status reflect immediately
+                                        if (_categoryTab == 1) {
+                                          _loadKhitma();
+                                        } else {
+                                          _loadDhikr();
+                                        }
+                                      });
+                                    },
+                                    onDelete: () {
+                                      // Remove the deleted group from the active list and refresh UI
+                                      setState(() {
+                                        if ((g['type'] as String?) == 'khitma') {
+                                          _khitmaGroups.removeWhere((x) => ((x['id'] is int) ? x['id'] as int : int.tryParse('${x['id']}') ?? -1) == gid);
+                                        } else {
+                                          _dhikrGroups.removeWhere((x) => ((x['id'] is int) ? x['id'] as int : int.tryParse('${x['id']}') ?? -1) == gid);
+                                        }
+                                      });
+                                      // Also trigger a background refresh to reflect server state
+                                      _refreshCurrent();
+                                    },
+                                  );
+                                },
+                              ),
                             ),
                           ),
                       ],
