@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "441277210042",
+    "project_id": "dhikr-app-f8c40",
+    "storage_bucket": "dhikr-app-f8c40.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:441277210042:android:bf129872bb59f1f0c01183",
+        "android_client_info": {
+          "package_name": "com.example.wered"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDtlZpRsABQPu3BWHajPGNBOF7FKxyOLjI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

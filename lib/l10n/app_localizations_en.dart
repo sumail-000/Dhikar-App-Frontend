@@ -33,7 +33,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yourCurrentStreak => 'Your Current Streak';
 
   @override
-  String get days => '5 Days';
+  String get days => 'Days';
 
   @override
   String get motivationalVerse => 'Motivational Verse';

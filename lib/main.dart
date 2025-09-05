@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'splash_screen.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
@@ -8,8 +10,27 @@ import 'dhikr_provider.dart';
 import 'app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'profile_provider.dart';
+import 'services/notification_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Firebase once; ignore duplicate-app on hot restart/auto-init races
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } on FirebaseException catch (e) {
+    if (e.code != 'duplicate-app') {
+      rethrow;
+    }
+  } catch (_) {
+    // Ignore any other already-initialized conditions
+  }
+  
+  // Initialize NotificationService
+  await NotificationService().initialize();
+  
   runApp(
     MultiProvider(
       providers: [
@@ -40,6 +61,7 @@ class MyApp extends StatelessWidget {
       builder: (context, themeProvider, languageProvider, child) {
         return MaterialApp(
           title: 'Wered App',
+          navigatorKey: NotificationService.navigatorKey,
           debugShowMaterialGrid: false,
           locale: languageProvider.currentLocale,
           supportedLocales: const [

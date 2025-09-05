@@ -33,7 +33,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get yourCurrentStreak => 'سلسلتك الحالية';
 
   @override
-  String get days => '٥ أيام';
+  String get days => 'أيام';
 
   @override
   String get motivationalVerse => 'الآية التحفيزية';

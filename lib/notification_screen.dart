@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
+import 'services/api_client.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -14,14 +15,86 @@ class NotificationScreen extends StatefulWidget {
 class _NotificationScreenState extends State<NotificationScreen> {
   String _selectedFilter = 'Individual';
   final List<String> _filters = ['Individual', 'Group', 'Motivational'];
-
-  // Empty notifications list - will be populated from backend
-  final List<NotificationItem> _notifications = [];
+  
+  List<NotificationItem> _notifications = [];
+  bool _isLoading = true;
+  String? _error;
 
   List<NotificationItem> get _filteredNotifications {
     return _notifications.where((notification) {
       return notification.type == _selectedFilter;
     }).toList();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotifications();
+  }
+
+  Future<void> _loadNotifications() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final response = await ApiClient.instance.getNotifications();
+      if (response.ok && response.data is Map) {
+        final data = response.data as Map<String, dynamic>;
+        final notificationsList = data['notifications'] as List?;
+        
+        if (notificationsList != null) {
+          _notifications = notificationsList.map<NotificationItem>((notif) {
+            return NotificationItem.fromMap(notif as Map<String, dynamic>);
+          }).toList();
+        }
+      } else {
+        _error = response.error ?? 'Failed to load notifications';
+      }
+    } catch (e) {
+      _error = 'Network error: $e';
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _markAsRead(NotificationItem notification) async {
+    try {
+      final response = await ApiClient.instance.markNotificationAsRead(notification.id);
+      if (response.ok) {
+        // Update local state
+        setState(() {
+          notification.isRead = true;
+        });
+      }
+    } catch (e) {
+      print('Error marking notification as read: $e');
+    }
+  }
+
+  Future<void> _deleteNotification(NotificationItem notification) async {
+    try {
+      final response = await ApiClient.instance.deleteNotification(notification.id);
+      if (response.ok) {
+        // Remove from local state
+        setState(() {
+          _notifications.remove(notification);
+        });
+      }
+    } catch (e) {
+      print('Error deleting notification: $e');
+    }
+  }
+
+  Future<void> _markAllAsRead() async {
+    final unreadNotifications = _notifications.where((n) => !n.isRead).toList();
+    
+    for (final notification in unreadNotifications) {
+      await _markAsRead(notification);
+    }
   }
 
   @override
@@ -72,19 +145,15 @@ class _NotificationScreenState extends State<NotificationScreen> {
                           textAlign: TextAlign.center,
                         ),
                       ),
-                      GestureDetector(
-                        onTap: () {
-                          // Mark all as read functionality
-                        },
-                        child: Text(
-                          isArabic ? 'تحديد كمقروء' : 'Mark as read',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: isDarkMode
-                                ? Colors.white.withOpacity(0.8)
-                                : Colors.grey.shade600,
-                            fontFamily: isArabic ? 'Amiri' : null,
-                          ),
+                      IconButton(
+                        onPressed: _markAllAsRead,
+                        tooltip: isArabic ? 'تحديد الكل كمقروء' : 'Mark all read',
+                        icon: Icon(
+                          Icons.done_all,
+                          size: 20,
+                          color: isDarkMode
+                              ? Colors.white.withOpacity(0.85)
+                              : Colors.grey.shade700,
                         ),
                       ),
                     ],
@@ -106,21 +175,21 @@ class _NotificationScreenState extends State<NotificationScreen> {
                           },
                           child: Container(
                             margin: const EdgeInsets.symmetric(horizontal: 4),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            padding: const EdgeInsets.symmetric(vertical: 8),
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? (isDarkMode
                                         ? const Color(0xFF2D1B69)
                                         : const Color(0xFF2E7D32))
                                   : Colors.transparent,
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(16),
                               border: Border.all(
                                 color: isSelected
                                     ? (isDarkMode
                                           ? const Color(0xFF2D1B69)
                                           : const Color(0xFF2E7D32))
                                     : (isDarkMode
-                                          ? Colors.white.withOpacity(0.3)
+                                          ? Colors.white.withOpacity(0.25)
                                           : Colors.grey.shade300),
                                 width: 1,
                               ),
@@ -128,7 +197,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                             child: Text(
                               _getFilterText(filter, isArabic),
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w500,
                                 color: isSelected
                                     ? Colors.white
@@ -150,10 +219,19 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
                 // Notifications content
                 Expanded(
-                  child: _filteredNotifications.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                  child: _isLoading
+                      ? Center(child: CircularProgressIndicator())
+                      : _error != null
+                          ? Center(
+                              child: Text(
+                                _error!,
+                                style: TextStyle(color: Colors.redAccent),
+                              ),
+                            )
+                          : _filteredNotifications.isEmpty
+                              ? Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
                                 Icons.notifications_none,
@@ -193,85 +271,104 @@ class _NotificationScreenState extends State<NotificationScreen> {
                             ],
                           ),
                         )
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                      : ListView.separated(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                           itemCount: _filteredNotifications.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 6),
                           itemBuilder: (context, index) {
                             final notification = _filteredNotifications[index];
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: isDarkMode
-                                    ? Colors.grey.shade800
-                                    : notification.backgroundColor,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: isDarkMode
-                                      ? Colors.grey.shade700
-                                      : Colors.grey.shade200,
-                                  width: 1,
-                                ),
+                            return Dismissible(
+                              key: ValueKey('notif_${notification.id}_${notification.time}'),
+                              direction: DismissDirection.endToStart,
+                              background: Container(
+                                alignment: Alignment.centerRight,
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                color: Colors.redAccent,
+                                child: const Icon(Icons.delete, color: Colors.white, size: 18),
                               ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
+                              onDismissed: (_) => _deleteNotification(notification),
+                              child: InkWell(
+                                onTap: () => _markAsRead(notification),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: isDarkMode
+                                        ? Colors.grey.shade800
+                                        : notification.backgroundColor,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
                                       color: isDarkMode
-                                          ? notification.iconColor.withOpacity(
-                                              0.2,
-                                            )
-                                          : notification.iconColor.withOpacity(
-                                              0.1,
+                                          ? Colors.grey.shade700
+                                          : Colors.grey.shade200,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: isDarkMode
+                                              ? notification.iconColor.withOpacity(0.18)
+                                              : notification.iconColor.withOpacity(0.08),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Icon(
+                                          notification.icon,
+                                          color: notification.iconColor,
+                                          size: 20,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              notification.title,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                                color: isDarkMode ? Colors.white : Colors.black,
+                                              ),
                                             ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Icon(
-                                      notification.icon,
-                                      color: notification.iconColor,
-                                      size: 24,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          notification.title,
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                            color: isDarkMode
-                                                ? Colors.white
-                                                : Colors.black,
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              notification.subtitle,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: isDarkMode
+                                                    ? Colors.grey.shade400
+                                                    : Colors.grey.shade700,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (!notification.isRead)
+                                        Container(
+                                          width: 8,
+                                          height: 8,
+                                          margin: const EdgeInsets.only(right: 8),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF2E7D32),
+                                            borderRadius: BorderRadius.circular(4),
                                           ),
                                         ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          notification.subtitle,
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: isDarkMode
-                                                ? Colors.grey.shade400
-                                                : Colors.grey.shade600,
-                                          ),
+                                      Text(
+                                        notification.time,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey.shade500,
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                  Text(
-                                    notification.time,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: isDarkMode
-                                          ? Colors.grey.shade500
-                                          : Colors.grey.shade500,
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
                             );
                           },
@@ -300,6 +397,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
 }
 
 class NotificationItem {
+  final int id;
   final String title;
   final String subtitle;
   final String time;
@@ -307,8 +405,10 @@ class NotificationItem {
   final Color backgroundColor;
   final Color iconColor;
   final String type;
+  bool isRead;
 
   NotificationItem({
+    required this.id,
     required this.title,
     required this.subtitle,
     required this.time,
@@ -316,7 +416,69 @@ class NotificationItem {
     required this.backgroundColor,
     required this.iconColor,
     required this.type,
+    this.isRead = false,
   });
+
+  factory NotificationItem.fromMap(Map<String, dynamic> map) {
+    final type = (map['type'] ?? 'Individual') as String;
+    final color = _typeColor(type);
+    return NotificationItem(
+      id: (map['id'] ?? 0) as int,
+      title: (map['title'] ?? '') as String,
+      subtitle: (map['body'] ?? map['subtitle'] ?? '') as String,
+      time: _formatTime(map['created_at'] as String?),
+      icon: _typeIcon(type),
+      backgroundColor: color.withOpacity(0.12),
+      iconColor: color,
+      type: _mapTypeToFilter(type),
+      isRead: (map['read_at'] != null),
+    );
+  }
+
+  static String _mapTypeToFilter(String backendType) {
+    switch (backendType) {
+      case 'group':
+      case 'group_reminder':
+        return 'Group';
+      case 'motivational_verse':
+        return 'Motivational';
+      default:
+        return 'Individual';
+    }
+  }
+
+  static Color _typeColor(String type) {
+    switch (_mapTypeToFilter(type)) {
+      case 'Group':
+        return const Color(0xFF2D1B69);
+      case 'Motivational':
+        return const Color(0xFF2E7D32);
+      default:
+        return const Color(0xFF00796B);
+    }
+  }
+
+  static IconData _typeIcon(String type) {
+    switch (_mapTypeToFilter(type)) {
+      case 'Group':
+        return Icons.group;
+      case 'Motivational':
+        return Icons.auto_awesome;
+      default:
+        return Icons.notifications_active;
+    }
+  }
+
+  static String _formatTime(String? isoString) {
+    if (isoString == null) return '';
+    try {
+      final dt = DateTime.tryParse(isoString)?.toLocal();
+      if (dt == null) return '';
+      return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return '';
+    }
+  }
 }
 
 class GeometricPatternPainter extends CustomPainter {

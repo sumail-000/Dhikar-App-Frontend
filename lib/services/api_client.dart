@@ -7,7 +7,21 @@ class ApiClient {
   ApiClient._();
   static final ApiClient instance = ApiClient._();
 
-  static const String baseUrl = String.fromEnvironment('API_BASE', defaultValue: 'http://192.168.1.5:8000/api');
+  // Normalize API base: ensure it ends with /api to match Laravel route prefix
+  static final String _rawBase = String.fromEnvironment('API_BASE', defaultValue: 'http://192.168.1.5:8000/api');
+  static final String baseUrl = _normalizeBase(_rawBase);
+  static String _normalizeBase(String input) {
+    var b = input.trim();
+    // Remove trailing slash for consistency
+    if (b.endsWith('/')) {
+      b = b.substring(0, b.length - 1);
+    }
+    // Ensure /api suffix
+    if (!b.toLowerCase().endsWith('/api')) {
+      b = '$b/api';
+    }
+    return b;
+  }
 
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -558,6 +572,89 @@ class ApiClient {
     return _request('DELETE', '/custom-dhikr/$id', auth: true);
   }
 
+  // ===== Device Token Management =====
+  Future<_ApiResponse> registerDevice({
+    required String deviceToken,
+    String? platform,
+    String? locale,
+    String? timezone,
+  }) {
+    final body = <String, dynamic>{
+      'device_token': deviceToken,
+    };
+    if (platform != null) body['platform'] = platform;
+    if (locale != null) body['locale'] = locale;
+    if (timezone != null) body['timezone'] = timezone;
+    
+    return _request('POST', '/devices/register', auth: true, body: jsonEncode(body));
+  }
+
+  Future<_ApiResponse> unregisterDevice({
+    required String deviceToken,
+  }) {
+    return _request(
+      'POST', 
+      '/devices/unregister', 
+      auth: true, 
+      body: jsonEncode({'device_token': deviceToken})
+    );
+  }
+
+  // ===== In-App Notifications =====
+  Future<_ApiResponse> getNotifications() {
+    return _request('GET', '/notifications', auth: true);
+  }
+
+  Future<_ApiResponse> markNotificationAsRead(int notificationId) {
+    return _request(
+      'PATCH', 
+      '/notifications/$notificationId/read', 
+      auth: true, 
+      body: jsonEncode({'read': true})
+    );
+  }
+
+  Future<_ApiResponse> deleteNotification(int notificationId) {
+    return _request('DELETE', '/notifications/$notificationId', auth: true);
+  }
+
+  // ===== Group Admin Reminders =====
+  Future<_ApiResponse> sendGroupReminder(int groupId, String message) {
+    return _request(
+      'POST', 
+      '/groups/$groupId/reminders', 
+      auth: true, 
+      body: jsonEncode({'message': message})
+    );
+  }
+
+  Future<_ApiResponse> sendGroupMemberReminder(int groupId, int userId, String message) {
+    return _request(
+      'POST',
+      '/groups/$groupId/reminders/member',
+      auth: true,
+      body: jsonEncode({'user_id': userId, 'message': message}),
+    );
+  }
+
+  Future<_ApiResponse> sendDhikrGroupReminder(int dhikrGroupId, String message) {
+    return _request(
+      'POST', 
+      '/dhikr-groups/$dhikrGroupId/reminders', 
+      auth: true, 
+      body: jsonEncode({'message': message})
+    );
+  }
+
+  Future<_ApiResponse> sendDhikrGroupMemberReminder(int groupId, int userId, String message) {
+    return _request(
+      'POST',
+      '/dhikr-groups/$groupId/reminders/member',
+      auth: true,
+      body: jsonEncode({'user_id': userId, 'message': message}),
+    );
+  }
+  
   // ===== Network Diagnostics =====
   
 }

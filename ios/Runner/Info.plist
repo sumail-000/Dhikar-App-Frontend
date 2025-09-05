@@ -45,6 +45,12 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Firebase Push Notification Support -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
 	<!-- Development: allow HTTP (cleartext) for local backend. Remove for production or restrict to specific domains. -->
 	<key>NSAppTransportSecurity</key>
 	<dict>

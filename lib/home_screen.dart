@@ -954,7 +954,7 @@ class _StreakSection extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          FutureBuilder<_ApiResponse>(
+                          FutureBuilder(
                             future: ApiClient.instance.getStreak(),
                             builder: (context, snapshot) {
                               String value = '0';
