@@ -11,10 +11,17 @@ import 'app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'profile_provider.dart';
 import 'services/notification_service.dart';
+import 'services/api_client.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
+  // Initialize API base override from storage (runtime-configurable)
+  await ApiClient.instance.initBaseOverride();
+  // Debug print base in use
+  // ignore: avoid_print
+  print('API base in use: ' + ApiClient.instance.currentBaseUrl);
+
   // Initialize Firebase once; ignore duplicate-app on hot restart/auto-init races
   try {
     await Firebase.initializeApp(
@@ -27,10 +34,10 @@ void main() async {
   } catch (_) {
     // Ignore any other already-initialized conditions
   }
-  
+
   // Initialize NotificationService
   await NotificationService().initialize();
-  
+
   runApp(
     MultiProvider(
       providers: [

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'profile_provider.dart';
 import 'services/api_client.dart';
-
+import 'profile_provider.dart';
+import 'widgets/personalized_reminder_dialog.dart';
 // Manage Members screen (UI only, compact, Figma-style) now wired to real data
 class GroupManageMembersScreen extends StatefulWidget {
   const GroupManageMembersScreen({super.key, required this.groupId, this.groupName, this.isDhikr = false});
@@ -286,61 +286,17 @@ class _MemberRow extends StatelessWidget {
               icon: Icons.notifications_none_rounded,
               color: Colors.white,
               onTap: () async {
-                // Compose reminder message with default based on group type
                 final state = context.findAncestorStateOfType<_GroupManageMembersScreenState>();
                 if (state == null) return;
-                final defaultMsg = state.widget.isDhikr
-                    ? 'Kind reminder to contribute to the dhikr goal today.'
-                    : 'Kind reminder to update your assigned Juz progress.';
-                final controller = TextEditingController(text: defaultMsg);
-
-                final confirmed = await showDialog<bool>(
+                
+                // Show the new personalized reminder dialog
+                await PersonalizedReminderDialog.show(
                   context: context,
-                  builder: (_) => AlertDialog(
-                    title: const Text('Send Reminder'),
-                    content: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text('Edit the message (optional):'),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: controller,
-                          maxLines: 3,
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'This reminder will be sent to this member only.',
-                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                        ),
-                      ],
-                    ),
-                    actions: [
-                      TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-                      ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Send')),
-                    ],
-                  ),
-                );
-
-                if (confirmed != true) return;
-
-                final message = controller.text.trim();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Sending reminder...')),
-                );
-
-                final resp = state.widget.isDhikr
-                    ? await ApiClient.instance.sendDhikrGroupMemberReminder(state.widget.groupId, member.userId, message)
-                    : await ApiClient.instance.sendGroupMemberReminder(state.widget.groupId, member.userId, message);
-
-                // ignore: use_build_context_synchronously
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(resp.ok ? 'Reminder sent' : (resp.error ?? 'Failed to send reminder')),
-                  ),
+                  memberName: member.name,
+                  memberId: member.userId,
+                  groupId: state.widget.groupId,
+                  groupName: state._resolvedGroupName ?? state.widget.groupName ?? 'Group',
+                  isDhikr: state.widget.isDhikr,
                 );
               },
             ),

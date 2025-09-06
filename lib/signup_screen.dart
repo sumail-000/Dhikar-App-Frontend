@@ -4,6 +4,7 @@ import 'login_screen.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'services/api_client.dart';
+import 'services/notification_service.dart';
 import 'home_screen.dart';
 import 'profile_provider.dart';
 
@@ -102,6 +103,10 @@ class _SignupScreenState extends State<SignupScreen> {
           // ignore: use_build_context_synchronously
           Provider.of<ProfileProvider>(context, listen: false).setFromMap(userMap);
         }
+      } catch (_) {}
+      // Register device token with backend (now that we have auth)
+      try {
+        await NotificationService().registerWithBackend();
       } catch (_) {}
       scaffold.showSnackBar(
         SnackBar(

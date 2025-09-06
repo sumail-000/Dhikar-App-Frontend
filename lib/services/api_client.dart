@@ -7,9 +7,11 @@ class ApiClient {
   ApiClient._();
   static final ApiClient instance = ApiClient._();
 
+  // Compile-time default base (can be overridden at runtime via SharedPreferences)
+  static final String _defaultRawBase = String.fromEnvironment('API_BASE', defaultValue: 'https://spectacular-observer-varies-via.trycloudflare.com/api');
+  static String? _overrideRawBase; // persisted override (raw), may be null
+
   // Normalize API base: ensure it ends with /api to match Laravel route prefix
-  static final String _rawBase = String.fromEnvironment('API_BASE', defaultValue: 'http://192.168.1.5:8000/api');
-  static final String baseUrl = _normalizeBase(_rawBase);
   static String _normalizeBase(String input) {
     var b = input.trim();
     // Remove trailing slash for consistency
@@ -22,6 +24,33 @@ class ApiClient {
     }
     return b;
   }
+
+  // Current base URL (normalized) – prefers override if set
+  String get currentBaseUrl => _normalizeBase((_overrideRawBase ?? _defaultRawBase));
+
+  // Initialize override from storage (call at app start)
+  Future<void> initBaseOverride() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('api_base_override');
+    if (raw != null && raw.trim().isNotEmpty) {
+      _overrideRawBase = raw;
+    }
+  }
+
+  // Set or clear runtime override. Pass null/empty to clear.
+  Future<void> setBaseOverride(String? newBase) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (newBase == null || newBase.trim().isEmpty) {
+      _overrideRawBase = null;
+      await prefs.remove('api_base_override');
+    } else {
+      _overrideRawBase = newBase;
+      await prefs.setString('api_base_override', newBase);
+    }
+  }
+
+  // Helpful for debugging
+  String get debugBaseInfo => 'default=' + _normalizeBase(_defaultRawBase) + ', override=' + (_overrideRawBase ?? 'null') + ', using=' + currentBaseUrl;
 
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -45,7 +74,7 @@ class ApiClient {
     Object? body,
     bool auth = false,
   }) async {
-    final url = Uri.parse('$baseUrl$path');
+    final url = Uri.parse('${currentBaseUrl}$path');
     final defaultHeaders = <String, String>{
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -156,7 +185,7 @@ class ApiClient {
     required String username,
     String? avatarFilePath, // local path for multipart
   }) async {
-    final url = Uri.parse('$baseUrl/profile');
+    final url = Uri.parse('${currentBaseUrl}/profile');
     final token = await _getToken();
     final request = http.MultipartRequest('POST', url);
     request.headers['Accept'] = 'application/json';
@@ -585,7 +614,7 @@ class ApiClient {
     if (platform != null) body['platform'] = platform;
     if (locale != null) body['locale'] = locale;
     if (timezone != null) body['timezone'] = timezone;
-    
+
     return _request('POST', '/devices/register', auth: true, body: jsonEncode(body));
   }
 
@@ -593,9 +622,9 @@ class ApiClient {
     required String deviceToken,
   }) {
     return _request(
-      'POST', 
-      '/devices/unregister', 
-      auth: true, 
+      'POST',
+      '/devices/unregister',
+      auth: true,
       body: jsonEncode({'device_token': deviceToken})
     );
   }
@@ -607,9 +636,9 @@ class ApiClient {
 
   Future<_ApiResponse> markNotificationAsRead(int notificationId) {
     return _request(
-      'PATCH', 
-      '/notifications/$notificationId/read', 
-      auth: true, 
+      'PATCH',
+      '/notifications/$notificationId/read',
+      auth: true,
       body: jsonEncode({'read': true})
     );
   }
@@ -621,9 +650,9 @@ class ApiClient {
   // ===== Group Admin Reminders =====
   Future<_ApiResponse> sendGroupReminder(int groupId, String message) {
     return _request(
-      'POST', 
-      '/groups/$groupId/reminders', 
-      auth: true, 
+      'POST',
+      '/groups/$groupId/reminders',
+      auth: true,
       body: jsonEncode({'message': message})
     );
   }
@@ -639,9 +668,9 @@ class ApiClient {
 
   Future<_ApiResponse> sendDhikrGroupReminder(int dhikrGroupId, String message) {
     return _request(
-      'POST', 
-      '/dhikr-groups/$dhikrGroupId/reminders', 
-      auth: true, 
+      'POST',
+      '/dhikr-groups/$dhikrGroupId/reminders',
+      auth: true,
       body: jsonEncode({'message': message})
     );
   }
@@ -654,9 +683,41 @@ class ApiClient {
       body: jsonEncode({'user_id': userId, 'message': message}),
     );
   }
-  
+
   // ===== Network Diagnostics =====
-  
+
+  // ===== Push tracking =====
+  Future<_ApiResponse> pushReceived({
+    String? notificationType,
+    String? deviceToken,
+    Map<String, dynamic>? data,
+    String? title,
+    String? body,
+  }) {
+    final payload = <String, dynamic>{};
+    if (notificationType != null) payload['notification_type'] = notificationType;
+    if (deviceToken != null) payload['device_token'] = deviceToken;
+    if (data != null) payload['data'] = data;
+    if (title != null) payload['title'] = title;
+    if (body != null) payload['body'] = body;
+    return _request('POST', '/push/received', auth: true, body: jsonEncode(payload));
+  }
+
+  Future<_ApiResponse> pushOpened({
+    String? notificationType,
+    String? deviceToken,
+    Map<String, dynamic>? data,
+    String? title,
+    String? body,
+  }) {
+    final payload = <String, dynamic>{};
+    if (notificationType != null) payload['notification_type'] = notificationType;
+    if (deviceToken != null) payload['device_token'] = deviceToken;
+    if (data != null) payload['data'] = data;
+    if (title != null) payload['title'] = title;
+    if (body != null) payload['body'] = body;
+    return _request('POST', '/push/opened', auth: true, body: jsonEncode(payload));
+  }
 }
 
 class _ApiResponse {

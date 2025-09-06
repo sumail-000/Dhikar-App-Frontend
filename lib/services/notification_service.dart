@@ -90,30 +90,65 @@ class NotificationService {
   /// Setup message handlers for different app states
   void _setupMessageHandlers() {
     if (_messaging == null) return;
+    if (_messaging == null) return;
 
     // Handle background messages
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
     // Handle foreground messages
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       print('🔔 Foreground Message: ${message.messageId}');
       print('📱 Foreground Notification: ${message.notification?.title}');
       
       // Show in-app notification or update UI
       _handleForegroundMessage(message);
+
+      // Track receipt to backend (best-effort)
+      try {
+        final token = await getToken();
+        await ApiClient.instance.pushReceived(
+          notificationType: message.data['type'],
+          deviceToken: token,
+          data: message.data,
+          title: message.notification?.title,
+          body: message.notification?.body,
+        );
+      } catch (_) {}
     });
 
     // Handle notification taps when app is in background or terminated
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
       print('🔔 Notification tapped: ${message.messageId}');
       _handleNotificationTap(message);
+      // Track opened to backend (best-effort)
+      try {
+        final token = await getToken();
+        await ApiClient.instance.pushOpened(
+          notificationType: message.data['type'],
+          deviceToken: token,
+          data: message.data,
+          title: message.notification?.title,
+          body: message.notification?.body,
+        );
+      } catch (_) {}
     });
 
     // Handle notification tap when app was terminated
-    FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
+    FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) async {
       if (message != null) {
         print('🔔 App opened from terminated state via notification: ${message.messageId}');
         _handleNotificationTap(message);
+        // Track opened (app opened from terminated)
+        try {
+          final token = await getToken();
+          await ApiClient.instance.pushOpened(
+            notificationType: message.data['type'],
+            deviceToken: token,
+            data: message.data,
+            title: message.notification?.title,
+            body: message.notification?.body,
+          );
+        } catch (_) {}
       }
     });
 
@@ -168,25 +203,31 @@ class NotificationService {
   /// Handle notification tap (navigate to appropriate screen)
   void _handleNotificationTap(RemoteMessage message) {
     final data = message.data;
+    // Get notification type
+    String type = (data['type'] ?? '').toString();
     
     // Navigate based on notification type
-    if (data.containsKey('type')) {
-      switch (data['type']) {
+    if (type.isNotEmpty) {
+      switch (type) {
+        // Individual reminder notifications
+        case 'group_khitma_reminder':
+        case 'dhikr_group_reminder':
         case 'group_reminder':
-          // Navigate to group screen
-          print('🔗 Navigating to group: ${data['group_id']}');
+        case 'individual_reminder':
+          print('🔗 Individual reminder tapped - navigate to notifications');
           break;
-        case 'dhikr_group':
-          // Navigate to dhikr group screen
-          print('🔗 Navigating to dhikr group: ${data['dhikr_group_id']}');
+        // Group notifications (Juz assignments)
+        case 'juz_assignment':
+        case 'juz_assignment_auto':
+        case 'juz_assignment_manual':
+          print('🔗 Navigating to group assignments: ${data['group_id']}');
           break;
+        // Motivational verse notifications
         case 'motivational_verse':
-          // Navigate to home screen or verse screen
-          print('🔗 Navigating to motivational verse');
+          print('🔗 Navigating to home for motivational verse');
           break;
         default:
-          // Navigate to notifications screen
-          print('🔗 Navigating to notifications screen');
+          print('🔗 Unknown notification type: $type - navigate to notifications screen');
           break;
       }
     }

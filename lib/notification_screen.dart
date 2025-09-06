@@ -437,35 +437,82 @@ class NotificationItem {
 
   static String _mapTypeToFilter(String backendType) {
     switch (backendType) {
-      case 'group':
-      case 'group_reminder':
+      // Juz assignments are Group notifications
+      case 'juz_assignment':
+      case 'juz_assignment_auto':
+      case 'juz_assignment_manual':
         return 'Group';
+      // Motivational verses are Motivational notifications  
       case 'motivational_verse':
         return 'Motivational';
+      // Individual member reminders are Individual notifications
+      case 'group_khitma_reminder':
+      case 'dhikr_group_reminder':
+      case 'group_reminder':
+      case 'individual_reminder':
+        return 'Individual';
       default:
         return 'Individual';
     }
   }
 
   static Color _typeColor(String type) {
-    switch (_mapTypeToFilter(type)) {
-      case 'Group':
-        return const Color(0xFF2D1B69);
-      case 'Motivational':
-        return const Color(0xFF2E7D32);
+    // First check for specific type
+    switch (type) {
+      // Juz assignment notifications (Group category)
+      case 'juz_assignment':
+      case 'juz_assignment_auto':
+      case 'juz_assignment_manual':
+        return const Color(0xFF1565C0); // Blue color for Juz assignments
+      // Motivational verse notifications (Motivational category)
+      case 'motivational_verse':
+        return const Color(0xFF2E7D32); // Green color for motivational verses
+      // Individual reminder notifications (Individual category)
+      case 'group_khitma_reminder':
+      case 'dhikr_group_reminder':
+      case 'group_reminder':
+      case 'individual_reminder':
+        return const Color(0xFF00796B); // Teal color for individual reminders
       default:
-        return const Color(0xFF00796B);
+        // Fall back to general category mapping
+        switch (_mapTypeToFilter(type)) {
+          case 'Group':
+            return const Color(0xFF1565C0);
+          case 'Motivational':
+            return const Color(0xFF2E7D32);
+          default:
+            return const Color(0xFF00796B);
+        }
     }
   }
 
   static IconData _typeIcon(String type) {
-    switch (_mapTypeToFilter(type)) {
-      case 'Group':
-        return Icons.group;
-      case 'Motivational':
-        return Icons.auto_awesome;
+    // First check for specific type
+    switch (type) {
+      // Juz assignment notifications (Group category)
+      case 'juz_assignment':
+      case 'juz_assignment_auto':
+      case 'juz_assignment_manual':
+        return Icons.menu_book; // Book icon for Juz assignments
+      // Motivational verse notifications (Motivational category)
+      case 'motivational_verse':
+        return Icons.auto_awesome; // Star icon for motivational verses
+      // Individual reminder notifications (Individual category)
+      case 'group_khitma_reminder':
+      case 'dhikr_group_reminder':
+      case 'group_reminder':
+      case 'individual_reminder':
+        return Icons.person_pin; // Person pin icon for individual reminders
       default:
-        return Icons.notifications_active;
+        // Fall back to general category mapping
+        switch (_mapTypeToFilter(type)) {
+          case 'Group':
+            return Icons.menu_book;
+          case 'Motivational':
+            return Icons.auto_awesome;
+          default:
+            return Icons.person_pin;
+        }
     }
   }
 
