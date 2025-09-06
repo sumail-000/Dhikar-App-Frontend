@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'services/api_client.dart';
@@ -13,6 +14,9 @@ class NotificationScreen extends StatefulWidget {
 }
 
 class _NotificationScreenState extends State<NotificationScreen> {
+  bool _allowGroup = true;
+  bool _allowMotivational = true;
+  bool _allowPersonal = true;
   String _selectedFilter = 'Individual';
   final List<String> _filters = ['Individual', 'Group', 'Motivational'];
   
@@ -21,15 +25,35 @@ class _NotificationScreenState extends State<NotificationScreen> {
   String? _error;
 
   List<NotificationItem> get _filteredNotifications {
-    return _notifications.where((notification) {
+    final filteredByTab = _notifications.where((notification) {
       return notification.type == _selectedFilter;
+    }).toList();
+
+    // Apply global visibility toggles
+    return filteredByTab.where((n) {
+      final cat = NotificationItem.mapTypeToCategory(n.rawType);
+      if (cat == 'Group' && !_allowGroup) return false;
+      if (cat == 'Motivational' && !_allowMotivational) return false;
+      if (cat == 'Personal' && !_allowPersonal) return false;
+      return true;
     }).toList();
   }
 
   @override
   void initState() {
     super.initState();
-    _loadNotifications();
+    _loadPrefs().then((_) => _loadNotifications());
+  }
+
+  Future<void> _loadPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        _allowGroup = prefs.getBool('show_group_notifications') ?? true;
+        _allowMotivational = prefs.getBool('show_motivational_notifications') ?? true;
+        _allowPersonal = prefs.getBool('show_personal_reminders') ?? true;
+      });
+    } catch (_) {}
   }
 
   Future<void> _loadNotifications() async {
@@ -405,6 +429,7 @@ class NotificationItem {
   final Color backgroundColor;
   final Color iconColor;
   final String type;
+  final String rawType;
   bool isRead;
 
   NotificationItem({
@@ -416,6 +441,7 @@ class NotificationItem {
     required this.backgroundColor,
     required this.iconColor,
     required this.type,
+    required this.rawType,
     this.isRead = false,
   });
 
@@ -431,8 +457,25 @@ class NotificationItem {
       backgroundColor: color.withOpacity(0.12),
       iconColor: color,
       type: _mapTypeToFilter(type),
+      rawType: type,
       isRead: (map['read_at'] != null),
     );
+  }
+
+  static String mapTypeToCategory(String backendType) {
+    switch (backendType) {
+      case 'juz_assignment':
+      case 'juz_assignment_auto':
+      case 'juz_assignment_manual':
+      case 'group_khitma_reminder':
+      case 'dhikr_group_reminder':
+        return 'Group';
+      case 'motivational_verse':
+        return 'Motivational';
+      case 'individual_reminder':
+      default:
+        return 'Personal';
+    }
   }
 
   static String _mapTypeToFilter(String backendType) {

@@ -16,6 +16,7 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
+  bool _obscurePassword = true;
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -330,7 +331,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                   height: MediaQuery.of(context).size.height * 0.07,
                                   child: TextField(
                                     controller: _passwordController,
-                                    obscureText: true,
+                                    obscureText: _obscurePassword,
                                     keyboardType: TextInputType.visiblePassword,
                                     autofillHints: const [AutofillHints.newPassword],
                                     enableSuggestions: true,
@@ -340,7 +341,8 @@ class _SignupScreenState extends State<SignupScreen> {
                                       fontSize: MediaQuery.of(context).size.width * 0.04,
                                     ),
                                     decoration: InputDecoration(
-                                      labelText: languageProvider.isArabic ? 'كلمة المرور' : 'Password',
+                                      labelText:
+                                          languageProvider.isArabic ? 'ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±' : 'Password',
                                       labelStyle: TextStyle(
                                         color: themeProvider.secondaryTextColor,
                                         fontSize: MediaQuery.of(context).size.width * 0.04,
@@ -362,6 +364,17 @@ class _SignupScreenState extends State<SignupScreen> {
                                       contentPadding: EdgeInsets.symmetric(
                                         horizontal: MediaQuery.of(context).size.width * 0.05,
                                         vertical: MediaQuery.of(context).size.height * 0.02,
+                                      ),
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                          color: themeProvider.secondaryTextColor,
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            _obscurePassword = !_obscurePassword;
+                                          });
+                                        },
                                       ),
                                     ),
                                   ),
