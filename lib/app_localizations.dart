@@ -44,7 +44,7 @@ class AppLocalizations {
       'dhikrReminder': 'Dhikr Reminder',
       'reminderSettings': 'Reminder Settings',
       'groupManagement': 'Group Management',
-      'privacyAndNotification': 'Privacy & Notification',
+'privacyAndNotification': 'Privacy & Notifications',
       'accountControl': 'Account Control',
       'accountDeletionRequest': 'Account Deletion Request',
       'logout': 'Logout',
@@ -72,7 +72,12 @@ class AppLocalizations {
       'imageTooLarge': 'Image is too large. Maximum size is 2 MB',
       'avatarRemoved': 'Profile photo removed',
       'profileUpdated': 'Profile updated',
-      'memberSince': 'Member since',
+'memberSince': 'Member since',
+      'pushNotifications': 'Push notifications',
+      'showInAppNotifications': 'Show in-app notifications',
+      'groupNotifications': 'Group notifications (Khitma & Dhikr)',
+      'motivationalMessages': 'Motivational messages',
+      'personalReminders': 'Personal reminders (daily wered & dhikr)',
     },
     'ar': {
       'salaamAli': 'السلام عليك يا علي!',
@@ -133,7 +138,12 @@ class AppLocalizations {
       'imageTooLarge': 'الصورة كبيرة جدًا. الحد الأقصى 2 ميجابايت',
       'avatarRemoved': 'تم حذف صورة الملف الشخصي',
       'profileUpdated': 'تم تحديث الملف الشخصي',
-      'memberSince': 'عضو منذ',
+'memberSince': 'عضو منذ',
+      'pushNotifications': 'إشعارات الدفع',
+      'showInAppNotifications': 'عرض الإشعارات داخل التطبيق',
+      'groupNotifications': 'إشعارات المجموعة (الختمة والذكر)',
+      'motivationalMessages': 'رسائل تحفيزية',
+      'personalReminders': 'تذكيرات شخصية (الورد والذكر اليومي)',
     },
   };
 
@@ -196,6 +206,13 @@ class AppLocalizations {
   String get avatarRemoved => _localizedValues[locale.languageCode]?['avatarRemoved'] ?? 'Profile photo removed';
   String get profileUpdated => _localizedValues[locale.languageCode]?['profileUpdated'] ?? 'Profile updated';
   String get memberSince => _localizedValues[locale.languageCode]?['memberSince'] ?? 'Member since';
+
+  // Privacy & Notifications additions
+  String get pushNotifications => _localizedValues[locale.languageCode]?['pushNotifications'] ?? 'Push notifications';
+  String get showInAppNotifications => _localizedValues[locale.languageCode]?['showInAppNotifications'] ?? 'Show in-app notifications';
+  String get groupNotifications => _localizedValues[locale.languageCode]?['groupNotifications'] ?? 'Group notifications (Khitma & Dhikr)';
+  String get motivationalMessages => _localizedValues[locale.languageCode]?['motivationalMessages'] ?? 'Motivational messages';
+  String get personalReminders => _localizedValues[locale.languageCode]?['personalReminders'] ?? 'Personal reminders (daily wered & dhikr)';
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

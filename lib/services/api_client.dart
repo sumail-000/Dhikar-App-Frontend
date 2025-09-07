@@ -629,6 +629,25 @@ class ApiClient {
     );
   }
 
+  // ===== User Preferences =====
+  Future<_ApiResponse> getUserPreferences() {
+    return _request('GET', '/user/preferences', auth: true);
+  }
+
+  Future<_ApiResponse> updateUserPreferences({
+    bool? allowGroup,
+    bool? allowMotivational,
+    bool? allowPersonal,
+    String? preferredHour, // '00'..'23'
+  }) {
+    final body = <String, dynamic>{};
+    if (allowGroup != null) body['allow_group_notifications'] = allowGroup;
+    if (allowMotivational != null) body['allow_motivational_notifications'] = allowMotivational;
+    if (allowPersonal != null) body['allow_personal_reminders'] = allowPersonal;
+    if (preferredHour != null) body['preferred_personal_reminder_hour'] = preferredHour;
+    return _request('PUT', '/user/preferences', auth: true, body: jsonEncode(body));
+  }
+
   // ===== In-App Notifications =====
   Future<_ApiResponse> getNotifications() {
     return _request('GET', '/notifications', auth: true);

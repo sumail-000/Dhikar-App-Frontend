@@ -5,6 +5,7 @@ import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'app_localizations.dart';
 import 'services/notification_service.dart';
+import 'services/api_client.dart';
 
 class PrivacyNotificationsScreen extends StatefulWidget {
   const PrivacyNotificationsScreen({super.key});
@@ -130,66 +131,83 @@ class _PrivacyNotificationsScreenState extends State<PrivacyNotificationsScreen>
             ),
             body: _loading
                 ? const Center(child: CircularProgressIndicator())
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Master Push toggle
-                        _buildSwitch(
-                          icon: Icons.notifications_active,
-                          title: 'Push notifications',
-                          value: _pushEnabled,
-                          onChanged: (v) async => _togglePush(v),
+                : FutureBuilder(
+                    future: ApiClient.instance.getUserPreferences(),
+                    builder: (context, snap) {
+                      if (snap.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (snap.hasData && (snap.data as dynamic).ok) {
+                        final prefs = (snap.data as dynamic).data['preferences'] as Map<String, dynamic>;
+                        _showGroup = prefs['allow_group_notifications'] ?? _showGroup;
+                        _showMotivational = prefs['allow_motivational_notifications'] ?? _showMotivational;
+                        _showPersonal = prefs['allow_personal_reminders'] ?? _showPersonal;
+                      }
+                      return SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Master Push toggle
+                            _buildSwitch(
+                              icon: Icons.notifications_active,
+                              title: app.pushNotifications,
+                              value: _pushEnabled,
+                              onChanged: (v) async => _togglePush(v),
+                            ),
+                            const SizedBox(height: 8),
+                            // In-app visibility toggles (client-side filtering)
+                            Text(
+                              app.showInAppNotifications,
+                              style: TextStyle(
+                                color: isLight ? const Color(0xFF205C3B) : Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            _buildSwitch(
+                              icon: Icons.group,
+                              title: app.groupNotifications,
+                              value: _showGroup,
+                              onChanged: (v) async {
+                                setState(() => _showGroup = v);
+                                await _setBool(_kShowGroupKey, v);
+                                try { await ApiClient.instance.updateUserPreferences(allowGroup: v); } catch (_) {}
+                              },
+                            ),
+                            _buildSwitch(
+                              icon: Icons.auto_awesome,
+                              title: app.motivationalMessages,
+                              value: _showMotivational,
+                              onChanged: (v) async {
+                                setState(() => _showMotivational = v);
+                                await _setBool(_kShowMotivationalKey, v);
+                                try { await ApiClient.instance.updateUserPreferences(allowMotivational: v); } catch (_) {}
+                              },
+                            ),
+                            _buildSwitch(
+                              icon: Icons.access_time,
+                              title: app.personalReminders,
+                              value: _showPersonal,
+                              onChanged: (v) async {
+                                setState(() => _showPersonal = v);
+                                await _setBool(_kShowPersonalKey, v);
+                                try { await ApiClient.instance.updateUserPreferences(allowPersonal: v); } catch (_) {}
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Note: These toggles hide or show items in the app’s Notifications screen. The master Push toggle controls whether your device receives any push notifications.',
+                              style: TextStyle(
+                                color: themeProvider.primaryTextColor.withOpacity(0.8),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 8),
-                        // In-app visibility toggles (client-side filtering)
-                        Text(
-                          'Show in-app notifications',
-                          style: TextStyle(
-                            color: isLight ? const Color(0xFF205C3B) : Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        _buildSwitch(
-                          icon: Icons.group,
-                          title: 'Group notifications (Khitma & Dhikr)',
-                          value: _showGroup,
-                          onChanged: (v) async {
-                            setState(() => _showGroup = v);
-                            await _setBool(_kShowGroupKey, v);
-                          },
-                        ),
-                        _buildSwitch(
-                          icon: Icons.auto_awesome,
-                          title: 'Motivational messages',
-                          value: _showMotivational,
-                          onChanged: (v) async {
-                            setState(() => _showMotivational = v);
-                            await _setBool(_kShowMotivationalKey, v);
-                          },
-                        ),
-                        _buildSwitch(
-                          icon: Icons.access_time,
-                          title: 'Personal reminders (daily wered & dhikr)',
-                          value: _showPersonal,
-                          onChanged: (v) async {
-                            setState(() => _showPersonal = v);
-                            await _setBool(_kShowPersonalKey, v);
-                          },
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Note: These toggles hide or show items in the app’s Notifications screen. The master Push toggle controls whether your device receives any push notifications.',
-                          style: TextStyle(
-                            color: themeProvider.primaryTextColor.withOpacity(0.8),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
           ),
         );
