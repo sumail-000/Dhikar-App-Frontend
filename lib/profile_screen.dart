@@ -785,6 +785,31 @@ class _ContentSections extends StatelessWidget {
               dividerColor: dividerColor,
             ),
             const SizedBox(height: 20),
+            // Notification Settings Section
+            _SectionCard(
+              title: 'Notification Settings', // Updated title
+              items: [
+                _SectionItem(
+                  icon: Icons.notifications,
+                  title: 'Notification Settings', // Updated title
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PrivacyNotificationsScreen(),
+                      ),
+                    );
+                  },
+                  textColor: sectionTextColor,
+                  iconColor: sectionIconColor,
+                ),
+              ],
+              headerColor: sectionHeaderColor,
+              cardColor: sectionCardColor,
+              borderColor: cardBorderColor,
+              dividerColor: dividerColor,
+            ),
+            const SizedBox(height: 20),
             // Group Management Section
             _SectionCard(
               title: appLocalizations.groupManagement,
@@ -797,20 +822,6 @@ class _ContentSections extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => const GroupManagementGroupsScreen(),
-                      ),
-                    );
-                  },
-                  textColor: sectionTextColor,
-                  iconColor: sectionIconColor,
-                ),
-                _SectionItem(
-                  icon: Icons.privacy_tip,
-                  title: appLocalizations.privacyAndNotification,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const PrivacyNotificationsScreen(),
                       ),
                     );
                   },

@@ -1,2 +1,0 @@
-# wered
-Quranic App
