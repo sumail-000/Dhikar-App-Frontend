@@ -264,7 +264,6 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
             content: Text(
               isArabic ? 'فشل في فتح شاشة القراءة' : 'Failed to open reading screen',
             ),
-            backgroundColor: Colors.red,
           ),
         );
       }

@@ -1110,48 +1110,19 @@ child: Text(
   void _showGroupProgressSavedSnackbar() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Consumer<LanguageProvider>(
-builder: (context, languageProvider, child) => Text(
-            AppLocalizations.of(context)!.groupKhitmaProgressSaved,
-            style: const TextStyle(
-              color: Color(0xFF2D1B69),
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        backgroundColor: const Color(0xFFF7F3E8),
+        content: Text(AppLocalizations.of(context)!.groupKhitmaProgressSaved),
         duration: const Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        margin: const EdgeInsets.all(16),
       ),
     );
   }
 
   /// Show progress saved snackbar
   void _showProgressSavedSnackbar(double completionPercentage) {
+    final text = AppLocalizations.of(context)!.khitmaProgressSaved + ' (' + completionPercentage.toStringAsFixed(1) + '% ' + AppLocalizations.of(context)!.completeWord + ')';
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Consumer<LanguageProvider>(
-builder: (context, languageProvider, child) => Text(
-            AppLocalizations.of(context)!.khitmaProgressSaved + ' (' + completionPercentage.toStringAsFixed(1) + '% ' + AppLocalizations.of(context)!.completeWord + ')',
-            style: const TextStyle(
-              color: Color(0xFF2D1B69),
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        backgroundColor: const Color(0xFFF7F3E8),
+        content: Text(text),
         duration: const Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        margin: const EdgeInsets.all(16),
       ),
     );
   }
@@ -1160,21 +1131,8 @@ builder: (context, languageProvider, child) => Text(
   void _showErrorSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        backgroundColor: const Color(0xFF8B3A3A), // Muted red that fits your palette
+        content: Text(message),
         duration: const Duration(seconds: 4),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        margin: const EdgeInsets.all(16),
       ),
     );
   }

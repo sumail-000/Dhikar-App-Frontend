@@ -78,10 +78,8 @@ class _PersonalizedReminderDialogState extends State<PersonalizedReminderDialog>
         if (mounted) {
           Navigator.of(context).pop(true);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Personalized reminder sent to ${widget.memberName}'),
-              backgroundColor: Colors.green.shade600,
-              behavior: SnackBarBehavior.floating,
+            const SnackBar(
+              content: Text('Personalized reminder sent to user'),
             ),
           );
         }
@@ -90,8 +88,6 @@ class _PersonalizedReminderDialogState extends State<PersonalizedReminderDialog>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(resp.error ?? 'Failed to send reminder'),
-              backgroundColor: Colors.red.shade600,
-              behavior: SnackBarBehavior.floating,
             ),
           );
         }
@@ -101,8 +97,6 @@ class _PersonalizedReminderDialogState extends State<PersonalizedReminderDialog>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error sending reminder: $e'),
-            backgroundColor: Colors.red.shade600,
-            behavior: SnackBarBehavior.floating,
           ),
         );
       }

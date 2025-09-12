@@ -598,7 +598,6 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to continue reading: $e'),
-            backgroundColor: Colors.red,
           ),
         );
       }

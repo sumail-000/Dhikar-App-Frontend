@@ -532,7 +532,6 @@ class _NewKhitmaScreenState extends State<NewKhitmaScreen> {
                                                       : 'Personal Khitma started successfully!',
                                                 ),
                                                 duration: const Duration(seconds: 2),
-                                                backgroundColor: const Color(0xFF4A148C),
                                               ),
                                             );
                                             
@@ -551,17 +550,16 @@ class _NewKhitmaScreenState extends State<NewKhitmaScreen> {
                                             );
                                           } else if (mounted) {
                                             // Show error message
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  response.error ?? (languageProvider.isArabic
-                                                      ? 'فشل في إنشاء الختمة'
-                                                      : 'Failed to create khitma'),
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    response.error ?? (languageProvider.isArabic
+                                                        ? 'فشل في إنشاء الختمة'
+                                                        : 'Failed to create khitma'),
+                                                  ),
+                                                  duration: const Duration(seconds: 3),
                                                 ),
-                                                backgroundColor: Colors.red,
-                                                duration: const Duration(seconds: 3),
-                                              ),
-                                            );
+                                              );
                                           }
                                         } catch (e) {
                                           if (mounted) {
@@ -572,7 +570,6 @@ class _NewKhitmaScreenState extends State<NewKhitmaScreen> {
                                                       ? 'خطأ في الاتصال. يرجى المحاولة مرة أخرى.'
                                                       : 'Connection error. Please try again.',
                                                 ),
-                                                backgroundColor: Colors.red,
                                                 duration: const Duration(seconds: 3),
                                               ),
                                             );

@@ -71,7 +71,6 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
             content: Text(
               languageProvider.isArabic ? 'تم الحفظ في المجموعة' : 'Saved to group',
             ),
-            backgroundColor: Colors.green,
           ),
         );
         Navigator.pop(context, true);
@@ -80,7 +79,6 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(resp.error ?? (languageProvider.isArabic ? 'فشل الحفظ' : 'Save failed')),
-            backgroundColor: Colors.red,
           ),
         );
       }
@@ -105,7 +103,6 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
               ? 'تم حفظ الذكر بنجاح'
               : 'Dhikr saved successfully',
         ),
-        backgroundColor: Colors.green,
       ),
     );
     Navigator.pop(context, true);
