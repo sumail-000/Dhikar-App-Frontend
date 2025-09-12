@@ -787,11 +787,11 @@ class _ContentSections extends StatelessWidget {
             const SizedBox(height: 20),
             // Notification Settings Section
             _SectionCard(
-              title: 'Notification Settings', // Updated title
+              title: appLocalizations.notificationSettings, // Localized title
               items: [
                 _SectionItem(
                   icon: Icons.notifications,
-                  title: 'Notification Settings', // Updated title
+                  title: appLocalizations.notificationSettings,
                   onTap: () {
                     Navigator.push(
                       context,

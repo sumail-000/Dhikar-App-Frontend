@@ -6,6 +6,7 @@ import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'services/api_client.dart';
 import 'dart:math' as math;
+import 'app_localizations.dart';
 
 class WeredReadingScreen extends StatefulWidget {
   final List<String> selectedSurahs;
@@ -952,14 +953,14 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
       } else {
         print('❌ DEBUG: Failed to save group progress: ${response.error}');
         if (mounted) {
-          _showErrorSnackbar(response.error ?? 'Failed to save group progress');
+_showErrorSnackbar(response.error ?? AppLocalizations.of(context)!.failedToSaveGroupProgress);
         }
       }
     } catch (e, stackTrace) {
       print('❌ DEBUG: Exception while saving group progress: $e');
       print('❌ DEBUG: Stack trace: $stackTrace');
       if (mounted) {
-        _showErrorSnackbar('Failed to save group progress. Please try again.');
+_showErrorSnackbar(AppLocalizations.of(context)!.failedToSaveGroupProgress + '. ' + AppLocalizations.of(context)!.tryAgain + '.');
       }
     }
   }
@@ -1056,9 +1057,9 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => Consumer<LanguageProvider>(
-        builder: (context, languageProvider, child) => AlertDialog(
+builder: (context, languageProvider, child) => AlertDialog(
           title: Text(
-            languageProvider.isArabic ? '🎉 تهانينا!' : '🎉 Congratulations!',
+                languageProvider.isArabic ? '🎉 تهانينا!' : '🎉 Congratulations!',
             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
@@ -1094,8 +1095,8 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                 Navigator.of(context).pop(); // Close dialog
                 Navigator.of(context).pop(); // Close reading screen
               },
-              child: Text(
-                languageProvider.isArabic ? 'العودة للرئيسية' : 'Back to Home',
+child: Text(
+                AppLocalizations.of(context)!.backToHome,
                 style: const TextStyle(fontSize: 16),
               ),
             ),
@@ -1110,10 +1111,8 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Consumer<LanguageProvider>(
-          builder: (context, languageProvider, child) => Text(
-            languageProvider.isArabic
-                ? 'تم حفظ تقدم الختمة الجماعية بنجاح!'
-                : 'Group khitma progress saved successfully!',
+builder: (context, languageProvider, child) => Text(
+            AppLocalizations.of(context)!.groupKhitmaProgressSaved,
             style: const TextStyle(
               color: Color(0xFF2D1B69),
               fontSize: 14,
@@ -1137,10 +1136,8 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Consumer<LanguageProvider>(
-          builder: (context, languageProvider, child) => Text(
-            languageProvider.isArabic
-                ? 'تم حفظ تقدم الختمة بنجاح! (${completionPercentage.toStringAsFixed(1)}% مكتمل)'
-                : 'Khitma progress saved successfully! (${completionPercentage.toStringAsFixed(1)}% complete)',
+builder: (context, languageProvider, child) => Text(
+            AppLocalizations.of(context)!.khitmaProgressSaved + ' (' + completionPercentage.toStringAsFixed(1) + '% ' + AppLocalizations.of(context)!.completeWord + ')',
             style: const TextStyle(
               color: Color(0xFF2D1B69),
               fontSize: 14,
@@ -1244,7 +1241,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        languageProvider.isArabic ? 'خطأ في التحميل' : 'Loading Error',
+AppLocalizations.of(context)!.loadingError,
                         style: TextStyle(
                           color: Colors.red[700],
                           fontSize: 20,
@@ -1275,7 +1272,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                             },
                             icon: const Icon(Icons.refresh),
                             label: Text(
-                              languageProvider.isArabic ? 'إعادة المحاولة' : 'Retry',
+AppLocalizations.of(context)!.tryAgain,
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF4A148C),
@@ -1285,7 +1282,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                           OutlinedButton(
                             onPressed: () => Navigator.pop(context),
                             child: Text(
-                              languageProvider.isArabic ? 'العودة' : 'Go Back',
+AppLocalizations.of(context)!.goBack,
                               style: const TextStyle(
                                 color: Color(0xFF4A148C),
                               ),
@@ -1360,17 +1357,11 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                               ),
                               Expanded(
                                 child: Text(
-                                  widget.isPersonalKhitma
-                                      ? (languageProvider.isArabic
-                                          ? 'الختمة الشخصية'
-                                          : 'Personal Khitma')
+widget.isPersonalKhitma
+                                      ? AppLocalizations.of(context)!.personalKhitma
                                       : widget.isGroupKhitma
-                                          ? (languageProvider.isArabic
-                                              ? 'الختمة الجماعية'
-                                              : 'Group Khitma')
-                                          : (languageProvider.isArabic
-                                              ? 'الورد اليومي'
-                                              : 'Daily Wered'),
+                                          ? AppLocalizations.of(context)!.groupKhitma
+                                          : AppLocalizations.of(context)!.dailyWered,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: themeProvider.isDarkMode
@@ -1406,9 +1397,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                               ),
                               // Page info
                               Text(
-                                languageProvider.isArabic
-                                    ? 'الصفحة ${currentPageIndex + 1} من ${surahData.length}'
-                                    : 'Page ${currentPageIndex + 1} of ${surahData.length}',
+'${AppLocalizations.of(context)!.pageShort} ${currentPageIndex + 1} ${AppLocalizations.of(context)!.outOfWord} ${surahData.length}',
                                 style: TextStyle(
                                   color: themeProvider.isDarkMode
                                       ? const Color(0xFFF7F3E8)
@@ -1506,9 +1495,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                                           ),
                                         ] else
                                           Text(
-                                            languageProvider.isArabic
-                                                ? 'لا يوجد محتوى للعرض'
-                                                : 'No content to display',
+AppLocalizations.of(context)!.noContentToDisplay,
                                             style: const TextStyle(
                                               fontSize: 18,
                                               color: Color(0xFF2D1B69),
@@ -1622,10 +1609,8 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                                               borderRadius: BorderRadius.circular(10),
                                             ),
                                           ),
-                                          child: Text(
-                                            languageProvider.isArabic
-                                                ? 'حفظ التقدم'
-                                                : 'Save Progress',
+child: Text(
+                                            AppLocalizations.of(context)!.saveProgress,
                                             style: const TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w600,
@@ -1664,10 +1649,8 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                                                       width: 18,
                                                       child: CircularProgressIndicator(strokeWidth: 2),
                                                     )
-                                                  : Text(
-                                                      languageProvider.isArabic
-                                                          ? 'حفظ التقدم'
-                                                          : 'Save Progress',
+: Text(
+                                                      AppLocalizations.of(context)!.saveProgress,
                                                       style: const TextStyle(
                                                         fontSize: 14,
                                                         fontWeight: FontWeight.w600,
@@ -1693,10 +1676,8 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                                                   borderRadius: BorderRadius.circular(10),
                                                 ),
                                               ),
-                                              child: Text(
-                                                languageProvider.isArabic
-                                                    ? 'تغيير السورة'
-                                                    : 'Change Surah',
+child: Text(
+                                                AppLocalizations.of(context)!.changeSurah,
                                                 style: const TextStyle(
                                                   fontSize: 14,
                                                   fontWeight: FontWeight.w600,

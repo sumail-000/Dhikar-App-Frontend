@@ -7,6 +7,7 @@ import 'services/api_client.dart';
 import 'services/notification_service.dart';
 import 'home_screen.dart';
 import 'profile_provider.dart';
+import 'app_localizations.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -34,6 +35,7 @@ class _SignupScreenState extends State<SignupScreen> {
   Future<void> _handleSignup(LanguageProvider languageProvider) async {
     FocusScope.of(context).unfocus();
     final scaffold = ScaffoldMessenger.of(context);
+    final l = AppLocalizations.of(context)!;
 
     // Normalize username: collapse multiple spaces and trim
     final username = _usernameController.text.replaceAll(RegExp(r'\s+'), ' ').trim();
@@ -48,11 +50,9 @@ class _SignupScreenState extends State<SignupScreen> {
     if (username.isEmpty || username.length > 255 || !usernamePattern.hasMatch(username)) {
       scaffold.showSnackBar(
         SnackBar(
-          content: Text(
-            languageProvider.isArabic
-                ? 'اسم المستخدم يجب أن يحتوي على حروف ومسافات فقط'
-                : 'Username may contain letters and spaces only',
-          ),
+            content: Text(
+              l.invalidUsername,
+            ),
         ),
       );
       return;
@@ -60,11 +60,9 @@ class _SignupScreenState extends State<SignupScreen> {
     if (email.isEmpty || password.length < 8) {
       scaffold.showSnackBar(
         SnackBar(
-          content: Text(
-            languageProvider.isArabic
-                ? 'يرجى إدخال بريد إلكتروني صحيح وكلمة مرور لا تقل عن 8 أحرف'
-                : 'Please enter a valid email and a password of at least 8 characters',
-          ),
+            content: Text(
+              l.enterValidEmailPassword8,
+            ),
         ),
       );
       return;
@@ -77,7 +75,7 @@ class _SignupScreenState extends State<SignupScreen> {
         scaffold.showSnackBar(
           SnackBar(
             content: Text(
-              resp.error ?? (languageProvider.isArabic ? 'فشل إنشاء الحساب' : 'Sign up failed'),
+              resp.error ?? l.signUpFailed,
             ),
           ),
         );
@@ -88,9 +86,7 @@ class _SignupScreenState extends State<SignupScreen> {
         scaffold.showSnackBar(
           SnackBar(
             content: Text(
-              languageProvider.isArabic
-                  ? 'استجابة غير متوقعة من الخادم'
-                  : 'Unexpected server response',
+              l.unexpectedServerResponse,
             ),
           ),
         );
@@ -112,9 +108,7 @@ class _SignupScreenState extends State<SignupScreen> {
       scaffold.showSnackBar(
         SnackBar(
           content: Text(
-            languageProvider.isArabic
-                ? 'تم إنشاء الحساب بنجاح'
-                : 'Account created successfully',
+            l.accountCreatedSuccessfully,
           ),
         ),
       );
@@ -127,9 +121,7 @@ class _SignupScreenState extends State<SignupScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            languageProvider.isArabic
-                ? 'خطأ في الشبكة. يرجى المحاولة لاحقًا.'
-                : 'Network error. Please try again later.',
+            l.networkErrorTryLater,
           ),
         ),
       );
@@ -142,6 +134,7 @@ class _SignupScreenState extends State<SignupScreen> {
   Widget build(BuildContext context) {
     return Consumer2<ThemeProvider, LanguageProvider>(
       builder: (context, themeProvider, languageProvider, child) {
+        final appLocalizations = AppLocalizations.of(context)!;
         return Directionality(
           textDirection: languageProvider.textDirection,
           child: Scaffold(
@@ -218,7 +211,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               children: [
                                 SizedBox(height: MediaQuery.of(context).size.height * 0.12),
                                 Text(
-                                  languageProvider.isArabic ? 'إنشاء حساب' : 'Sign Up',
+                                  appLocalizations.signupTitle,
                                   style: TextStyle(
                                     fontSize: MediaQuery.of(context).size.width * 0.08,
                                     fontWeight: FontWeight.bold,
@@ -227,9 +220,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                 ),
                                 SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                                 Text(
-                                  languageProvider.isArabic
-                                      ? 'انضم لبدء رحلتك الروحية. تتبع ختمتك وذكرك والمزيد.'
-                                      : 'Join to start your spiritual journey. Track your Khitma, Dhikr and more.',
+                                  appLocalizations.signupSubtitle,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: MediaQuery.of(context).size.width * 0.04,
@@ -254,7 +245,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                       fontSize: MediaQuery.of(context).size.width * 0.04,
                                     ),
                                     decoration: InputDecoration(
-                                      labelText: languageProvider.isArabic ? 'اسم المستخدم' : 'Username',
+                                      labelText: appLocalizations.username,
                                       labelStyle: TextStyle(
                                         color: themeProvider.secondaryTextColor,
                                         fontSize: MediaQuery.of(context).size.width * 0.04,
@@ -297,7 +288,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                       fontSize: MediaQuery.of(context).size.width * 0.04,
                                     ),
                                     decoration: InputDecoration(
-                                      labelText: languageProvider.isArabic ? 'البريد الإلكتروني' : 'Email',
+                                      labelText: appLocalizations.password,
                                       labelStyle: TextStyle(
                                         color: themeProvider.secondaryTextColor,
                                         fontSize: MediaQuery.of(context).size.width * 0.04,

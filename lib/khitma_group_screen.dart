@@ -543,7 +543,7 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
                           children: [
                             IconButton(
                               icon: Icon(
-                                Icons.arrow_back_ios,
+                                isArabic ? Icons.arrow_forward_ios : Icons.arrow_back_ios,
                                 color: isLightMode ? greenColor : creamColor,
                               ),
                               onPressed: () {

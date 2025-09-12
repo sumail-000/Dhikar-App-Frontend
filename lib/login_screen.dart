@@ -8,6 +8,7 @@ import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'profile_provider.dart';
 import 'services/notification_service.dart';
+import 'app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -33,6 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleLogin(LanguageProvider languageProvider) async {
     FocusScope.of(context).unfocus();
     final scaffold = ScaffoldMessenger.of(context);
+    final l = AppLocalizations.of(context)!;
 
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
@@ -40,11 +42,9 @@ class _LoginScreenState extends State<LoginScreen> {
     if (email.isEmpty || password.isEmpty) {
       scaffold.showSnackBar(
         SnackBar(
-          content: Text(
-            languageProvider.isArabic
-                ? 'يرجى إدخال البريد الإلكتروني وكلمة المرور'
-                : 'Please enter email and password',
-          ),
+            content: Text(
+              l.enterEmailPassword,
+            ),
         ),
       );
       return;
@@ -57,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
         scaffold.showSnackBar(
           SnackBar(
             content: Text(
-              resp.error ?? (languageProvider.isArabic ? 'فشل تسجيل الدخول' : 'Login failed'),
+              resp.error ?? l.loginFailed,
             ),
           ),
         );
@@ -68,9 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
         scaffold.showSnackBar(
           SnackBar(
             content: Text(
-              languageProvider.isArabic
-                  ? 'استجابة غير متوقعة من الخادم'
-                  : 'Unexpected server response',
+              l.unexpectedServerResponse,
             ),
           ),
         );
@@ -91,9 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
       scaffold.showSnackBar(
         SnackBar(
           content: Text(
-            languageProvider.isArabic
-                ? 'تم تسجيل الدخول بنجاح'
-                : 'Logged in successfully',
+            l.loggedInSuccessfully,
           ),
         ),
       );
@@ -106,9 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            languageProvider.isArabic
-                ? 'خطأ في الشبكة. يرجى المحاولة لاحقًا.'
-                : 'Network error. Please try again later.',
+            l.networkErrorTryLater,
           ),
         ),
       );
@@ -121,6 +115,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Consumer2<ThemeProvider, LanguageProvider>(
       builder: (context, themeProvider, languageProvider, child) {
+        final appLocalizations = AppLocalizations.of(context)!;
         return Directionality(
           textDirection: languageProvider.textDirection,
           child: Scaffold(
@@ -208,7 +203,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 // Title
                                 Text(
-                                  languageProvider.isArabic ? 'تسجيل الدخول' : 'Login',
+                                  appLocalizations.loginTitle,
                                   style: TextStyle(
                                     fontSize: MediaQuery.of(context).size.width * 0.08,
                                     fontWeight: FontWeight.bold,
@@ -220,9 +215,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 // Subtitle
                                 Text(
-                                  languageProvider.isArabic
-                                      ? 'مرحبًا بعودتك. واصل طريقك في الذكر والتأمل والعبادة بسهولة.'
-                                      : 'Welcome back. Continue your path of remembrance, reflection, and worship with ease.',
+                                  appLocalizations.loginSubtitle,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: MediaQuery.of(context).size.width * 0.04,
@@ -248,8 +241,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       fontSize: MediaQuery.of(context).size.width * 0.04,
                                     ),
                                     decoration: InputDecoration(
-                                      labelText:
-                                          languageProvider.isArabic ? 'البريد الإلكتروني' : 'Email',
+                                      labelText: appLocalizations.email,
                                       labelStyle: TextStyle(
                                         color: themeProvider.secondaryTextColor,
                                         fontSize: MediaQuery.of(context).size.width * 0.04,
@@ -294,8 +286,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       fontSize: MediaQuery.of(context).size.width * 0.04,
                                     ),
                                     decoration: InputDecoration(
-                                      labelText:
-                                          languageProvider.isArabic ? 'ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±' : 'Password',
+                                      labelText: appLocalizations.password,
                                       labelStyle: TextStyle(
                                         color: themeProvider.secondaryTextColor,
                                         fontSize: MediaQuery.of(context).size.width * 0.04,

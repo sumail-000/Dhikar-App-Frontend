@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/api_client.dart';
+import 'app_localizations.dart';
 
 class DhikrData {
   final String title;
@@ -64,9 +65,10 @@ class DhikrProvider with ChangeNotifier {
 
   double get dhikrProgress => _currentDhikr?.progress ?? 0.0;
 
-  String get dhikrProgressText {
-    if (_currentDhikr == null) return '0 out of 0';
-    return '${_currentDhikr!.currentCount} out of ${_currentDhikr!.target}';
+  String dhikrProgressText(BuildContext context) {
+    final app = AppLocalizations.of(context)!;
+    if (_currentDhikr == null) return '0 ${app.outOfWord} 0';
+    return '${_currentDhikr!.currentCount} ${app.outOfWord} ${_currentDhikr!.target}';
   }
 
   Future<void> loadFromStorage() async {

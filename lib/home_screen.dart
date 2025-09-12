@@ -443,7 +443,7 @@ class _ProgressSectionState extends State<_ProgressSection> {
 
         // Calculate group khitma progress
         double groupProgress = 0.0;
-        String groupSubtitle = '0 out of 0';
+        String groupSubtitle = '0 ${appLocalizations.outOfWord} 0';
         
         if (!isLoadingGroupStats && groupStatsError == null && groupKhitmaStats != null) {
           final int totalGroups = groupKhitmaStats!['total_groups'] ?? 0;
@@ -452,12 +452,12 @@ class _ProgressSectionState extends State<_ProgressSection> {
           
           if (totalGroups > 0) {
             groupProgress = averageProgress / 100; // Convert percentage to decimal
-            groupSubtitle = '$completedGroups out of $totalGroups';
+            groupSubtitle = '$completedGroups ${appLocalizations.outOfWord} $totalGroups';
           }
         } else if (isLoadingGroupStats) {
-          groupSubtitle = 'Loading...';
+          groupSubtitle = appLocalizations.loading;
         } else if (groupStatsError != null) {
-          groupSubtitle = 'Error loading';
+          groupSubtitle = appLocalizations.errorLoading;
         }
 
         return Column(
@@ -485,10 +485,10 @@ class _ProgressSectionState extends State<_ProgressSection> {
                       title: appLocalizations.dhikrGoal,
                       progress: (dhikrTotalTarget > 0) ? (dhikrTotalCount / dhikrTotalTarget).clamp(0.0, 1.0) : 0.0,
                       subtitle: isLoadingDhikr
-                          ? 'Loading...'
+                          ? appLocalizations.loading
                           : (dhikrError != null)
-                              ? 'Error loading'
-                              : '${_shortNum(dhikrTotalCount)} out of ${_shortNum(dhikrTotalTarget)}',
+                              ? appLocalizations.errorLoadingDhikr
+                              : '${_shortNum(dhikrTotalCount)} ${appLocalizations.outOfWord} ${_shortNum(dhikrTotalTarget)}',
                     ),
                   ),
                 ),
@@ -613,7 +613,8 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
   Widget build(BuildContext context) {
     return Consumer2<ThemeProvider, LanguageProvider>(
       builder: (context, themeProvider, languageProvider, child) {
-        final String title = languageProvider.isArabic ? 'ختمتي الشخصية' : 'Personal Khitma';
+        final app = AppLocalizations.of(context)!;
+        final String title = app.personalKhitma;
         
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -660,7 +661,7 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            languageProvider.isArabic ? 'خطأ في تحميل البيانات' : 'Error loading data',
+            AppLocalizations.of(context)!.errorLoadingData,
             style: TextStyle(
               color: themeProvider.homeBoxTextColor,
               fontSize: 14,
@@ -678,7 +679,7 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
               _loadActiveKhitma();
             },
             child: Text(
-              languageProvider.isArabic ? 'إعادة المحاولة' : 'Try Again',
+              AppLocalizations.of(context)!.tryAgain,
             ),
           ),
         ],
@@ -690,7 +691,7 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            languageProvider.isArabic ? 'لا توجد ختمة نشطة' : 'No active khitma',
+            AppLocalizations.of(context)!.noActiveKhitma,
             style: TextStyle(
               color: themeProvider.homeBoxTextColor,
               fontSize: 14,
@@ -700,9 +701,7 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
           ),
           const SizedBox(height: 10),
           Text(
-            languageProvider.isArabic 
-                ? 'ابدأ ختمة جديدة للمتابعة'
-                : 'Start a new khitma to continue',
+            AppLocalizations.of(context)!.startNewKhitma,
             style: TextStyle(
               color: themeProvider.homeBoxTextColor,
               fontSize: 12,
@@ -719,12 +718,9 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
     final int currentPage = activeKhitma!['current_page'] as int;
     final String khitmaName = activeKhitma!['khitma_name'] as String;
     
-    final String subtitle = languageProvider.isArabic
-        ? 'الصفحة $currentPage - الجزء $currentJuzz'
-        : 'Page $currentPage - Juz $currentJuzz';
-    final String lastReadLabel = languageProvider.isArabic
-        ? 'آخر قراءة: الصفحة $currentPage'
-        : 'Last read: Page $currentPage';
+    final app = AppLocalizations.of(context)!;
+    final String subtitle = '${app.pageShort} $currentPage - ${app.juzShort} $currentJuzz';
+    final String lastReadLabel = '${app.lastRead}: ${app.pageShort} $currentPage';
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -801,7 +797,7 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
               elevation: 0,
             ),
             child: Text(
-              languageProvider.isArabic ? 'متابعة القراءة' : 'Continue Reading',
+              AppLocalizations.of(context)!.continueReading,
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,

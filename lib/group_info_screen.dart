@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'services/api_client.dart';
 import 'profile_provider.dart';
 import 'language_provider.dart';
+import 'app_localizations.dart';
 
 // Functional Group Info screen with real API data
 class GroupInfoScreen extends StatefulWidget {
@@ -210,7 +211,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                 child: Row(
                   children: [
                     _CircleIconButton(
-                      icon: Icons.arrow_back_ios_new_rounded,
+                      icon: languageProvider.isArabic ? Icons.arrow_forward_ios_rounded : Icons.arrow_back_ios_new_rounded,
                       onTap: () => Navigator.of(context).maybePop(),
                     ),
                     const Spacer(),
@@ -225,7 +226,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      isArabic ? 'معلومات المجموعة' : 'Group Info.',
+                      AppLocalizations.of(context)!.groupInfoTitle,
                       style: GoogleFonts.manrope(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -234,8 +235,8 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      _groupName ?? (isArabic ? 'دائرة القرآن' : "The Qur'an Circle"),
+Text(
+                      _groupName ?? AppLocalizations.of(context)!.quranCircle,
                       style: GoogleFonts.manrope(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -244,8 +245,8 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      isArabic ? '$_membersCount عضو' : '$_membersCount Members',
+Text(
+                      '$_membersCount ' + AppLocalizations.of(context)!.members,
                       style: GoogleFonts.manrope(
                         fontSize: 12,
                         color: Colors.white.withOpacity(0.9),
@@ -261,7 +262,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14.0),
                 child: Text(
-                  isArabic ? 'قائمة الأعضاء' : 'Members List',
+                  AppLocalizations.of(context)!.membersList,
                   style: GoogleFonts.manrope(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -305,7 +306,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                                     foregroundColor: Colors.white,
                                   ),
                                   child: Text(
-                                    isArabic ? 'إعادة المحاولة' : 'Retry',
+                                    AppLocalizations.of(context)!.tryAgain,
                                   ),
                                 ),
                               ],
@@ -314,9 +315,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                         : membersToDisplay.isEmpty
                             ? Center(
                                 child: Text(
-                                  isArabic
-                                      ? 'لا توجد تعيينات للأعضاء'
-                                      : 'No member assignments found',
+                                  AppLocalizations.of(context)!.noMemberAssignments,
                                   style: GoogleFonts.manrope(
                                     color: Colors.white.withOpacity(0.7),
                                     fontSize: 14,
@@ -399,10 +398,11 @@ class _MemberTile extends StatelessWidget {
     final cardColor = Colors.white.withOpacity(0.05);
     final borderColor = Colors.white.withOpacity(0.18);
 
+final app = AppLocalizations.of(context)!;
     final statusText = switch (member.status) {
-      _Status.completed => isArabic ? 'مكتمل' : 'Completed',
-      _Status.inProgress => isArabic ? 'قيد التقدم' : 'In Progress',
-      _Status.notStarted => isArabic ? 'لم يبدأ' : 'Not Started',
+      _Status.completed => app.completed,
+      _Status.inProgress => app.inProgress,
+      _Status.notStarted => app.notStarted,
     };
 
     final statusColor = switch (member.status) {
@@ -449,7 +449,9 @@ class _MemberTile extends StatelessWidget {
                     color: Colors.white.withOpacity(0.05),
                   ),
                   child: Text(
-                    formattedJuz.isEmpty ? (isArabic ? 'غير مُعين' : 'Unassigned') : 'Juzz#$formattedJuz',
+                    formattedJuz.isEmpty
+                        ? AppLocalizations.of(context)!.unassigned
+                        : '${AppLocalizations.of(context)!.juzShort} $formattedJuz',
                     style: GoogleFonts.manrope(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,

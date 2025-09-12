@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import '../services/api_client.dart';
+import '../app_localizations.dart';
 
 class ManagementGroupCard extends StatelessWidget {
   final bool isArabic;
@@ -34,8 +35,9 @@ class ManagementGroupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = isArabic ? titleArabic : titleEnglish;
-    final privacy = isArabic ? (isPublic ? 'عام' : 'خاص') : (isPublic ? 'Public' : 'Private');
+final title = isArabic ? titleArabic : titleEnglish;
+    final privacy = isPublic ? AppLocalizations.of(context)!.public : AppLocalizations.of(context)!.private;
+    final app = AppLocalizations.of(context)!;
     
     // App's theming system integration
     final primaryColor = isLightMode ? const Color(0xFF251629) : const Color(0xFF6B46C1); // App's purple theme
@@ -154,7 +156,7 @@ class ManagementGroupCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              title.isNotEmpty ? title : (isArabic ? 'مجموعة بدون اسم' : 'Untitled Group'),
+                              title.isNotEmpty ? title : app.untitledGroup,
                               maxLines: 1, // Reduced from 2 to 1
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
@@ -206,7 +208,7 @@ class ManagementGroupCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4), // Reduced from 6 to 4
                         Text(
-                          isArabic ? 'الأعضاء: $membersCount' : 'Members: $membersCount',
+                          '${app.members}: $membersCount',
                           style: TextStyle(
                             fontSize: 11, // Reduced from 12 to 11
                             fontWeight: FontWeight.w600,
@@ -237,7 +239,7 @@ class ManagementGroupCard extends StatelessWidget {
                         child: _modernButton(
                           context,
                           icon: isArabic ? Icons.arrow_back_ios : Icons.arrow_forward_ios,
-                          label: isArabic ? 'فتح' : 'Open',
+                          label: app.open,
                           onTap: onOpen,
                           isPrimary: true,
                           isLightMode: isLightMode,
@@ -252,7 +254,7 @@ class ManagementGroupCard extends StatelessWidget {
                       _modernIconButton(
                         context,
                         icon: Icons.share_rounded,
-                        tooltip: isArabic ? 'دعوة' : 'Invite',
+                        tooltip: app.invite,
                         onTap: () => _handleInvite(context),
                         isLightMode: isLightMode,
                         color: const Color(0xFF235347), // App's green for invite
@@ -438,7 +440,7 @@ class ManagementGroupCard extends StatelessWidget {
         : await ApiClient.instance.getGroupInvite(groupId);
     if (!inviteResp.ok) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(inviteResp.error ?? (isArabic ? 'خطأ الدعوة' : 'Invite error'))),
+SnackBar(content: Text(inviteResp.error ?? AppLocalizations.of(context)!.inviteError)),
       );
       return;
     }
@@ -459,8 +461,8 @@ class ManagementGroupCard extends StatelessWidget {
           insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           titlePadding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
           contentPadding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          title: Text(
-            isArabic ? 'دعوة الأعضاء' : 'Invite members',
+title: Text(
+            AppLocalizations.of(context)!.inviteMembers,
             style: TextStyle(
               color: isDark ? Colors.white : const Color(0xFF2D1B69),
               fontWeight: FontWeight.w700,
@@ -503,7 +505,7 @@ class ManagementGroupCard extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      tooltip: isArabic ? 'نسخ' : 'Copy',
+tooltip: AppLocalizations.of(context)!.copy,
                       onPressed: () async {
                         await Clipboard.setData(ClipboardData(text: token));
                         if (ctx.mounted) Navigator.of(ctx).pop();
@@ -526,8 +528,8 @@ class ManagementGroupCard extends StatelessWidget {
                 await Share.share(message);
               },
               icon: const Icon(Icons.share_rounded, size: 18),
-              label: Text(
-                isArabic ? 'مشاركة' : 'Share',
+label: Text(
+                AppLocalizations.of(context)!.share,
                 style: TextStyle(color: isDark ? Colors.white : const Color(0xFF2D1B69)),
               ),
             ),
@@ -537,8 +539,8 @@ class ManagementGroupCard extends StatelessWidget {
                 if (ctx.mounted) Navigator.of(ctx).pop();
               },
               icon: const Icon(Icons.copy_rounded, size: 18),
-              label: Text(
-                isArabic ? 'نسخ' : 'Copy',
+label: Text(
+                AppLocalizations.of(context)!.copy,
                 style: TextStyle(color: isDark ? Colors.white : const Color(0xFF2D1B69)),
               ),
             ),
@@ -556,28 +558,26 @@ class ManagementGroupCard extends StatelessWidget {
         return AlertDialog(
           backgroundColor: isDark ? const Color(0xFF2D1B69) : Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text(
-            isArabic ? 'حذف المجموعة؟' : 'Delete group?',
+title: Text(
+            AppLocalizations.of(context)!.deleteGroupQuestion,
             style: TextStyle(
               color: isDark ? Colors.white : const Color(0xFF2D1B69),
               fontWeight: FontWeight.w700,
             ),
           ),
-          content: Text(
-            isArabic
-                ? 'سيتم حذف المجموعة وجميع التعيينات والدعوات. لا يمكن التراجع.'
-                : 'This will delete the group, its assignments and invites. This action cannot be undone.',
+content: Text(
+            AppLocalizations.of(context)!.deleteGroupWarning,
             style: TextStyle(color: isDark ? Colors.white70 : const Color(0xFF2D1B69)),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(isArabic ? 'إلغاء' : 'Cancel'),
+child: Text(AppLocalizations.of(context)!.cancel),
             ),
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(true),
-              child: Text(
-                isArabic ? 'حذف' : 'Delete',
+child: Text(
+                AppLocalizations.of(context)!.delete,
                 style: const TextStyle(color: Color(0xFFB91C1C), fontWeight: FontWeight.bold),
               ),
             ),
@@ -594,7 +594,7 @@ class ManagementGroupCard extends StatelessWidget {
         : await ApiClient.instance.deleteGroup(groupId);
     if (!resp.ok) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(resp.error ?? (isArabic ? 'فشل الحذف' : 'Delete failed'))),
+SnackBar(content: Text(resp.error ?? AppLocalizations.of(context)!.deleteFailed)),
       );
       return;
     }
@@ -603,7 +603,7 @@ class ManagementGroupCard extends StatelessWidget {
     if (onDelete != null) onDelete!();
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(isArabic ? 'تم حذف المجموعة' : 'Group deleted')),
+SnackBar(content: Text(AppLocalizations.of(context)!.groupDeleted))
     );
   }
 }

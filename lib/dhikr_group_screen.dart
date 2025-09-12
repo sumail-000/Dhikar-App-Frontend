@@ -342,7 +342,7 @@ final resp = await ApiClient.instance.joinDhikrGroup(token: token);
                           children: [
                             IconButton(
                               icon: Icon(
-                                Icons.arrow_back_ios,
+                                isArabic ? Icons.arrow_forward_ios : Icons.arrow_back_ios,
                                 color: isLightMode ? greenColor : creamColor,
                               ),
                               onPressed: () {

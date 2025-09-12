@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'services/api_client.dart';
+import 'app_localizations.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -127,6 +128,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       builder: (context, themeProvider, languageProvider, child) {
         final isArabic = languageProvider.isArabic;
         final isDarkMode = themeProvider.isDarkMode;
+        final app = AppLocalizations.of(context)!;
 
         return Scaffold(
           backgroundColor: isDarkMode ? const Color(0xFF1A1A1A) : Colors.white,
@@ -159,7 +161,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       ),
                       Expanded(
                         child: Text(
-                          isArabic ? 'الإشعارات' : 'Notifications',
+                          app.notifications,
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -171,7 +173,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       ),
                       IconButton(
                         onPressed: _markAllAsRead,
-                        tooltip: isArabic ? 'تحديد الكل كمقروء' : 'Mark all read',
+                        tooltip: app.markAllRead,
                         icon: Icon(
                           Icons.done_all,
                           size: 20,
@@ -219,7 +221,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                               ),
                             ),
                             child: Text(
-                              _getFilterText(filter, isArabic),
+                              _getFilterText(filter, app),
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
@@ -266,9 +268,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                               ),
                               const SizedBox(height: 20),
                               Text(
-                                isArabic
-                                    ? 'لا توجد إشعارات متاحة'
-                                    : 'No available notifications',
+                                app.noNotifications,
                                 style: TextStyle(
                                   fontSize: 18,
                                   color: isDarkMode
@@ -280,9 +280,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                isArabic
-                                    ? 'ستظهر الإشعارات هنا عند توفرها'
-                                    : 'Notifications will appear here when available',
+                                app.notificationsAppearHere,
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: isDarkMode
@@ -406,14 +404,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
     );
   }
 
-  String _getFilterText(String filter, bool isArabic) {
+  String _getFilterText(String filter, AppLocalizations app) {
     switch (filter) {
       case 'Individual':
-        return isArabic ? 'فردي' : 'Individual';
+        return app.individual;
       case 'Group':
-        return isArabic ? 'مجموعة' : 'Group';
+        return app.group;
       case 'Motivational':
-        return isArabic ? 'تحفيزي' : 'Motivational';
+        return app.motivational;
       default:
         return filter;
     }

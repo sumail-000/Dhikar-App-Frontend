@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'wered_reading_screen.dart';
+import 'app_localizations.dart';
 
 class DailyWeredScreen extends StatefulWidget {
   // Updated with real Quran data integration
@@ -566,9 +567,7 @@ class _DailyWeredScreenState extends State<DailyWeredScreen> {
                 children: [
                   Text(
                     _selectedSurahName == null
-                        ? (languageProvider.isArabic
-                              ? 'اختر السورة'
-                              : 'Choose surah')
+                        ? AppLocalizations.of(context)!.chooseSurah
                         : languageProvider.isArabic
                         ? _selectedSurahMetadata!['arabicName']
                         : _selectedSurahName!,
