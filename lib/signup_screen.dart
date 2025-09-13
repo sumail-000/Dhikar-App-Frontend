@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'login_screen.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
@@ -155,19 +156,15 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 child: Stack(
                   children: [
+                    // Background SVG (subtle): 3% (dark), 4% (light)
                     Positioned.fill(
                       child: Opacity(
-                        opacity: themeProvider.isDarkMode ? 0.5 : 1.0,
-                        child: Image.asset(
-                          themeProvider.backgroundImage3,
+                        opacity: themeProvider.isDarkMode ? 0.03 : 0.05,
+                        child: SvgPicture.asset(
+                          'assets/background_elements/3_background.svg',
                           fit: BoxFit.cover,
-                          cacheWidth: 800,
-                          filterQuality: FilterQuality.medium,
                         ),
                       ),
-                    ),
-                    Positioned.fill(
-                      child: Container(color: themeProvider.backgroundImageOverlay),
                     ),
                     Positioned(
                       top: 0,

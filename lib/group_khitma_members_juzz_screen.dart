@@ -5,6 +5,7 @@ import 'language_provider.dart';
 import 'services/api_client.dart';
 import 'profile_provider.dart';
 import 'wered_reading_screen.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class GroupKhitmaJuzzScreen extends StatefulWidget {
   final int? groupId;
@@ -293,15 +294,16 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
               ),
               child: Stack(
                 children: [
-                  // Background image
+                  // Background SVG (subtle): 3% (dark), 12% (light). Light mode tinted to #8EB69B
                   Positioned.fill(
                     child: Opacity(
-                      opacity: isDarkMode ? 0.5 : 1.0,
-                      child: Image.asset(
-                        'assets/background_elements/3_background.png',
+                      opacity: isDarkMode ? 0.03 : 0.12,
+                      child: SvgPicture.asset(
+                        'assets/background_elements/3_background.svg',
                         fit: BoxFit.cover,
-                        cacheWidth: 800,
-                        filterQuality: FilterQuality.medium,
+                        colorFilter: !isDarkMode
+                            ? const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn)
+                            : null,
                       ),
                     ),
                   ),

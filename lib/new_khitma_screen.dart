@@ -4,6 +4,7 @@ import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'wered_reading_screen.dart';
 import 'services/api_client.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class NewKhitmaScreen extends StatefulWidget {
   const NewKhitmaScreen({super.key});
@@ -253,24 +254,24 @@ class _NewKhitmaScreenState extends State<NewKhitmaScreen> {
                           ),
                         ),
                         child: Opacity(
-                          opacity: 0.5,
-                          child: Image.asset(
-                            'assets/background_elements/3_background.png',
+                          opacity: 0.03,
+                          child: SvgPicture.asset(
+                            'assets/background_elements/3_background.svg',
                             fit: BoxFit.cover,
-                            cacheWidth: 800,
-                            filterQuality: FilterQuality.medium,
                           ),
                         ),
                       ),
                     ),
-                  // Background image for light mode only
+                  // Background image for light mode only (SVG overlay with tint)
                   if (!themeProvider.isDarkMode)
                     Positioned.fill(
-                      child: Image.asset(
-                        'assets/background_elements/3_background.png',
-                        fit: BoxFit.cover,
-                        cacheWidth: 800,
-                        filterQuality: FilterQuality.medium,
+                      child: Opacity(
+                        opacity: 0.12,
+                        child: SvgPicture.asset(
+                          'assets/background_elements/3_background.svg',
+                          fit: BoxFit.cover,
+                          colorFilter: const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn),
+                        ),
                       ),
                     ),
                   // Main content

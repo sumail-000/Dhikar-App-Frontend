@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'profile_screen.dart';
 import 'dart:math' as math;
 import 'theme_provider.dart';
@@ -15,6 +16,9 @@ import 'profile_provider.dart';
 import 'wered_reading_screen.dart';
 import 'services/api_client.dart';
 
+
+
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -26,13 +30,13 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   final GlobalKey<_ProgressSectionState> _progressKey = GlobalKey<_ProgressSectionState>();
   final GlobalKey<_PersonalKhitmaSectionState> _personalKey = GlobalKey<_PersonalKhitmaSectionState>();
-  
+
   @override
   void initState() {
     super.initState();
   }
 
-  
+
   void _onItemTapped(int index) {
     if (_selectedIndex != index) {
       setState(() {
@@ -94,16 +98,18 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: Stack(
                 children: [
-                  // Background image with optimized loading (both themes)
+                  // Background SVG with subtle opacity (3% dark, 4% light)
                   Positioned.fill(
                     child: Opacity(
-                      opacity: themeProvider.isDarkMode ? 0.5 : 1.0,
-                      child: Image.asset(
-                        'assets/background_elements/3_background.png',
+                      // In light mode, optionally boost opacity for debugging visibility
+                      opacity: themeProvider.isDarkMode ? 0.03 : 0.12,
+                      child: SvgPicture.asset(
+                        'assets/background_elements/3_background.svg',
                         fit: BoxFit.cover,
-                        cacheWidth: 800, // Optimize memory usage
-                        filterQuality: FilterQuality
-                            .medium, // Balance quality and performance
+                        // Light mode tint for SVG background on Home screen only
+                        colorFilter: themeProvider.isDarkMode
+                            ? null
+                            : const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn),
                       ),
                     ),
                   ),
@@ -444,12 +450,12 @@ class _ProgressSectionState extends State<_ProgressSection> {
         // Calculate group khitma progress
         double groupProgress = 0.0;
         String groupSubtitle = '0 ${appLocalizations.outOfWord} 0';
-        
+
         if (!isLoadingGroupStats && groupStatsError == null && groupKhitmaStats != null) {
           final int totalGroups = groupKhitmaStats!['total_groups'] ?? 0;
           final int completedGroups = groupKhitmaStats!['completed_groups'] ?? 0;
           final double averageProgress = (groupKhitmaStats!['average_progress'] ?? 0.0).toDouble();
-          
+
           if (totalGroups > 0) {
             groupProgress = averageProgress / 100; // Convert percentage to decimal
             groupSubtitle = '$completedGroups ${appLocalizations.outOfWord} $totalGroups';
@@ -539,7 +545,7 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
   Future<void> _loadActiveKhitma() async {
     try {
       final response = await ApiClient.instance.getActivePersonalKhitma();
-      
+
       if (response.ok) {
         if (mounted) {
           setState(() {
@@ -567,12 +573,12 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
 
   void _continueReading() async {
     if (activeKhitma == null) return;
-    
+
     try {
       final int khitmaId = activeKhitma!['id'] as int;
       final int currentPage = activeKhitma!['current_page'] as int;
       final int totalDays = activeKhitma!['total_days'] as int;
-      
+
       // Navigate to WeredReadingScreen with current position
       final result = await Navigator.push(
         context,
@@ -587,7 +593,7 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
           ),
         ),
       );
-      
+
       // Refresh active khitma data when returning from reading screen
       // This ensures the progress bar and completion percentage are updated in real-time
       if (mounted) {
@@ -614,7 +620,7 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
       builder: (context, themeProvider, languageProvider, child) {
         final app = AppLocalizations.of(context)!;
         final String title = app.personalKhitma;
-        
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -644,7 +650,7 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
       },
     );
   }
-  
+
   Widget _buildKhitmaContent(ThemeProvider themeProvider, LanguageProvider languageProvider) {
     if (isLoading) {
       return const Center(
@@ -654,7 +660,7 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
         ),
       );
     }
-    
+
     if (errorMessage != null) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -684,7 +690,7 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
         ],
       );
     }
-    
+
     if (activeKhitma == null) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -710,17 +716,17 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
         ],
       );
     }
-    
+
     // Active khitma exists - show progress and continue button
     final double completionPercentage = (activeKhitma!['completion_percentage'] as num?)?.toDouble() ?? 0.0;
     final int currentJuzz = activeKhitma!['current_juzz'] as int;
     final int currentPage = activeKhitma!['current_page'] as int;
     final String khitmaName = activeKhitma!['khitma_name'] as String;
-    
+
     final app = AppLocalizations.of(context)!;
     final String subtitle = '${app.pageShort} $currentPage - ${app.juzShort} $currentJuzz';
     final String lastReadLabel = '${app.lastRead}: ${app.pageShort} $currentPage';
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1126,96 +1132,96 @@ class _MotivationalVerseSectionState extends State<_MotivationalVerseSection> {
                     child: _loading
                         ? const Center(child: SizedBox(height: 40, width: 40, child: CircularProgressIndicator()))
                         : (_error != null)
-                            ? Column(
-                                children: [
-                                  Text(
-                                    appLocalizations.verseText,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontStyle: FontStyle.italic,
-                                      color: themeProvider.isDarkMode ? const Color(0xFF251629) : const Color(0xFF051F20),
-                                      fontSize: 16,
-                                      height: 1.4,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 12)),
-                                ],
-                              )
-                            : Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    verseText,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontStyle: FontStyle.italic,
-                                      color: themeProvider.isDarkMode ? const Color(0xFF251629) : const Color(0xFF051F20),
-                                      fontSize: 16,
-                                      height: 1.4,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  // Decorative line with diamond
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Container(
-                                          height: 1,
-                                          color: themeProvider.isDarkMode ? const Color(0xFF251629) : const Color(0xFF051F20),
-                                        ),
-                                      ),
-                                      Container(
-                                        margin: const EdgeInsets.symmetric(horizontal: 12),
-                                        width: 8,
-                                        height: 8,
-                                        decoration: BoxDecoration(
-                                          color: themeProvider.isDarkMode ? const Color(0xFF251629) : const Color(0xFF051F20),
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Container(
-                                          height: 1,
-                                          color: themeProvider.isDarkMode ? const Color(0xFF251629) : Colors.white,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    surahName,
-                                    style: TextStyle(
-                                      color: themeProvider.isDarkMode ? const Color(0xFF251629) : const Color(0xFF051F20),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-(() {
-                                    String a = '$surahNum:$ayahNum';
-                                    if (isArabicLocale) {
-                                      const western = ['0','1','2','3','4','5','6','7','8','9'];
-                                      const eastern = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
-                                      final buf = StringBuffer();
-                                      for (final ch in a.split('')) {
-                                        final idx = western.indexOf(ch);
-                                        buf.write(idx >= 0 ? eastern[idx] : ch);
-                                      }
-                                      a = buf.toString();
-                                    }
-                                    return '($a)';
-                                  })(),
-                                    style: TextStyle(
-                                      color: themeProvider.isDarkMode ? const Color(0xFF251629) : const Color(0xFF051F20),
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
+                        ? Column(
+                      children: [
+                        Text(
+                          appLocalizations.verseText,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontStyle: FontStyle.italic,
+                            color: themeProvider.isDarkMode ? const Color(0xFF251629) : const Color(0xFF051F20),
+                            fontSize: 16,
+                            height: 1.4,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                      ],
+                    )
+                        : Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          verseText,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontStyle: FontStyle.italic,
+                            color: themeProvider.isDarkMode ? const Color(0xFF251629) : const Color(0xFF051F20),
+                            fontSize: 16,
+                            height: 1.4,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Decorative line with diamond
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                height: 1,
+                                color: themeProvider.isDarkMode ? const Color(0xFF251629) : const Color(0xFF051F20),
                               ),
+                            ),
+                            Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 12),
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: themeProvider.isDarkMode ? const Color(0xFF251629) : const Color(0xFF051F20),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                height: 1,
+                                color: themeProvider.isDarkMode ? const Color(0xFF251629) : Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          surahName,
+                          style: TextStyle(
+                            color: themeProvider.isDarkMode ? const Color(0xFF251629) : const Color(0xFF051F20),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          (() {
+                            String a = '$surahNum:$ayahNum';
+                            if (isArabicLocale) {
+                              const western = ['0','1','2','3','4','5','6','7','8','9'];
+                              const eastern = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+                              final buf = StringBuffer();
+                              for (final ch in a.split('')) {
+                                final idx = western.indexOf(ch);
+                                buf.write(idx >= 0 ? eastern[idx] : ch);
+                              }
+                              a = buf.toString();
+                            }
+                            return '($a)';
+                          })(),
+                          style: TextStyle(
+                            color: themeProvider.isDarkMode ? const Color(0xFF251629) : const Color(0xFF051F20),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

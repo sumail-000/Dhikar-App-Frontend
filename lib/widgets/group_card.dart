@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
+import '../theme_provider.dart';
 
 class MemberAvatar {
   final String? imageUrl;
@@ -106,27 +109,27 @@ class GroupCard extends StatelessWidget {
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                // Corner decorations - edge-aligned positioning (top-left and bottom-right only)
-                Positioned(
-                  top: -8 * s,
-                  left: -8 * s,
-                  child: _CornerDecoration(
-                    angleDeg: 0,
-                    assetPath: 'assets/background_elements/9.png',
-                    size: 45 * s,
+                  // Corner decorations - edge-aligned positioning (top-left and bottom-right only)
+                  Positioned(
+                    top: -8 * s,
+                    left: -8 * s,
+                    child: _CornerDecoration(
+                      angleDeg: 0,
+                      assetPath: 'assets/background_elements/9.png',
+                      size: 45 * s,
+                    ),
                   ),
-                ),
-                Positioned(
-                  bottom: -8 * s,
-                  right: -8 * s,
-                  child: _CornerDecoration(
-                    angleDeg: 180,
-                    assetPath: 'assets/background_elements/9.png',
-                    size: 45 * s,
+                  Positioned(
+                    bottom: -8 * s,
+                    right: -8 * s,
+                    child: _CornerDecoration(
+                      angleDeg: 180,
+                      assetPath: 'assets/background_elements/9.png',
+                      size: 45 * s,
+                    ),
                   ),
-                ),
 
-                // Helpers for localization and script detection
+                  // Helpers for localization and script detection
                 ...(() {
                   final locale = Localizations.localeOf(context);
                   final isArabicLocale = locale.languageCode == 'ar';
@@ -464,12 +467,16 @@ class _CornerDecoration extends StatelessWidget {
       height: size,
       child: Transform.rotate(
         angle: angleDeg * math.pi / 180,
-        child: Image.asset(
-          assetPath,
-          width: size,
-          height: size,
-          fit: BoxFit.contain,
-          filterQuality: FilterQuality.medium,
+        child: Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
+            return SvgPicture.asset(
+              assetPath,
+              width: size,
+              height: size,
+              fit: BoxFit.contain,
+              colorFilter: themeProvider.isDarkMode ? const ColorFilter.mode(Color(0xFF1F1F1F), BlendMode.srcIn) : null,
+            );
+          },
         ),
       ),
     );

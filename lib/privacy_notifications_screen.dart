@@ -6,6 +6,7 @@ import 'language_provider.dart';
 import 'app_localizations.dart';
 import 'services/notification_service.dart';
 import 'services/api_client.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class PrivacyNotificationsScreen extends StatefulWidget {
   const PrivacyNotificationsScreen({super.key});
@@ -113,23 +114,62 @@ class _PrivacyNotificationsScreenState extends State<PrivacyNotificationsScreen>
         return Directionality(
           textDirection: languageProvider.textDirection,
           child: Scaffold(
-            appBar: AppBar(
-              backgroundColor: themeProvider.screenBackgroundColor,
-              elevation: 0,
-              leading: IconButton(
-                icon: Icon(Icons.arrow_back_ios, color: isLight ? const Color(0xFF205C3B) : Colors.white),
-                onPressed: () => Navigator.pop(context),
+            resizeToAvoidBottomInset: true,
+            extendBodyBehindAppBar: true,
+            extendBody: true,
+            backgroundColor: themeProvider.isDarkMode ? const Color(0xFF251629) : themeProvider.screenBackgroundColor,
+            body: Container(
+              width: double.infinity,
+              height: double.infinity,
+              decoration: BoxDecoration(
+                gradient: themeProvider.isDarkMode
+                    ? const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF251629), Color(0xFF4C3B6E)],
+                      )
+                    : null,
               ),
-              title: Text(
-                app.privacyAndNotification,
-                style: TextStyle(
-                  color: isLight ? const Color(0xFF205C3B) : Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              centerTitle: true,
-            ),
-            body: _loading
+              child: Stack(
+                children: [
+                  // Background SVG overlay
+                  Positioned.fill(
+                    child: Opacity(
+                      opacity: themeProvider.isDarkMode ? 0.03 : 0.12,
+                      child: SvgPicture.asset(
+                        'assets/background_elements/3_background.svg',
+                        fit: BoxFit.cover,
+                        colorFilter: themeProvider.isDarkMode ? null : const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn),
+                      ),
+                    ),
+                  ),
+                  SafeArea(
+                    child: Column(
+                      children: [
+                        // Header
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          child: Row(
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.arrow_back_ios, color: themeProvider.isDarkMode ? Colors.white : const Color(0xFF205C3B)),
+                                onPressed: () => Navigator.pop(context),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                app.privacyAndNotification,
+                                style: TextStyle(
+                                  color: themeProvider.isDarkMode ? Colors.white : const Color(0xFF205C3B),
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Content
+                        Expanded(
+                          child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : FutureBuilder(
                     future: ApiClient.instance.getUserPreferences(),
@@ -144,7 +184,7 @@ class _PrivacyNotificationsScreenState extends State<PrivacyNotificationsScreen>
                         _showPersonal = prefs['allow_personal_reminders'] ?? _showPersonal;
                       }
                       return SingleChildScrollView(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
@@ -160,7 +200,7 @@ class _PrivacyNotificationsScreenState extends State<PrivacyNotificationsScreen>
                             Text(
                               app.showInAppNotifications,
                               style: TextStyle(
-                                color: isLight ? const Color(0xFF205C3B) : Colors.white,
+                                color: themeProvider.isDarkMode ? Colors.white : const Color(0xFF205C3B),
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -198,17 +238,25 @@ class _PrivacyNotificationsScreenState extends State<PrivacyNotificationsScreen>
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Note: These toggles hide or show items in the app’s Notifications screen. The master Push toggle controls whether your device receives any push notifications.',
+                              'Note: These toggles hide or show items in the app\'s Notifications screen. The master Push toggle controls whether your device receives any push notifications.',
                               style: TextStyle(
                                 color: themeProvider.primaryTextColor.withOpacity(0.8),
                                 fontSize: 12,
                               ),
                             ),
+                            const SizedBox(height: 24),
                           ],
                         ),
                       );
                     },
                   ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         );
       },

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
 import 'theme_provider.dart';
@@ -435,22 +436,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   height: double.infinity,
                   color: themeProvider.screenBackgroundColor,
                 ),
-                // Background image for both themes
+                // Background SVG (subtle): 3% (dark), 12% (light). Light mode tinted to #8EB69B
                 Positioned.fill(
                   child: Opacity(
-                    opacity: !isLightMode ? 0.5 : 1.0,
-                    child: Image.asset(
-                      themeProvider.backgroundImage3,
+                    opacity: themeProvider.isDarkMode ? 0.03 : 0.12,
+                    child: SvgPicture.asset(
+                      'assets/background_elements/3_background.svg',
                       fit: BoxFit.cover,
-                      cacheWidth: 800,
-                      filterQuality: FilterQuality.medium,
+                      colorFilter: isLightMode
+                          ? const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn)
+                          : null,
                     ),
                   ),
                 ),
-                if (!isLightMode)
-                  Positioned.fill(
-                    child: Container(color: Colors.black.withOpacity(0.2)),
-                  ),
                 SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),

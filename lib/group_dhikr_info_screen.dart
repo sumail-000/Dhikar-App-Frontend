@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'language_provider.dart';
 import 'profile_provider.dart';
 import 'services/api_client.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class GroupDhikrInfoScreen extends StatefulWidget {
   const GroupDhikrInfoScreen({super.key, required this.groupId, this.groupName});
@@ -95,15 +96,22 @@ class _GroupDhikrInfoScreenState extends State<GroupDhikrInfoScreen> {
                 ? const [Color(0xFF251629), Color(0xFF4C3B6E)]
                 : const [Color(0xFF163832), Color(0xFF235347)],
           ),
-          image: const DecorationImage(
-            image: AssetImage('assets/background_elements/3_background.png'),
-            fit: BoxFit.cover,
-            opacity: 0.20,
-          ),
         ),
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Opacity(
+                opacity: isDark ? 0.03 : 0.12,
+                child: SvgPicture.asset(
+                  'assets/background_elements/3_background.svg',
+                  fit: BoxFit.cover,
+                  colorFilter: isDark ? null : const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn),
+                ),
+              ),
+            ),
+            SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Header (back only)
               Padding(
@@ -205,6 +213,8 @@ class _GroupDhikrInfoScreenState extends State<GroupDhikrInfoScreen> {
               ),
             ],
           ),
+        ),
+          ],
         ),
       ),
     );

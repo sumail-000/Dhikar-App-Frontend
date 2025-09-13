@@ -4,6 +4,7 @@ import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'services/api_client.dart';
 import 'profile_provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class GroupInfoScreen extends StatefulWidget {
   final int? groupId;
@@ -92,12 +93,11 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                 children: [
                   Positioned.fill(
                     child: Opacity(
-                      opacity: isDarkMode ? 0.5 : 1.0,
-                      child: Image.asset(
-                        'assets/background_elements/3_background.png',
+                      opacity: isDarkMode ? 0.03 : 0.12,
+                      child: SvgPicture.asset(
+                        'assets/background_elements/3_background.svg',
                         fit: BoxFit.cover,
-                        cacheWidth: 800,
-                        filterQuality: FilterQuality.medium,
+                        colorFilter: !isDarkMode ? const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn) : null,
                       ),
                     ),
                   ),

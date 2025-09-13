@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'home_screen.dart';
 import 'signup_screen.dart';
 import 'forgetpass_screen.dart';
@@ -138,22 +139,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 child: Stack(
                   children: [
-                    // Background image
+                    // Background SVG (subtle): 3% (dark), 4% (light)
                     Positioned.fill(
                       child: Opacity(
-                        opacity: themeProvider.isDarkMode ? 0.5 : 1.0,
-                        child: Image.asset(
-                          themeProvider.backgroundImage3,
+                        opacity: themeProvider.isDarkMode ? 0.03 : 0.05,
+                        child: SvgPicture.asset(
+                          'assets/background_elements/3_background.svg',
                           fit: BoxFit.cover,
-                          cacheWidth: 800,
-                          filterQuality: FilterQuality.medium,
                         ),
-                      ),
-                    ),
-                    // Color overlay based on theme
-                    Positioned.fill(
-                      child: Container(
-                        color: themeProvider.backgroundImageOverlay,
                       ),
                     ),
                     // Top lanterns

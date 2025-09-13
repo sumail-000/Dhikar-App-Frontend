@@ -13,6 +13,7 @@ import 'services/api_client.dart';
 import 'widgets/group_card.dart';
 import 'group_khitma_info_screen.dart';
 import 'group_khitma_members_juzz_screen.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 // Small chip helper for cozy density
 Widget _chip(String label, bool isLightMode, Color greenColor) {
@@ -516,15 +517,16 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
             extendBody: true,
             body: Stack(
               children: [
-                // Background image
+                // Background SVG (subtle): 3% (dark), 12% (light). Light mode tinted to #8EB69B
                 Positioned.fill(
                   child: Opacity(
-                    opacity: !isLightMode ? 0.5 : 1.0,
-                    child: Image.asset(
-                      themeProvider.backgroundImage3,
+                    opacity: themeProvider.isDarkMode ? 0.03 : 0.12,
+                    child: SvgPicture.asset(
+                      'assets/background_elements/3_background.svg',
                       fit: BoxFit.cover,
-                      cacheWidth: 800,
-                      filterQuality: FilterQuality.medium,
+                      colorFilter: isLightMode
+                          ? const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn)
+                          : null,
                     ),
                   ),
                 ),

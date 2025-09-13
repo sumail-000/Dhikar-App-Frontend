@@ -6,6 +6,7 @@ import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'services/api_client.dart';
 import 'profile_provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'group_info_screen.dart';
 import 'group_manage_members_screen.dart';
 import 'khitma_juzz_assign_admin_screen.dart';
@@ -166,12 +167,11 @@ class _DhikrGroupDetailsScreenState extends State<DhikrGroupDetailsScreen> {
                 children: [
                   Positioned.fill(
                     child: Opacity(
-                      opacity: isDarkMode ? 0.5 : 1.0,
-                      child: Image.asset(
-                        'assets/background_elements/3_background.png',
+                      opacity: isDarkMode ? 0.03 : 0.12,
+                      child: SvgPicture.asset(
+                        'assets/background_elements/3_background.svg',
                         fit: BoxFit.cover,
-                        cacheWidth: 800,
-                        filterQuality: FilterQuality.medium,
+                        colorFilter: !isDarkMode ? const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn) : null,
                       ),
                     ),
                   ),

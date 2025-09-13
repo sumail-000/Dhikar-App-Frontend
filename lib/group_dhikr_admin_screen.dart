@@ -7,6 +7,7 @@ import 'profile_provider.dart';
 import 'group_info_screen.dart';
 import 'group_manage_members_screen.dart';
 import 'group_dhikr_info_screen.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class GroupDhikrAdminScreen extends StatefulWidget {
   final int groupId;
@@ -131,12 +132,11 @@ class _GroupDhikrAdminScreenState extends State<GroupDhikrAdminScreen> {
                 children: [
                   Positioned.fill(
                     child: Opacity(
-                      opacity: isDark ? 0.5 : 1.0,
-                      child: Image.asset(
-                        'assets/background_elements/3_background.png',
+                      opacity: isDark ? 0.03 : 0.12,
+                      child: SvgPicture.asset(
+                        'assets/background_elements/3_background.svg',
                         fit: BoxFit.cover,
-                        cacheWidth: 800,
-                        filterQuality: FilterQuality.medium,
+                        colorFilter: isDark ? null : const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn),
                       ),
                     ),
                   ),

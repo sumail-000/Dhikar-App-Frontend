@@ -65,24 +65,24 @@ class _KhitmaScreenState extends State<KhitmaScreen> {
             backgroundColor: themeProvider.screenBackgroundColor,
             body: Stack(
               children: [
-                // Background image for both themes
+              //background image for both themes
                 Positioned.fill(
                   child: Opacity(
-                    opacity: themeProvider.isDarkMode ? 0.5 : 1.0,
-                    child: Image.asset(
-                      'assets/background_elements/5.png',
+                      opacity: themeProvider.isDarkMode ? 0.5 : 1.0,
+                      child: Image.asset(
+                        'assets/background_elements/5.png',
                       fit: BoxFit.cover,
-                      cacheWidth: 800,
-                      filterQuality: FilterQuality.medium,
+                        cacheWidth: 800,
+                        filterQuality: FilterQuality.medium,
                     ),
                   ),
                 ),
-                // Color overlay for dark mode only
+                //color overlay for dark mode only
                 if (themeProvider.isDarkMode)
                   Positioned.fill(
-                    child: Container(
-                      color: themeProvider.backgroundImageOverlay,
-                    ),
+                      child: Container(
+                        color: themeProvider.backgroundImageOverlay,
+                      ),
                   ),
                 // Header (back button and title) over image
                 Positioned(

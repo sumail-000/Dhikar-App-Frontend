@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:async';
 import 'services/api_client.dart';
 import 'theme_provider.dart';
@@ -189,21 +190,19 @@ class _GroupManagementGroupsScreenState extends State<GroupManagementGroupsScree
             extendBody: true,
             body: Stack(
               children: [
+                // Background SVG (subtle): 3% (dark), 4% (light). Light mode tinted to #8EB69B
                 Positioned.fill(
                   child: Opacity(
-                    opacity: !isLightMode ? 0.5 : 1.0,
-                    child: Image.asset(
-                      themeProvider.backgroundImage3,
+                    opacity: !isLightMode ? 0.03 : 0.04,
+                    child: SvgPicture.asset(
+                      'assets/background_elements/3_background.svg',
                       fit: BoxFit.cover,
-                      cacheWidth: 800,
-                      filterQuality: FilterQuality.medium,
+                      colorFilter: isLightMode
+                          ? const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn)
+                          : null,
                     ),
                   ),
                 ),
-                if (!isLightMode)
-                  Positioned.fill(
-                    child: Container(color: Colors.black.withOpacity(0.2)),
-                  ),
                 SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),

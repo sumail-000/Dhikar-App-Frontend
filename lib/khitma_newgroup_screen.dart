@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'services/api_client.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class KhitmaNewgroupScreen extends StatefulWidget {
   const KhitmaNewgroupScreen({super.key});
@@ -57,16 +58,16 @@ class _KhitmaNewgroupScreenState extends State<KhitmaNewgroupScreen> {
               ),
               child: Stack(
                 children: [
-                  // Background image with optimized loading (always visible)
+                  // Background SVG (subtle): 3% (dark), 12% (light). Light mode tinted to #8EB69B
                   Positioned.fill(
                     child: Opacity(
-                      opacity: themeProvider.isDarkMode ? 0.5 : 1.0,
-                      child: Image.asset(
-                        'assets/background_elements/3_background.png',
+                      opacity: themeProvider.isDarkMode ? 0.03 : 0.12,
+                      child: SvgPicture.asset(
+                        'assets/background_elements/3_background.svg',
                         fit: BoxFit.cover,
-                        cacheWidth: 800, // Optimize memory usage
-                        filterQuality: FilterQuality
-                            .medium, // Balance quality and performance
+                        colorFilter: !themeProvider.isDarkMode
+                            ? const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn)
+                            : null,
                       ),
                     ),
                   ),

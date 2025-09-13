@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'home_screen.dart';
@@ -13,6 +14,7 @@ import 'dhikr_presets.dart';
 import 'services/api_client.dart';
 import 'widgets/add_custom_dhikr_dialog.dart';
 import 'dhikr_provider.dart';
+
 
 class DhikrScreen extends StatefulWidget {
   const DhikrScreen({super.key});
@@ -117,26 +119,39 @@ class _DhikrScreenState extends State<DhikrScreen> {
         return Directionality(
           textDirection: languageProvider.textDirection,
           child: Scaffold(
-            backgroundColor: themeProvider.screenBackgroundColor,
-            extendBodyBehindAppBar: true,
-            extendBody: true,
-            body: Stack(
-              children: [
-                // Background images for both themes
-                // Background image
+            body: Container(
+              width: double.infinity,
+              height: double.infinity,
+              decoration: BoxDecoration(
+                gradient: themeProvider.isDarkMode
+                    ? const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF251629), Color(0xFF4C3B6E)],
+                      )
+                    : null,
+                color: themeProvider.isDarkMode
+                    ? null
+                    : themeProvider.screenBackgroundColor,
+              ),
+              child: Stack(
+                children: [
+                // Background SVG (subtle): 3% (dark), 4% (light). Light mode tinted to #8EB69B
                 Positioned.fill(
                   child: Opacity(
-                    opacity: !isLightMode ? 0.5 : 1.0,
-                    child: Image.asset(
-                      themeProvider.backgroundImage3,
+                    // In light mode, optionally boost opacity for debugging visibility (same as Home)
+                    opacity: themeProvider.isDarkMode ? 0.03 : 0.12,
+                    child: SvgPicture.asset(
+                      'assets/background_elements/3_background.svg',
                       fit: BoxFit.cover,
-                      cacheWidth: 800,
-                      filterQuality: FilterQuality.medium,
+                      colorFilter: isLightMode
+                          ? const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn)
+                          : null,
                     ),
                   ),
                 ),
                 // Color overlay for dark mode only
-                if (!isLightMode)
+                if (themeProvider.isDarkMode)
                   Positioned.fill(
                     child: Container(color: Colors.black.withOpacity(0.2)),
                   ),
@@ -603,6 +618,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
                   ),
                 ),
               ],
+            ),
             ),
             bottomNavigationBar: BottomNavBar(
               selectedIndex: _selectedIndex,

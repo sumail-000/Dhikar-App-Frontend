@@ -6,6 +6,7 @@ import 'app_localizations.dart';
 import 'theme_provider.dart';
 import 'services/api_client.dart';
 import 'profile_provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final String? name; // current username (server-side uses username)
@@ -183,25 +184,41 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final app = AppLocalizations.of(context)!;
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: Stack(
-        children: [
-          Container(width: double.infinity, height: double.infinity, color: themeProvider.screenBackgroundColor),
-          Positioned.fill(
-            child: Opacity(
-              opacity: themeProvider.isDarkMode ? 0.5 : 1.0,
-              child: Image.asset(themeProvider.backgroundImage3, fit: BoxFit.cover),
+      resizeToAvoidBottomInset: true,
+      extendBodyBehindAppBar: true,
+      extendBody: true,
+      backgroundColor: themeProvider.isDarkMode ? const Color(0xFF251629) : themeProvider.screenBackgroundColor,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: themeProvider.isDarkMode
+              ? const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF251629), Color(0xFF4C3B6E)],
+          )
+              : null,
+        ),
+        child: Stack(
+          children: [
+            // Background SVG overlay
+            Positioned.fill(
+              child: Opacity(
+                opacity: themeProvider.isDarkMode ? 0.03 : 0.12,
+                child: SvgPicture.asset(
+                  'assets/background_elements/3_background.svg',
+                  fit: BoxFit.cover,
+                  colorFilter: themeProvider.isDarkMode ? null : const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn),
+                ),
+              ),
             ),
-          ),
-          if (themeProvider.isDarkMode)
-            Positioned.fill(child: Container(color: Colors.black.withOpacity(0.2))),
-          SafeArea(
-            child: SingleChildScrollView(
-              physics: const ClampingScrollPhysics(),
-              padding: EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 12 + bottomInset),
+            SafeArea(
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -242,8 +259,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             child: _picked != null
                                 ? Image.file(File(_picked!.path), width: 120, height: 120, fit: BoxFit.cover)
                                 : (_serverAvatarUrl != null && _serverAvatarUrl!.isNotEmpty
-                                    ? Image.network(_serverAvatarUrl!, width: 120, height: 120, fit: BoxFit.cover)
-                                    : Icon(Icons.person, color: themeProvider.primaryTextColor, size: 46)),
+                                ? Image.network(_serverAvatarUrl!, width: 120, height: 120, fit: BoxFit.cover)
+                                : Icon(Icons.person, color: themeProvider.primaryTextColor, size: 46)),
                           ),
                         ),
                         Positioned(
@@ -363,9 +380,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ],
               ),
             ),
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
+    ),
     );
   }
 }

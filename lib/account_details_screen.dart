@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'app_localizations.dart';
 import 'theme_provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class AccountDetailsScreen extends StatefulWidget {
   final String? name; // treated as username in current backend
@@ -45,16 +46,32 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Background
-          Container(width: double.infinity, height: double.infinity, color: theme.screenBackgroundColor),
+          // Base background: gradient in dark, solid in light
           Positioned.fill(
-            child: Opacity(
-              opacity: theme.isDarkMode ? 0.5 : 1.0,
-              child: Image.asset(theme.backgroundImage3, fit: BoxFit.cover),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: theme.isDarkMode
+                    ? const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF251629), Color(0xFF4C3B6E)],
+                      )
+                    : null,
+                color: theme.isDarkMode ? null : theme.screenBackgroundColor,
+              ),
             ),
           ),
-          if (theme.isDarkMode)
-            Positioned.fill(child: Container(color: Colors.black.withOpacity(0.2))),
+          // Background SVG overlay
+          Positioned.fill(
+            child: Opacity(
+              opacity: theme.isDarkMode ? 0.03 : 0.12,
+              child: SvgPicture.asset(
+                'assets/background_elements/3_background.svg',
+                fit: BoxFit.cover,
+                colorFilter: theme.isDarkMode ? null : const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn),
+              ),
+            ),
+          ),
 
           SafeArea(
             child: Padding(

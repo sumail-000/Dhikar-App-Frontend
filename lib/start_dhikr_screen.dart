@@ -5,6 +5,7 @@ import 'language_provider.dart';
 import 'dhikr_provider.dart';
 import 'dart:math';
 import 'services/api_client.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class StartDhikrScreen extends StatefulWidget {
   final String dhikrTitle;
@@ -147,15 +148,14 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
               ),
               child: Stack(
                 children: [
-                  // Background image
+                  // Background SVG overlay
                   Positioned.fill(
                     child: Opacity(
-                      opacity: !isLightMode ? 0.5 : 1.0,
-                      child: Image.asset(
-                        'assets/background_elements/3_background.png',
+                      opacity: themeProvider.isDarkMode ? 0.03 : 0.12,
+                      child: SvgPicture.asset(
+                        'assets/background_elements/3_background.svg',
                         fit: BoxFit.cover,
-                        cacheWidth: 800,
-                        filterQuality: FilterQuality.medium,
+                        colorFilter: isLightMode ? const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn) : null,
                       ),
                     ),
                   ),

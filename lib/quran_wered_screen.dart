@@ -6,6 +6,7 @@ import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'wered_reading_screen.dart';
 import 'app_localizations.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class DailyWeredScreen extends StatefulWidget {
   // Updated with real Quran data integration
@@ -378,17 +379,13 @@ class _DailyWeredScreenState extends State<DailyWeredScreen> {
                     ),
                     child: Stack(
                       children: [
-                        // Background image with full height coverage
+                        // Background SVG overlay
                         Positioned.fill(
                           child: Opacity(
-                            opacity: 0.3,
-                            child: Image.asset(
-                              'assets/background_elements/3_background.png',
+                            opacity: 0.03,
+                            child: SvgPicture.asset(
+                              'assets/background_elements/3_background.svg',
                               fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                              cacheWidth: 800,
-                              filterQuality: FilterQuality.medium,
                             ),
                           ),
                         ),
@@ -458,72 +455,77 @@ class _DailyWeredScreenState extends State<DailyWeredScreen> {
                 : Container(
                     width: double.infinity,
                     height: MediaQuery.of(context).size.height,
-                    decoration: const BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage(
-                          'assets/background_elements/3_background.png',
+                    decoration: const BoxDecoration(),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: Opacity(
+                            opacity: 0.12,
+                            child: SvgPicture.asset(
+                              'assets/background_elements/3_background.svg',
+                              fit: BoxFit.cover,
+                              colorFilter: ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn),
+                            ),
+                          ),
                         ),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    child: SingleChildScrollView(
-                      child: SafeArea(
-                        child: Column(
-                          children: [
-                            // Header
-                            Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Row(
-                                children: [
-                                  IconButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    icon: const Icon(
-                                      Icons.arrow_back_ios,
-                                      color: Color(0xFF205C3B),
-                                      size: 20,
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: Text(
-                                      languageProvider.isArabic
-                                          ? 'الورد اليومي'
-                                          : 'Daily Wered',
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        color: Color(0xFF205C3B),
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
+                        SingleChildScrollView(
+                          child: SafeArea(
+                            child: Column(
+                              children: [
+                                // Header
+                                Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Row(
+                                    children: [
+                                      IconButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        icon: const Icon(
+                                          Icons.arrow_back_ios,
+                                          color: Color(0xFF205C3B),
+                                          size: 20,
+                                        ),
                                       ),
+                                      Expanded(
+                                        child: Text(
+                                          languageProvider.isArabic
+                                              ? 'الورد اليومي'
+                                              : 'Daily Wered',
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            color: Color(0xFF205C3B),
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 48),
+                                    ],
+                                  ),
+                                ),
+                                // Subtitle
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0,
+                                  ),
+                                  child: Text(
+                                    languageProvider.isArabic
+                                        ? 'اشغل قلبك بذكر الله. اختر سورة لتبدأ رحلتك الروحية والسلام.'
+                                        : 'Engage your heart in the remembrance of Allah. Select a Surah to begin your spiritual journey and peace.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: const Color(0xFF205C3B).withOpacity(0.8),
+                                      fontSize: 14,
                                     ),
                                   ),
-                                  const SizedBox(width: 48),
-                                ],
-                              ),
-                            ),
-                            // Subtitle
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                              ),
-                              child: Text(
-                                languageProvider.isArabic
-                                    ? 'اشغل قلبك بذكر الله. اختر سورة لتبدأ رحلتك الروحية والسلام.'
-                                    : 'Engage your heart in the remembrance of Allah. Select a Surah to begin your spiritual journey and peace.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: const Color(
-                                    0xFF205C3B,
-                                  ).withOpacity(0.8),
-                                  fontSize: 14,
                                 ),
-                              ),
+                                const SizedBox(height: 20),
+                                // Content
+                                _buildContent(themeProvider, languageProvider),
+                              ],
                             ),
-                            const SizedBox(height: 20),
-                            // Content
-                            _buildContent(themeProvider, languageProvider),
-                          ],
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
           ),

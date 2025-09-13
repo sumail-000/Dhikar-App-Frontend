@@ -6,6 +6,7 @@ import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'services/api_client.dart';
 import 'app_localizations.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -20,7 +21,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
   bool _allowPersonal = true;
   String _selectedFilter = 'Individual';
   final List<String> _filters = ['Individual', 'Group', 'Motivational'];
-  
+
   List<NotificationItem> _notifications = [];
   bool _isLoading = true;
   String? _error;
@@ -68,7 +69,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       if (response.ok && response.data is Map) {
         final data = response.data as Map<String, dynamic>;
         final notificationsList = data['notifications'] as List?;
-        
+
         if (notificationsList != null) {
           _notifications = notificationsList.map<NotificationItem>((notif) {
             return NotificationItem.fromMap(notif as Map<String, dynamic>);
@@ -116,7 +117,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   Future<void> _markAllAsRead() async {
     final unreadNotifications = _notifications.where((n) => !n.isRead).toList();
-    
+
     for (final notification in unreadNotifications) {
       await _markAsRead(notification);
     }
@@ -131,9 +132,37 @@ class _NotificationScreenState extends State<NotificationScreen> {
         final app = AppLocalizations.of(context)!;
 
         return Scaffold(
-          backgroundColor: isDarkMode ? const Color(0xFF1A1A1A) : Colors.white,
-          body: SafeArea(
-            child: Column(
+          backgroundColor: Colors.transparent,
+          body: Stack(
+            children: [
+              // Base background: gradient in dark, solid in light
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: isDarkMode
+                        ? const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Color(0xFF251629), Color(0xFF4C3B6E)],
+                          )
+                        : null,
+                    color: isDarkMode ? null : Theme.of(context).scaffoldBackgroundColor,
+                  ),
+                ),
+              ),
+              // SVG overlay
+              Positioned.fill(
+                child: Opacity(
+                  opacity: isDarkMode ? 0.03 : 0.12,
+                  child: SvgPicture.asset(
+                    'assets/background_elements/3_background.svg',
+                    fit: BoxFit.cover,
+                    colorFilter: isDarkMode ? null : const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn),
+                  ),
+                ),
+              ),
+            SafeArea(
+              child: Column(
               children: [
                 // Header
                 Padding(
@@ -397,7 +426,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
                         ),
                 ),
               ],
+              ),
             ),
+          ],
           ),
         );
       },
@@ -483,7 +514,7 @@ class NotificationItem {
       case 'juz_assignment_auto':
       case 'juz_assignment_manual':
         return 'Group';
-      // Motivational verses are Motivational notifications  
+      // Motivational verses are Motivational notifications
       case 'motivational_verse':
         return 'Motivational';
       // Individual member reminders are Individual notifications

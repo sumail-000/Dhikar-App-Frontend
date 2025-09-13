@@ -7,6 +7,8 @@ import 'services/api_client.dart';
 import 'profile_provider.dart';
 import 'package:provider/provider.dart';
 
+const bool kFreezeSplashDebug = false;
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -36,6 +38,12 @@ class _SplashScreenState extends State<SplashScreen>
 
     // Start fade animation
     _fadeController.forward();
+
+    // DEBUG: Freeze splash navigation when kFreezeSplashDebug is true.
+    // Set kFreezeSplashDebug = false to restore normal behavior.
+    if (kFreezeSplashDebug) {
+      return;
+    }
 
     // After splash, gate by auth token
     Future.delayed(const Duration(seconds: 2), () async {
@@ -101,11 +109,10 @@ class _SplashScreenState extends State<SplashScreen>
             // Background image (bottom layer)
             Positioned.fill(
               child: Opacity(
-                opacity: isDarkMode ? 0.5 : 1.0,
-                child: Image.asset(
-                  'assets/background_elements/3_background.png',
-                  width: 440,
-                  height: 956,
+                // Subtle background: 3% (dark) and 4% (light)
+                opacity: isDarkMode ? 0.03 : 0.04, // 3% (dark), 4% (light)
+                child: SvgPicture.asset(
+                  'assets/background_elements/3_background.svg',
                   fit: BoxFit.cover,
                 ),
               ),
@@ -122,10 +129,28 @@ class _SplashScreenState extends State<SplashScreen>
                   builder: (context, child) {
                     return Opacity(
                       opacity: _fadeAnimation.value,
-                      child: SvgPicture.asset(
-                        'assets/splash/bismillah.svg',
-                        width: double.infinity,
-                        fit: BoxFit.fitWidth,
+                      child: Container(
+                        // Toggle this to a faint color (e.g., Colors.red.withOpacity(0.12)) if you need to visually debug layout
+                        color: Colors.transparent,
+                        child: AspectRatio(
+                          aspectRatio: 320 / 46, // Match the SVG viewBox to guarantee height
+                          child: SvgPicture.asset(
+                            'assets/splash/bismillah.svg',
+                            fit: BoxFit.contain,
+                            // Tint based on theme: dark -> #F2EDE0, light -> #FFFFFF
+                            colorFilter: ColorFilter.mode(
+                              Theme.of(context).brightness == Brightness.dark
+                                  ? const Color(0xFFF2EDE0)
+                                  : Colors.white,
+                              BlendMode.srcIn,
+                            ),
+                            placeholderBuilder: (context) => const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        ),
                       ),
                     );
                   },

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'language_provider.dart';
 import 'theme_provider.dart';
 import 'services/api_client.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class GroupKhitmaAssignmentsAdminScreen extends StatefulWidget {
   final int groupId;
@@ -472,12 +473,11 @@ class _GroupKhitmaAssignmentsAdminScreenState extends State<GroupKhitmaAssignmen
                 children: [
                   Positioned.fill(
                     child: Opacity(
-                      opacity: isDarkMode ? 0.5 : 1.0,
-                      child: Image.asset(
-                        'assets/background_elements/3_background.png',
+                      opacity: isDarkMode ? 0.03 : 0.12,
+                      child: SvgPicture.asset(
+                        'assets/background_elements/3_background.svg',
                         fit: BoxFit.cover,
-                        cacheWidth: 800,
-                        filterQuality: FilterQuality.medium,
+                        colorFilter: !isDarkMode ? const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn) : null,
                       ),
                     ),
                   ),

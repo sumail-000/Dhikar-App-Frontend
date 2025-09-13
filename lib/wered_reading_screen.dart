@@ -7,6 +7,7 @@ import 'language_provider.dart';
 import 'services/api_client.dart';
 import 'dart:math' as math;
 import 'app_localizations.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class WeredReadingScreen extends StatefulWidget {
   final List<String> selectedSurahs;
@@ -43,7 +44,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
   List<Map<String, dynamic>> surahData = [];
   bool isLoading = true;
   String? errorMessage;
-  
+
   // Hardcoded surah list with Arabic names
   static const List<Map<String, String>> _surahs = [
     {'name': 'Al-Fatihah', 'arabic': 'الفاتحة', 'subtitle': 'The Opening'},
@@ -306,7 +307,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
       if (widget.isGroupKhitma) {
         print('🚀 DEBUG: Assigned Juz: ${widget.assignedJuz}');
       }
-      
+
       print('📁 DEBUG: Attempting to load asset: assets/hafsData_v2-0.json');
       final String jsonString;
       try {
@@ -320,7 +321,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
         });
         return;
       }
-      
+
       if (jsonString.isEmpty) {
         print('❌ DEBUG: JSON string is empty');
         setState(() {
@@ -329,7 +330,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
         });
         return;
       }
-      
+
       print('📊 DEBUG: Parsing JSON data...');
       final List<dynamic> jsonData;
       try {
@@ -343,9 +344,9 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
         });
         return;
       }
-      
+
       List<dynamic> relevantVerses;
-      
+
       if (widget.isPersonalKhitma) {
         // Personal Khitma: Load all verses from all surahs (entire Quran)
         print('📖 DEBUG: Loading entire Quran for Personal Khitma...');
@@ -354,7 +355,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
         // Group Khitma: Load verses for assigned Juz only
         print('🤝 DEBUG: Loading assigned Juz for Group Khitma...');
         print('🤝 DEBUG: Assigned Juz: ${widget.assignedJuz}');
-        
+
         if (widget.assignedJuz == null || widget.assignedJuz!.isEmpty) {
           setState(() {
             errorMessage = 'No assigned Juz found for group reading.';
@@ -362,11 +363,11 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
           });
           return;
         }
-        
+
         // Filter verses for assigned Juz pages
         final assignedPages = _getPagesForJuz(widget.assignedJuz!);
         print('🤝 DEBUG: Assigned pages: ${assignedPages.take(10).toList()}${assignedPages.length > 10 ? '...' : ''}');
-        
+
         relevantVerses = jsonData.where((verse) {
           final Map<String, dynamic> v = verse as Map<String, dynamic>;
           final int page = v['page'] as int;
@@ -376,10 +377,10 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
         // Daily Wered: Load only selected surah
         final selectedSurahName = widget.selectedSurahs.first;
         final int? surahNumber = surahNameToNumber[selectedSurahName];
-        
+
         print('🔍 DEBUG: Selected surah name: "$selectedSurahName"');
         print('🔍 DEBUG: Mapped to surah number: $surahNumber');
-        
+
         if (surahNumber == null) {
           setState(() {
             errorMessage = 'Could not find surah number for "$selectedSurahName". Please check the surah name.';
@@ -387,7 +388,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
           });
           return;
         }
-        
+
         // Filter verses for the selected surah by number
         relevantVerses = jsonData.where((verse) {
           final Map<String, dynamic> v = verse as Map<String, dynamic>;
@@ -395,19 +396,19 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
           return surahNo == surahNumber;
         }).toList();
       }
-      
+
       print('🚀 DEBUG: Found ${relevantVerses.length} verses');
-      
+
       if (relevantVerses.isEmpty) {
         setState(() {
-          errorMessage = widget.isPersonalKhitma 
+          errorMessage = widget.isPersonalKhitma
               ? 'No Quran data found'
               : 'No verses found for the selected surah';
           isLoading = false;
         });
         return;
       }
-      
+
       // Debug: Show some sample verses
       if (relevantVerses.isNotEmpty) {
         final sampleVerse = relevantVerses.first;
@@ -418,7 +419,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
         print('   - Page: ${sampleVerse['page']}');
         print('   - Verse number: ${sampleVerse['aya_no']}');
       }
-      
+
       // Group verses by page
       final Map<int, List<Map<String, dynamic>>> versesByPage = {};
       for (final verse in relevantVerses) {
@@ -426,14 +427,14 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
         final int page = v['page'] as int;
         versesByPage.putIfAbsent(page, () => []).add(v);
       }
-      
+
       print('🚀 DEBUG: Verses grouped into ${versesByPage.length} pages');
       print('🚀 DEBUG: Available pages: ${versesByPage.keys.toList()..sort()}');
-      
+
       // Determine which pages to load
       final sortedPages = versesByPage.keys.toList()..sort();
       List<int> requestedPages;
-      
+
       if (widget.isPersonalKhitma) {
         // Personal Khitma: Load all pages sequentially (1-604)
         requestedPages = sortedPages;
@@ -448,9 +449,9 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
         requestedPages = sortedPages.take(requestedPageCount).toList();
         print('📄 DEBUG: Daily Wered - Loading $requestedPageCount pages from selected surah');
       }
-      
+
       print('🚀 DEBUG: Selected pages: ${requestedPages.take(10).toList()}${requestedPages.length > 10 ? '...' : ''}');
-      
+
       if (requestedPages.isEmpty) {
         setState(() {
           errorMessage = 'No pages available for the requested configuration';
@@ -458,16 +459,16 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
         });
         return;
       }
-      
+
       // Build page data structure
       final List<Map<String, dynamic>> pagesData = [];
       for (final pageNum in requestedPages) {
         final verses = versesByPage[pageNum]!;
         verses.sort((a, b) => (a['aya_no'] as int).compareTo(b['aya_no'] as int));
-        
+
         // Get the main surah for this page (first verse's surah)
         final mainSurah = verses.first;
-        
+
         pagesData.add({
           'pageNumber': pageNum,
           'verses': verses,
@@ -475,14 +476,14 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
           'surahNameAr': mainSurah['sura_name_ar'],
         });
       }
-      
+
       print('✅ DEBUG: Successfully loaded ${pagesData.length} pages of data');
       print('📊 DEBUG: Page range: ${pagesData.first['pageNumber']} to ${pagesData.last['pageNumber']}');
-      
+
       setState(() {
         surahData = pagesData;
         isLoading = false;
-        
+
         // Set starting page if specified
         if (widget.startFromPage != null) {
           _setInitialPageIndex(widget.startFromPage!);
@@ -502,7 +503,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
     if (surahData.isEmpty || currentPageIndex >= surahData.length) return null;
     return surahData[currentPageIndex];
   }
-  
+
   void _previousPage() {
     if (currentPageIndex > 0) {
       setState(() {
@@ -510,7 +511,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
       });
     }
   }
-  
+
   void _nextPage() {
     if (currentPageIndex < surahData.length - 1) {
       setState(() {
@@ -522,12 +523,12 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
   /// Set initial page index based on page number from backend
   void _setInitialPageIndex(int targetPageNumber) {
     print('🎯 DEBUG: Looking for page $targetPageNumber in loaded data');
-    
+
     // Find the index of the page with the target page number
     for (int i = 0; i < surahData.length; i++) {
       final pageData = surahData[i];
       final int pageNumber = pageData['pageNumber'] as int;
-      
+
       if (pageNumber == targetPageNumber) {
         print('🎯 DEBUG: Found target page $targetPageNumber at index $i');
         setState(() {
@@ -536,22 +537,22 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
         return;
       }
     }
-    
+
     // If target page not found, try to find the closest page
     int closestIndex = 0;
     int minDiff = ((surahData[0]['pageNumber'] as int) - targetPageNumber).abs();
-    
+
     for (int i = 1; i < surahData.length; i++) {
       final pageData = surahData[i];
       final int pageNumber = pageData['pageNumber'] as int;
       final int diff = (pageNumber - targetPageNumber).abs();
-      
+
       if (diff < minDiff) {
         minDiff = diff;
         closestIndex = i;
       }
     }
-    
+
     print('🎯 DEBUG: Target page $targetPageNumber not found exactly, using closest page at index $closestIndex (page ${surahData[closestIndex]['pageNumber']})');
     setState(() {
       currentPageIndex = closestIndex;
@@ -562,7 +563,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
   String _cleanVerseText(String originalText) {
     // Remove verse ending markers - these are special Unicode characters
     String cleanedText = originalText;
-    
+
     // Simple and effective approach: Remove the specific verse ending markers
     // that we see in the JSON data: ﰀ ﰁ ﰂ ﰃ ﰄ ﰅ ﰆ ﰇ
     final List<String> verseEndingMarkers = [
@@ -570,53 +571,53 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
       'ﰊ', 'ﰋ', 'ﰌ', 'ﰍ', 'ﰎ', 'ﰏ', 'ﰐ', 'ﰑ', 'ﰒ', 'ﰓ',
       'ﰔ', 'ﰕ', 'ﰖ', 'ﰗ', 'ﰘ', 'ﰙ', 'ﰚ', 'ﰛ', 'ﰜ', 'ﰝ'
     ];
-    
+
     // Remove each marker
     for (final marker in verseEndingMarkers) {
       cleanedText = cleanedText.replaceAll(marker, '');
     }
-    
+
     // Also use a broader regex to catch any remaining verse markers in the range
     // U+FC00 to U+FDFF (Arabic Presentation Forms-A)
     cleanedText = cleanedText.replaceAll(RegExp(r'[\uFC00-\uFDFF]'), '');
-    
+
     // Trim any extra whitespace
     cleanedText = cleanedText.trim();
-    
+
     // Only print if something was actually cleaned
     if (cleanedText != originalText) {
       print('🧹 DEBUG: Cleaned verse text: "$originalText" -> "$cleanedText"');
     }
-    
+
     return cleanedText;
   }
-  
+
   /// Build TextSpans for verses with inline numbers in a continuous flow
   List<TextSpan> _buildVerseSpans(List<dynamic> verses) {
     List<TextSpan> spans = [];
-    
+
     // Check if this is Al-Fatihah (surah 1)
     final isAlFatihah = verses.isNotEmpty && (verses.first['sura_no'] as int) == 1;
-    
+
     int displayVerseNumber = 1; // Counter for display numbering
-    
+
     for (int i = 0; i < verses.length; i++) {
       final verse = verses[i];
       final String verseText = _cleanVerseText(verse['aya_text']);
       final int originalVerseNumber = verse['aya_no'] as int;
-      
+
       // Special handling for Al-Fatihah: skip verse 1 (which is Bismillah)
       if (isAlFatihah && originalVerseNumber == 1) {
         print('🔍 DEBUG: Skipping Al-Fatihah verse 1 (Bismillah): $verseText');
         continue;
       }
-      
+
       // Skip Bismillah verses for other surahs
       if (!isAlFatihah && _isBismillahVerse(verseText)) {
         print('🔍 DEBUG: Skipping Bismillah verse: $verseText');
         continue;
       }
-      
+
       // Add the verse text with Amiri font
       spans.add(
         TextSpan(
@@ -631,7 +632,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
           ),
         ),
       );
-      
+
       // Add verse number in parentheses
       // For Al-Fatihah, use adjusted numbering (1, 2, 3, etc.)
       // For other surahs, use original numbering
@@ -648,12 +649,12 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
           ),
         ),
       );
-      
+
       // Increment display counter for Al-Fatihah
       if (isAlFatihah) {
         displayVerseNumber++;
       }
-      
+
       // Add space before next verse (except for the last verse)
       if (i < verses.length - 1) {
         spans.add(
@@ -668,10 +669,10 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
         );
       }
     }
-    
+
     return spans;
   }
-  
+
   /// Check if a verse is Bismillah
   bool _isBismillahVerse(String verseText) {
     // Common variations of Bismillah
@@ -679,17 +680,17 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
       'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', // Full diacritics
       'بسم الله الرحمن الرحيم', // Without diacritics
     ];
-    
+
     for (final pattern in bismillahPatterns) {
       if (verseText.contains(pattern)) {
         return true;
       }
     }
-    
+
     // Also check if it starts with bismillah-like pattern
     return verseText.startsWith('بِسْمِ') || verseText.startsWith('بسم');
   }
-  
+
   /// Get Bismillah text for surah header
   String? _getBismillahForSurah(List<dynamic> verses) {
     for (final verse in verses) {
@@ -705,34 +706,34 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
   bool _shouldShowBismillah(Map<String, dynamic> pageContent) {
     final verses = pageContent['verses'] as List<dynamic>;
     if (verses.isEmpty) return false;
-    
+
     final currentSurahNumber = verses.first['sura_no'] as int;
-    
+
     // Special case: At-Tawbah (Surah 9) never has Bismillah
     if (currentSurahNumber == 9) {
       return false;
     }
-    
+
     // Check if this is the beginning of a new surah
     // We show Bismillah if:
     // 1. This is the first page of the session and we're starting from page 1
     // 2. OR this page starts a new surah (first verse is verse 1 of the surah)
-    
+
     final firstVerse = verses.first;
     final firstVerseNumber = firstVerse['aya_no'] as int;
-    
+
     // If the first verse on this page is verse 1, it's the start of a surah
     if (firstVerseNumber == 1) {
       print('📖 DEBUG: Showing Bismillah for start of Surah $currentSurahNumber');
       return true;
     }
-    
+
     // For continuing khitma: Show Bismillah only if starting from page 1 of first surah
     if (currentPageIndex == 0 && (widget.startFromPage == null || widget.startFromPage == 1)) {
       print('📖 DEBUG: Showing Bismillah for first page of session');
       return true;
     }
-    
+
     return false;
   }
 
@@ -775,7 +776,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
   /// Get list of pages for given Juz numbers (for group reading mode)
   List<int> _getPagesForJuz(List<int> juzNumbers) {
     final Set<int> pages = <int>{};
-    
+
     // Juz to page range mapping based on standard Mushaf
     final Map<int, List<int>> juzPageRanges = {
       1: List.generate(21, (i) => i + 1), // Pages 1-21
@@ -809,14 +810,14 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
       29: List.generate(20, (i) => i + 563), // Pages 563-582
       30: List.generate(22, (i) => i + 583), // Pages 583-604
     };
-    
+
     // Collect pages for all assigned Juz
     for (final juzNumber in juzNumbers) {
       if (juzPageRanges.containsKey(juzNumber)) {
         pages.addAll(juzPageRanges[juzNumber]!);
       }
     }
-    
+
     return pages.toList()..sort();
   }
 
@@ -835,7 +836,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
 
     try {
       print('💾 DEBUG: Saving group khitma progress...');
-      
+
       final verses = currentPageContent['verses'] as List<dynamic>;
       if (verses.isEmpty) {
         print('❌ DEBUG: No verses found in current page');
@@ -846,7 +847,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
       final int currentPage = currentPageContent['pageNumber'] as int;
       final int currentSurah = verses.first['sura_no'] as int;
       final int currentJuzz = _getJuzzForPage(currentPage);
-      
+
       // Get first and last verse numbers
       final int? startVerse = verses.first['aya_no'] as int?;
       final int? endVerse = verses.last['aya_no'] as int?;
@@ -946,7 +947,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
           print('⚠️ DEBUG: Exception while updating assignments across Juz: $e');
           print(st);
         }
-        
+
         if (mounted) {
           _showGroupProgressSavedSnackbar();
         }
@@ -980,7 +981,7 @@ _showErrorSnackbar(AppLocalizations.of(context)!.failedToSaveGroupProgress + '. 
 
     try {
       print('💾 DEBUG: Saving personal khitma progress...');
-      
+
       final verses = currentPageContent['verses'] as List<dynamic>;
       if (verses.isEmpty) {
         print('❌ DEBUG: No verses found in current page');
@@ -991,11 +992,11 @@ _showErrorSnackbar(AppLocalizations.of(context)!.failedToSaveGroupProgress + '. 
       final int currentPage = currentPageContent['pageNumber'] as int;
       final int currentSurah = verses.first['sura_no'] as int;
       final int currentJuzz = _getJuzzForPage(currentPage);
-      
+
       // For personal khitma, we track reading from first page of current session
       final int startPage = currentPageIndex == 0 ? currentPage : currentPage;
       final int endPage = currentPage;
-      
+
       // Get first and last verse numbers
       final int? startVerse = verses.first['aya_no'] as int?;
       final int? endVerse = verses.last['aya_no'] as int?;
@@ -1024,11 +1025,11 @@ _showErrorSnackbar(AppLocalizations.of(context)!.failedToSaveGroupProgress + '. 
         print('✅ DEBUG: Progress saved successfully!');
         final responseData = response.data as Map<String, dynamic>;
         final khitmaData = responseData['khitma'] as Map<String, dynamic>;
-        
+
         // Check if khitma was completed
         final bool isCompleted = khitmaData['is_completed'] == true;
         final double completionPercentage = (khitmaData['completion_percentage'] as num?)?.toDouble() ?? 0.0;
-        
+
         if (mounted) {
           if (isCompleted) {
             _showKhitmaCompletedDialog(completionPercentage);
@@ -1273,20 +1274,19 @@ AppLocalizations.of(context)!.goBack,
                   colors: themeProvider.gradientColors,
                 ),
               ),
-              child: Stack(
-                children: [
-                  // Background image
-                  Positioned.fill(
-                    child: Opacity(
-                      opacity: themeProvider.isDarkMode ? 0.5 : 1.0,
-                      child: Image.asset(
-                        'assets/background_elements/3_background.png',
-                        fit: BoxFit.cover,
-                        cacheWidth: 800,
-                        filterQuality: FilterQuality.medium,
-                      ),
-                    ),
+          child: Stack(
+            children: [
+              // Background SVG overlay
+              Positioned.fill(
+                child: Opacity(
+                  opacity: themeProvider.isDarkMode ? 0.03 : 0.12,
+                  child: SvgPicture.asset(
+                    'assets/background_elements/3_background.svg',
+                    fit: BoxFit.cover,
+                    colorFilter: themeProvider.isDarkMode ? null : const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn),
                   ),
+                ),
+              ),
                   // Color overlay for dark mode only
                   if (themeProvider.isDarkMode)
                     Positioned.fill(
@@ -1390,153 +1390,153 @@ widget.isPersonalKhitma
                               child: Stack(
                                 clipBehavior: Clip.none,
                                 children: [
-                                // Main content container
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.all(20),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.95),
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.08),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 3),
-                                      ),
-                                    ],
-                                  ),
-                                  child: SingleChildScrollView(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min, // Make column size fit content
-                                      children: [
-                                        const SizedBox(height: 6), // Minimal top spacing for maximum content area
-                                        if (currentPageContent != null) ...[
-                                          // Surah title - dynamically get from current page content
-                                          Text(
-                                            _getArabicSurahName(currentPageContent!['surahName']) ?? currentPageContent!['surahNameAr'],
-                                            style: const TextStyle(
-                                              fontFamily: 'Amiri',
-                                              fontSize: 36,
-                                              height: 1.0, // 100% line height
-                                              letterSpacing: 0,
-                                              color: Color(0xFF392852), // #392852
-                                              fontWeight: FontWeight.w400, // Regular weight
-                                            ),
-                                            textAlign: TextAlign.center,
-                                            textDirection: TextDirection.rtl,
-                                          ),
-                                          const SizedBox(height: 17), // Slightly reduced spacing before Bismillah
-                                          
-                                          // Show Bismillah when appropriate
-                                          if (_shouldShowBismillah(currentPageContent!)) const Text(
-                                            'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
-                                            style: TextStyle(
-                                              fontFamily: 'Amiri',
-                                              fontSize: 16,
-                                              height: 1.0, // 100% line height
-                                              letterSpacing: 0,
-                                              color: Color(0xFF392852), // #392852
-                                              fontWeight: FontWeight.w400, // Regular weight
-                                            ),
-                                            textAlign: TextAlign.center,
-                                            textDirection: TextDirection.rtl,
-                                          ),
-                                          if (_shouldShowBismillah(currentPageContent!)) const SizedBox(height: 20), // Equal spacing after Bismillah
-                                          
-                                          // Verses - continuous flow with inline numbers and center alignment
-                                          RichText(
-                                            textAlign: TextAlign.center,
-                                            textDirection: TextDirection.rtl,
-                                            text: TextSpan(
-                                              children: _buildVerseSpans(currentPageContent!['verses']),
-                                            ),
-                                          ),
-                                        ] else
-                                          Text(
-AppLocalizations.of(context)!.noContentToDisplay,
-                                            style: const TextStyle(
-                                              fontSize: 18,
-                                              color: Color(0xFF2D1B69),
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
+                                  // Main content container
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(20),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.95),
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.08),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 3),
+                                        ),
                                       ],
                                     ),
+                                    child: SingleChildScrollView(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min, // Make column size fit content
+                                        children: [
+                                          const SizedBox(height: 6), // Minimal top spacing for maximum content area
+                                          if (currentPageContent != null) ...[
+                                            // Surah title - dynamically get from current page content
+                                            Text(
+                                              _getArabicSurahName(currentPageContent!['surahName']) ?? currentPageContent!['surahNameAr'],
+                                              style: const TextStyle(
+                                                fontFamily: 'Amiri',
+                                                fontSize: 36,
+                                                height: 1.0, // 100% line height
+                                                letterSpacing: 0,
+                                                color: Color(0xFF392852), // #392852
+                                                fontWeight: FontWeight.w400, // Regular weight
+                                              ),
+                                              textAlign: TextAlign.center,
+                                              textDirection: TextDirection.rtl,
+                                            ),
+                                            const SizedBox(height: 17), // Slightly reduced spacing before Bismillah
+
+                                            // Show Bismillah when appropriate
+                                            if (_shouldShowBismillah(currentPageContent!)) const Text(
+                                              'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+                                              style: TextStyle(
+                                                fontFamily: 'Amiri',
+                                                fontSize: 16,
+                                                height: 1.0, // 100% line height
+                                                letterSpacing: 0,
+                                                color: Color(0xFF392852), // #392852
+                                                fontWeight: FontWeight.w400, // Regular weight
+                                              ),
+                                              textAlign: TextAlign.center,
+                                              textDirection: TextDirection.rtl,
+                                            ),
+                                            if (_shouldShowBismillah(currentPageContent!)) const SizedBox(height: 20), // Equal spacing after Bismillah
+
+                                            // Verses - continuous flow with inline numbers and center alignment
+                                            RichText(
+                                              textAlign: TextAlign.center,
+                                              textDirection: TextDirection.rtl,
+                                              text: TextSpan(
+                                                children: _buildVerseSpans(currentPageContent!['verses']),
+                                              ),
+                                            ),
+                                          ] else
+                                            Text(
+                                              AppLocalizations.of(context)!.noContentToDisplay,
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                color: Color(0xFF2D1B69),
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
-                                ),
-                                
-                                // Corner decorations - edge-aligned positioning (overlapping with card border)
-                                // Top-left corner (EDGE-ALIGNED)
-                                const Positioned(
-                                  top: -8,
-                                  left: -8,
-                                  child: _CornerDecoration(
-                                    angleDeg: 0,
-                                    assetPath: 'assets/background_elements/9.png',
-                                    size: 45,
+
+                                  // Corner decorations - edge-aligned positioning (overlapping with card border)
+                                  // Top-left corner (EDGE-ALIGNED)
+                                  const Positioned(
+                                    top: -8,
+                                    left: -8,
+                                    child: _CornerDecoration(
+                                      angleDeg: 0,
+                                      assetPath: 'assets/background_elements/9.png',
+                                      size: 45,
+                                    ),
                                   ),
-                                ),
-                                // Top-right corner (EDGE-ALIGNED)
-                                const Positioned(
-                                  top: -8,
-                                  right: -8,
-                                  child: _CornerDecoration(
-                                    angleDeg: 90,
-                                    assetPath: 'assets/background_elements/9.png',
-                                    size: 45,
+                                  // Top-right corner (EDGE-ALIGNED)
+                                  const Positioned(
+                                    top: -8,
+                                    right: -8,
+                                    child: _CornerDecoration(
+                                      angleDeg: 90,
+                                      assetPath: 'assets/background_elements/9.png',
+                                      size: 45,
+                                    ),
                                   ),
-                                ),
-                                // Bottom-left corner (EDGE-ALIGNED)
-                                const Positioned(
-                                  bottom: -8,
-                                  left: -8,
-                                  child: _CornerDecoration(
-                                    angleDeg: 270,
-                                    assetPath: 'assets/background_elements/9.png',
-                                    size: 45,
+                                  // Bottom-left corner (EDGE-ALIGNED)
+                                  const Positioned(
+                                    bottom: -8,
+                                    left: -8,
+                                    child: _CornerDecoration(
+                                      angleDeg: 270,
+                                      assetPath: 'assets/background_elements/9.png',
+                                      size: 45,
+                                    ),
                                   ),
-                                ),
-                                // Bottom-right corner (EDGE-ALIGNED)
-                                const Positioned(
-                                  bottom: -8,
-                                  right: -8,
-                                  child: _CornerDecoration(
-                                    angleDeg: 180,
-                                    assetPath: 'assets/background_elements/9.png',
-                                    size: 45,
+                                  // Bottom-right corner (EDGE-ALIGNED)
+                                  const Positioned(
+                                    bottom: -8,
+                                    right: -8,
+                                    child: _CornerDecoration(
+                                      angleDeg: 180,
+                                      assetPath: 'assets/background_elements/9.png',
+                                      size: 45,
+                                    ),
                                   ),
-                                ),
-                                
-                                // Juz information at bottom center
-                                if (currentPageContent != null) Positioned(
-                                  bottom: 2,
-                                  left: 0,
-                                  right: 0,
-                                  child: Consumer<LanguageProvider>(
-                                    builder: (context, langProvider, child) {
-                                      final currentPageNumber = currentPageContent!['pageNumber'] as int;
-                                      final currentJuz = _getJuzzForPage(currentPageNumber);
-                                      
-                                      return Text(
-                                        langProvider.isArabic
-                                            ? 'جُزْءُ $currentJuz'
-                                            : 'Juz $currentJuz',
-                                        style: const TextStyle(
-                                          fontFamily: 'Amiri',
-                                          fontSize: 12,
-                                          height: 1.2,
-                                          letterSpacing: 0,
-                                          color: Color(0xFF999999),
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                        textDirection: langProvider.isArabic ? TextDirection.rtl : TextDirection.ltr,
-                                      );
-                                    },
+
+                                  // Juz information at bottom center
+                                  if (currentPageContent != null) Positioned(
+                                    bottom: 2,
+                                    left: 0,
+                                    right: 0,
+                                    child: Consumer<LanguageProvider>(
+                                      builder: (context, langProvider, child) {
+                                        final currentPageNumber = currentPageContent!['pageNumber'] as int;
+                                        final currentJuz = _getJuzzForPage(currentPageNumber);
+
+                                        return Text(
+                                          langProvider.isArabic
+                                              ? 'جُزْءُ $currentJuz'
+                                              : 'Juz $currentJuz',
+                                          style: const TextStyle(
+                                            fontFamily: 'Amiri',
+                                            fontSize: 12,
+                                            height: 1.2,
+                                            letterSpacing: 0,
+                                            color: Color(0xFF999999),
+                                            fontWeight: FontWeight.w400,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                          textDirection: langProvider.isArabic ? TextDirection.rtl : TextDirection.ltr,
+                                        );
+                                      },
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -1665,7 +1665,7 @@ class _CornerDecoration extends StatelessWidget {
   final double angleDeg;
   final String assetPath;
   final double size;
-  
+
   const _CornerDecoration({
     required this.angleDeg,
     required this.assetPath,
@@ -1679,12 +1679,16 @@ class _CornerDecoration extends StatelessWidget {
       height: size,
       child: Transform.rotate(
         angle: angleDeg * math.pi / 180,
-        child: Image.asset(
-          assetPath,
-          width: size,
-          height: size,
-          fit: BoxFit.contain,
-          filterQuality: FilterQuality.medium,
+        child: Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
+            return SvgPicture.asset(
+              assetPath,
+              width: size,
+              height: size,
+              fit: BoxFit.contain,
+              colorFilter: themeProvider.isDarkMode ? const ColorFilter.mode(Color(0xFF1F1F1F), BlendMode.srcIn) : null,
+            );
+          },
         ),
       ),
     );

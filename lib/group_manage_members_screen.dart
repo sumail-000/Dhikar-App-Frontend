@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'services/api_client.dart';
 import 'profile_provider.dart';
 import 'widgets/personalized_reminder_dialog.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 // Manage Members screen (UI only, compact, Figma-style) now wired to real data
 class GroupManageMembersScreen extends StatefulWidget {
   const GroupManageMembersScreen({super.key, required this.groupId, this.groupName, this.isDhikr = false});
@@ -78,15 +79,22 @@ class _GroupManageMembersScreenState extends State<GroupManageMembersScreen> {
                 ? const [Color(0xFF251629), Color(0xFF4C3B6E)]
                 : const [Color(0xFF163832), Color(0xFF235347)],
           ),
-          image: const DecorationImage(
-            image: AssetImage('assets/background_elements/3_background.png'),
-            fit: BoxFit.cover,
-            opacity: 0.25,
-          ),
         ),
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Opacity(
+                opacity: isDark ? 0.03 : 0.12,
+                child: SvgPicture.asset(
+                  'assets/background_elements/3_background.svg',
+                  fit: BoxFit.cover,
+                  colorFilter: isDark ? null : const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn),
+                ),
+              ),
+            ),
+            SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Header (compact)
               Padding(
@@ -177,6 +185,8 @@ class _GroupManageMembersScreenState extends State<GroupManageMembersScreen> {
               ),
             ],
           ),
+        ),
+          ],
         ),
       ),
     );
