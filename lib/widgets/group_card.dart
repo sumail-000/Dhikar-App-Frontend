@@ -82,14 +82,32 @@ class GroupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Fixed palette and geometry per provided pixel spec
-    const cardBg = Color(0xFFF2EDE0);
-    const cardBorder = Color(0xFF251629);
-    const titleColor = Color(0xFF051F20);
-    const chipBg = Color(0xFF392852);
-    const percentTextColor = Color(0xFF392852);
-    const progressTrack = Color(0xFFC2AEEA);
-    const progressFill = Color(0xFF392852);
+    // Get theme provider for dynamic colors
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isLightMode = !themeProvider.isDarkMode;
+    
+    // Theme-aware colors - Light mode uses consistent app colors, Dark mode keeps original design
+    final cardBg = isLightMode 
+        ? const Color(0xFFE8F5E8)        // Light green (matches dhikr cards & motivational cards)
+        : const Color(0xFFF2EDE0);       // Keep original cream for dark mode
+    final cardBorder = isLightMode 
+        ? const Color(0xFFB6D1C2)        // Light green border (consistent with app)
+        : const Color(0xFF251629);       // Keep original dark border
+    final titleColor = isLightMode 
+        ? const Color(0xFF2D1B69)        // Dark purple (consistent app text color)
+        : const Color(0xFF051F20);       // Keep original for dark mode
+    final chipBg = isLightMode 
+        ? const Color(0xFF235347)        // Islamic green (consistent with theme)
+        : const Color(0xFF392852);       // Keep original purple for dark mode
+    final percentTextColor = isLightMode 
+        ? const Color(0xFF235347)        // Islamic green (matches chip)
+        : const Color(0xFF392852);       // Keep original for dark mode
+    final progressTrack = isLightMode 
+        ? const Color(0xFFB6D1C2)        // Light green track (consistent border color)
+        : const Color(0xFFC2AEEA);       // Keep original purple track for dark mode
+    final progressFill = isLightMode 
+        ? const Color(0xFF235347)        // Islamic green progress (consistent theme)
+        : const Color(0xFF392852);       // Keep original purple fill for dark mode
 
     return AspectRatio(
       aspectRatio: 408 / 213, // keep card proportions consistent across widths
@@ -245,7 +263,7 @@ class GroupCard extends StatelessWidget {
                             child: Container(
                               width: 50 * s,
                               height: 50 * s,
-                              decoration: const BoxDecoration(
+                              decoration: BoxDecoration(
                                 color: chipBg,
                                 shape: BoxShape.circle,
                               ),
@@ -325,7 +343,7 @@ class GroupCard extends StatelessWidget {
                               fontFamily: 'Manrope',
                               fontWeight: FontWeight.w400,
                               fontSize: 16 * s,
-                              color: const Color(0xFF392852),
+                              color: percentTextColor,
                               height: 1.0,
                             ),
                           ),
