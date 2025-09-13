@@ -636,8 +636,8 @@ class _DailyWeredScreenState extends State<DailyWeredScreen> {
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: isSelected
-                                  ? const Color(0xFF4A148C)
-                                  : Colors.grey[300]!,
+                                  ? const Color(0xFF205C3B)
+                                  : const Color(0xFFB6D1C2),
                               width: isSelected ? 2 : 1,
                             ),
                           ),
@@ -652,7 +652,7 @@ class _DailyWeredScreenState extends State<DailyWeredScreen> {
                                           ? surah['arabic']!
                                           : surah['name']!,
                                       style: TextStyle(
-                                        color: isSelected ? const Color(0xFF4A148C) : const Color(0xFF4A148C),
+                                        color: const Color(0xFF2D1B69),
                                         fontSize: 16,
                                         fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                                       ),
@@ -663,7 +663,7 @@ class _DailyWeredScreenState extends State<DailyWeredScreen> {
                                           ? surah['name']!
                                           : surah['subtitle']!,
                                       style: TextStyle(
-                                        color: const Color(0xFF4A148C).withOpacity(0.7),
+                                        color: const Color(0xFF2D1B69).withOpacity(0.7),
                                         fontSize: 14,
                                       ),
                                     ),
@@ -678,7 +678,7 @@ class _DailyWeredScreenState extends State<DailyWeredScreen> {
                                         ? surah['name']!
                                         : surah['arabic']!,
                                     style: const TextStyle(
-                                      color: Color(0xFF4A148C),
+                                      color: Color(0xFF2D1B69),
                                       fontSize: 18,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -689,19 +689,19 @@ class _DailyWeredScreenState extends State<DailyWeredScreen> {
                                           ? '$pageCount صفحة'
                                           : '$pageCount pages',
                                       style: TextStyle(
-                                        color: const Color(0xFF4A148C).withOpacity(0.6),
+                                        color: const Color(0xFF2D1B69).withOpacity(0.6),
                                         fontSize: 12,
                                       ),
                                     ),
                                 ],
                               ),
                               const SizedBox(width: 8),
-                              if (isSelected)
-                                const Icon(
-                                  Icons.check_circle,
-                                  color: Color(0xFF4A148C),
-                                  size: 24,
-                                ),
+                                if (isSelected)
+                                  const Icon(
+                                    Icons.check_circle,
+                                    color: Color(0xFF205C3B),
+                                    size: 24,
+                                  ),
                             ],
                           ),
                         ),
