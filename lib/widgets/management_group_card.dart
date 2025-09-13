@@ -39,13 +39,13 @@ final title = isArabic ? titleArabic : titleEnglish;
     final privacy = isPublic ? AppLocalizations.of(context)!.public : AppLocalizations.of(context)!.private;
     final app = AppLocalizations.of(context)!;
     
-    // App's theming system integration
-    final primaryColor = isLightMode ? const Color(0xFF251629) : const Color(0xFF6B46C1); // App's purple theme
-    final secondaryColor = isLightMode ? const Color(0xFF392852) : const Color(0xFF8B5CF6); // App's secondary purple
-    final surfaceColor = isLightMode ? const Color(0xFFF2EDE0) : const Color(0xFF251629); // App's card colors
-    final textPrimaryColor = isLightMode ? const Color(0xFF051F20) : Colors.white; // App's text colors
-    final textSecondaryColor = isLightMode ? const Color(0xFF235347) : const Color(0xFFB0BEC5); // App's green/secondary
-    final borderColor = isLightMode ? const Color(0xFF251629) : Colors.white.withOpacity(0.2); // App's border colors
+    // App's theming system integration - Light mode uses green theme, not yellow/cream
+    final primaryColor = isLightMode ? const Color(0xFF235347) : const Color(0xFF6B46C1); // Light mode: green, Dark mode: purple
+    final secondaryColor = isLightMode ? const Color(0xFF2E7D32) : const Color(0xFF8B5CF6); // Light mode: dark green, Dark mode: purple
+    final surfaceColor = isLightMode ? const Color(0xFFE8F5E8) : const Color(0xFF251629); // Light mode: light green, Dark mode: dark
+    final textPrimaryColor = isLightMode ? const Color(0xFF2E7D32) : Colors.white; // Light mode: dark green text
+    final textSecondaryColor = isLightMode ? const Color(0xFF235347) : const Color(0xFFB0BEC5); // Light mode: green
+    final borderColor = isLightMode ? const Color(0xFFB6D1C2) : Colors.white.withOpacity(0.2); // Light mode: light green border
     
     return Container(
       decoration: BoxDecoration(
@@ -54,8 +54,8 @@ final title = isArabic ? titleArabic : titleEnglish;
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  surfaceColor, // App's card background
-                  const Color(0xFFF7F3E8), // App's cream color
+                  surfaceColor, // Light green background
+                  Colors.white, // White instead of cream
                 ],
               )
             : LinearGradient(
@@ -98,7 +98,7 @@ final title = isArabic ? titleArabic : titleEnglish;
                 height: 60,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: (isLightMode ? const Color(0xFFC2AEEA) : const Color(0xFF6B46C1)).withOpacity(0.06), // App's accent colors
+                  color: (isLightMode ? const Color(0xFF8EB69B) : const Color(0xFF6B46C1)).withOpacity(0.06), // Light mode: sage green, Dark mode: purple
                 ),
               ),
             ),
@@ -348,11 +348,11 @@ final title = isArabic ? titleArabic : titleEnglish;
                     colors: [primaryColor, secondaryColor],
                   )
                 : null,
-            color: isPrimary ? null : (isLightMode ? const Color(0xFFE3D9F6) : Colors.white.withOpacity(0.1)), // App's light purple accent
+            color: isPrimary ? null : (isLightMode ? const Color(0xFFDAF1DE) : Colors.white.withOpacity(0.1)), // Light mode: light green, Dark mode: white
             borderRadius: BorderRadius.circular(8),
             border: !isPrimary
                 ? Border.all(
-                    color: isLightMode ? const Color(0xFF392852) : Colors.white.withOpacity(0.2), // App's purple border
+                    color: isLightMode ? const Color(0xFF235347) : Colors.white.withOpacity(0.2), // Light mode: green border, Dark mode: white
                   )
                 : null,
             boxShadow: isPrimary
@@ -376,7 +376,7 @@ final title = isArabic ? titleArabic : titleEnglish;
                   fontWeight: FontWeight.w600,
                   color: isPrimary
                       ? Colors.white
-                      : (isLightMode ? const Color(0xFF251629) : Colors.white), // App's primary dark color
+                      : (isLightMode ? const Color(0xFF2E7D32) : Colors.white), // Light mode: dark green, Dark mode: white
                 ),
               ),
               const SizedBox(width: 4), // Reduced from 6 to 4
@@ -385,7 +385,7 @@ final title = isArabic ? titleArabic : titleEnglish;
                 size: 14, // Reduced from 16 to 14
                 color: isPrimary
                     ? Colors.white
-                    : (isLightMode ? const Color(0xFF251629) : Colors.white), // App's primary dark color
+                    : (isLightMode ? const Color(0xFF2E7D32) : Colors.white), // Light mode: dark green, Dark mode: white
               ),
             ],
           ),
