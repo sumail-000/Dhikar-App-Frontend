@@ -1395,8 +1395,16 @@ widget.isPersonalKhitma
                                     width: double.infinity,
                                     padding: const EdgeInsets.all(20),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.95),
+                                      color: themeProvider.isDarkMode 
+                                          ? Colors.white.withOpacity(0.95) 
+                                          : const Color(0xFFDAF1DE),
                                       borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: themeProvider.isDarkMode 
+                                            ? Colors.transparent 
+                                            : const Color(0xFFB6D1C2),
+                                        width: 1,
+                                      ),
                                       boxShadow: [
                                         BoxShadow(
                                           color: Colors.black.withOpacity(0.08),
@@ -1561,8 +1569,12 @@ widget.isPersonalKhitma
                                             }
                                           },
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor: const Color(0xFFF7F3E8),
-                                            foregroundColor: const Color(0xFF2D1B69),
+                                            backgroundColor: themeProvider.isDarkMode 
+                                                ? const Color(0xFFF7F3E8) 
+                                                : const Color(0xFF235347),
+                                            foregroundColor: themeProvider.isDarkMode 
+                                                ? const Color(0xFF2D1B69) 
+                                                : Colors.white,
                                             shape: RoundedRectangleBorder(
                                               borderRadius: BorderRadius.circular(10),
                                             ),
@@ -1595,8 +1607,12 @@ child: Text(
                                                 }
                                               },
                                               style: ElevatedButton.styleFrom(
-                                                backgroundColor: const Color(0xFFF7F3E8),
-                                                foregroundColor: const Color(0xFF2D1B69),
+                                                backgroundColor: themeProvider.isDarkMode 
+                                                    ? const Color(0xFFF7F3E8) 
+                                                    : const Color(0xFF235347),
+                                                foregroundColor: themeProvider.isDarkMode 
+                                                    ? const Color(0xFF2D1B69) 
+                                                    : Colors.white,
                                                 shape: RoundedRectangleBorder(
                                                   borderRadius: BorderRadius.circular(10),
                                                 ),
@@ -1628,8 +1644,12 @@ child: Text(
                                                 Navigator.pop(context);
                                               },
                                               style: ElevatedButton.styleFrom(
-                                                backgroundColor: const Color(0xFFF7F3E8),
-                                                foregroundColor: const Color(0xFF2D1B69),
+                                                backgroundColor: themeProvider.isDarkMode 
+                                                    ? const Color(0xFFF7F3E8) 
+                                                    : const Color(0xFF235347),
+                                                foregroundColor: themeProvider.isDarkMode 
+                                                    ? const Color(0xFF2D1B69) 
+                                                    : Colors.white,
                                                 shape: RoundedRectangleBorder(
                                                   borderRadius: BorderRadius.circular(10),
                                                 ),
