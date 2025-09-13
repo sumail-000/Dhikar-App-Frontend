@@ -202,6 +202,18 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
     return const Color(0xFF8B8B8B);
   }
 
+  Color _statusTextColor(String status, bool isDarkMode) {
+    if (!isDarkMode) {
+      // Light mode - use dark text for better contrast
+      if (status.contains('Pages Read') || status.contains('صفحات')) {
+        return const Color(0xFF5D5D00); // Dark yellow for yellow background
+      }
+      return const Color(0xFF2E7D32); // Default dark green for light mode
+    }
+    // Dark mode - keep white text
+    return Colors.white;
+  }
+
   String _localizedStatus(LanguageProvider lang, String status) {
     if (!lang.isArabic) return status;
     switch (status) {
@@ -278,6 +290,9 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
         final isDarkMode = themeProvider.isDarkMode;
         final isArabic = languageProvider.isArabic;
         final textColor = isDarkMode ? Colors.white : const Color(0xFF2E7D32);
+        final memberTextColor = isDarkMode ? Colors.white : const Color(0xFF2E7D32);
+        final headerTextColor = isDarkMode ? const Color(0xFFC2AEEA) : const Color(0xFF6B5B95);
+        final statusTextColor = isDarkMode ? Colors.white : const Color(0xFF2E7D32);
 
         return Directionality(
           textDirection: languageProvider.textDirection,
@@ -336,13 +351,13 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
                               Center(
                                 child: Text(
                                   isArabic ? 'تفاصيل الختمة' : 'Khitma Details',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontFamily: 'Manrope',
                                     fontWeight: FontWeight.w500,
                                     fontSize: 18,
                                     height: 1.1,
                                     letterSpacing: 0,
-                                    color: Colors.white,
+                                    color: isDarkMode ? Colors.white : const Color(0xFF2E7D32),
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -362,13 +377,13 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
                                 flex: 4,
                                 child: Text(
                                   isArabic ? 'اسم العضو' : 'Member Name',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontFamily: 'Manrope',
                                     fontWeight: FontWeight.w500,
                                     fontSize: 14,
                                     height: 1.0,
                                     letterSpacing: 0,
-                                    color: Color(0xFFC2AEEA),
+                                    color: headerTextColor,
                                   ),
                                 ),
                               ),
@@ -376,13 +391,13 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
                                 flex: 2,
                                 child: Text(
                                   isArabic ? 'الأجزاء' : 'Assigned Juz',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontFamily: 'Manrope',
                                     fontWeight: FontWeight.w500,
                                     fontSize: 14,
                                     height: 1.0,
                                     letterSpacing: 0,
-                                    color: Color(0xFFC2AEEA),
+                                    color: headerTextColor,
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -391,13 +406,13 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
                                 flex: 3,
                                 child: Text(
                                   isArabic ? 'الحالة' : 'Juz Status',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontFamily: 'Manrope',
                                     fontWeight: FontWeight.w500,
                                     fontSize: 14,
                                     height: 1.0,
                                     letterSpacing: 0,
-                                    color: Color(0xFFC2AEEA),
+                                    color: headerTextColor,
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -405,6 +420,9 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
                             ],
                           ),
                         ),
+
+                        // Add spacing after headers
+                        const SizedBox(height: 4),
 
                         // Members List
                         Expanded(
@@ -435,13 +453,13 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
                                                       flex: 4,
                                                       child: Text(
                                                         row.name,
-                                                        style: const TextStyle(
+                                                        style: TextStyle(
                                                           fontFamily: 'Manrope',
                                                           fontWeight: FontWeight.w400,
                                                           fontSize: 13,
                                                           height: 1.2,
                                                           letterSpacing: 0,
-                                                          color: Colors.white,
+                                                          color: memberTextColor,
                                                         ),
                                                         maxLines: 1,
                                                         overflow: TextOverflow.ellipsis,
@@ -452,13 +470,13 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
                                                       flex: 2,
                                                       child: Text(
                                                         row.assignedJuz,
-                                                        style: const TextStyle(
+                                                        style: TextStyle(
                                                           fontFamily: 'Manrope',
                                                           fontWeight: FontWeight.w400,
                                                           fontSize: 13,
                                                           height: 1.2,
                                                           letterSpacing: 0,
-                                                          color: Colors.white,
+                                                          color: memberTextColor,
                                                         ),
                                                         textAlign: TextAlign.center,
                                                         maxLines: 1,
@@ -481,13 +499,13 @@ class _GroupKhitmaJuzzScreenState extends State<GroupKhitmaJuzzScreen> {
                                                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                                           child: Text(
                                                             _localizedStatus(languageProvider, row.status),
-                                                            style: const TextStyle(
+                                                            style: TextStyle(
                                                               fontFamily: 'Manrope',
                                                               fontWeight: FontWeight.w500,
                                                               fontSize: 11,
                                                               height: 1.0,
                                                               letterSpacing: 0,
-                                                              color: Colors.white,
+                                                              color: _statusTextColor(row.status, isDarkMode),
                                                             ),
                                                             textAlign: TextAlign.center,
                                                             maxLines: 1,
