@@ -8,7 +8,7 @@ class ApiClient {
   static final ApiClient instance = ApiClient._();
 
   // Compile-time default base (can be overridden at runtime via SharedPreferences)
-  static final String _defaultRawBase = String.fromEnvironment('API_BASE', defaultValue: 'https://airfare-greece-depot-fiscal.trycloudflare.com/api');
+  static final String _defaultRawBase = String.fromEnvironment('API_BASE', defaultValue: 'https://richmond-peripheral-far-direct.trycloudflare.com/api');
   static String? _overrideRawBase; // persisted override (raw), may be null
 
   // Normalize API base: ensure it ends with /api to match Laravel route prefix
