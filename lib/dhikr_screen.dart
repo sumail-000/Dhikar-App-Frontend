@@ -226,8 +226,12 @@ class _DhikrScreenState extends State<DhikrScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFE8E8F0),
+                                color: isLightMode ? Colors.white : const Color(0xFFE8E8F0),
                                 borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: isLightMode ? const Color(0xFFB6D1C2) : Colors.transparent,
+                                  width: 1.0,
+                                ),
                               ),
                               child: Row(
                                 children: [
@@ -236,7 +240,9 @@ class _DhikrScreenState extends State<DhikrScreen> {
                                       _selectedDhikr ?? (isArabic ? 'اختر الذكر' : 'Choose Dhikr'),
                                       style: TextStyle(
                                         fontSize: 16,
-                                        color: _selectedDhikr != null ? Colors.black : Colors.grey[600],
+                                        color: _selectedDhikr != null 
+                                            ? (isLightMode ? const Color(0xFF2D1B69) : Colors.black)
+                                            : (isLightMode ? const Color(0xFF2D1B69).withOpacity(0.6) : Colors.grey[600]),
                                         fontFamily: amiriFont,
                                       ),
                                       overflow: TextOverflow.ellipsis,
@@ -244,7 +250,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
                                   ),
                                   Icon(
                                     _showDhikrCards ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                                    color: Colors.grey[600],
+                                    color: isLightMode ? const Color(0xFF2D1B69).withOpacity(0.6) : Colors.grey[600],
                                   ),
                                 ],
                               ),
@@ -272,8 +278,12 @@ class _DhikrScreenState extends State<DhikrScreen> {
                                     child: Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFE8E8F0),
+                                        color: isLightMode ? Colors.white : const Color(0xFFE8E8F0),
                                         borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: isLightMode ? const Color(0xFFB6D1C2) : Colors.transparent,
+                                          width: 1.0,
+                                        ),
                                       ),
                                       child: Row(
                                         children: [
@@ -283,10 +293,10 @@ class _DhikrScreenState extends State<DhikrScreen> {
                                               children: [
                                                 Text(
                                                   dhikr['title'] ?? '',
-                                                  style: const TextStyle(
+                                                  style: TextStyle(
                                                     fontSize: 14,
                                                     fontWeight: FontWeight.w600,
-                                                    color: Colors.black,
+                                                    color: isLightMode ? const Color(0xFF2D1B69) : Colors.black,
                                                   ),
                                                   overflow: TextOverflow.ellipsis,
                                                 ),
@@ -295,7 +305,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
                                                   dhikr['subtitle'] ?? '',
                                                   style: TextStyle(
                                                     fontSize: 12,
-                                                    color: Colors.grey[600],
+                                                    color: isLightMode ? const Color(0xFF2D1B69).withOpacity(0.7) : Colors.grey[600],
                                                   ),
                                                   overflow: TextOverflow.ellipsis,
                                                 ),
@@ -304,10 +314,10 @@ class _DhikrScreenState extends State<DhikrScreen> {
                                           ),
                                           Text(
                                             dhikr['titleArabic'] ?? '',
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.black,
+                                              color: isLightMode ? const Color(0xFF2D1B69) : Colors.black,
                                               fontFamily: 'Amiri',
                                             ),
                                           ),
