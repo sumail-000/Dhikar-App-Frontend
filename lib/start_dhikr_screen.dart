@@ -227,11 +227,14 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
                                     return Container(
                                       width: double.infinity,
                                       padding: EdgeInsets.zero,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFF7F3E8),
-                                        borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
-                                      ),
+                      decoration: BoxDecoration(
+                        color: isLightMode ? const Color(0xFFDAF1DE) : const Color(0xFFF7F3E8),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isLightMode ? const Color(0xFFB6D1C2) : const Color(0xFFE5E7EB), 
+                          width: 1
+                        ),
+                      ),
                                       child: ClipRRect(
                                         borderRadius: BorderRadius.circular(20),
                                         child: Stack(
@@ -322,14 +325,14 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Container(
-                                      decoration: BoxDecoration(color: isLightMode ? const Color(0xFF051F20) : Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: Offset(0, 2))]),
+                                      decoration: BoxDecoration(color: isLightMode ? const Color(0xFF235347) : Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: Offset(0, 2))]),
                                       child: IconButton(onPressed: _decrementCounter, icon: Icon(Icons.remove, color: isLightMode ? Colors.white : const Color(0xFF392852), size: 24), padding: const EdgeInsets.all(16)),
                                     ),
                                     const SizedBox(width: 40),
                                     Text(_currentCount.toString(), style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: isLightMode ? const Color(0xFF1F1F1F) : Colors.white, fontFamily: amiriFont)),
                                     const SizedBox(width: 40),
                                     Container(
-                                      decoration: BoxDecoration(color: isLightMode ? const Color(0xFF051F20) : Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: Offset(0, 2))]),
+                                      decoration: BoxDecoration(color: isLightMode ? const Color(0xFF235347) : Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: Offset(0, 2))]),
                                       child: IconButton(onPressed: _incrementCounter, icon: Icon(Icons.add, color: isLightMode ? Colors.white : const Color(0xFF392852), size: 24), padding: const EdgeInsets.all(16)),
                                     ),
                                   ],
@@ -341,7 +344,7 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
                                     // Save Dhikr button
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isLightMode ? const Color(0xFF051F20) : Colors.white,
+                        backgroundColor: isLightMode ? const Color(0xFF235347) : Colors.white,
                         foregroundColor: isLightMode ? Colors.white : const Color(0xFF392852),
                         minimumSize: const Size.fromHeight(48),
                         shape: RoundedRectangleBorder(
@@ -366,10 +369,10 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
                                       OutlinedButton(
                                       style: OutlinedButton.styleFrom(
                                         side: BorderSide(
-                                          color: isLightMode ? const Color(0xFF051F20) : Colors.white,
+                                          color: isLightMode ? const Color(0xFF235347) : Colors.white,
                                           width: 1.5,
                                         ),
-                                        foregroundColor: isLightMode ? const Color(0xFF051F20) : Colors.white,
+                                        foregroundColor: isLightMode ? const Color(0xFF235347) : Colors.white,
                                         minimumSize: const Size.fromHeight(48),
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(
@@ -382,7 +385,7 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
                                         isArabic ? 'إعادة تعيين' : 'Reset',
                                         style: TextStyle(
                                           fontSize: 18,
-                                          color: isLightMode ? const Color(0xFF051F20) : Colors.white,
+                                          color: isLightMode ? const Color(0xFF235347) : Colors.white,
                                           fontWeight: FontWeight.bold,
                                           fontFamily: amiriFont,
                                         ),
