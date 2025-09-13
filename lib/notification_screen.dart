@@ -194,7 +194,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: isDarkMode ? Colors.white : Colors.black,
+                            color: isDarkMode ? Colors.white : const Color(0xFF205C3B),
                             fontFamily: isArabic ? 'Amiri' : null,
                           ),
                           textAlign: TextAlign.center,
@@ -208,7 +208,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                           size: 20,
                           color: isDarkMode
                               ? Colors.white.withOpacity(0.85)
-                              : Colors.grey.shade700,
+                              : const Color(0xFF205C3B),
                         ),
                       ),
                     ],
@@ -235,17 +235,17 @@ class _NotificationScreenState extends State<NotificationScreen> {
                               color: isSelected
                                   ? (isDarkMode
                                         ? const Color(0xFF2D1B69)
-                                        : const Color(0xFF2E7D32))
+                                        : const Color(0xFF205C3B))
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
                                 color: isSelected
                                     ? (isDarkMode
                                           ? const Color(0xFF2D1B69)
-                                          : const Color(0xFF2E7D32))
+                                          : const Color(0xFF205C3B))
                                     : (isDarkMode
                                           ? Colors.white.withOpacity(0.25)
-                                          : Colors.grey.shade300),
+                                          : const Color(0xFFB6D1C2)),
                                 width: 1,
                               ),
                             ),
@@ -258,7 +258,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                     ? Colors.white
                                     : (isDarkMode
                                           ? Colors.white
-                                          : Colors.black),
+                                          : const Color(0xFF2D1B69)),
                                 fontFamily: isArabic ? 'Amiri' : null,
                               ),
                               textAlign: TextAlign.center,
@@ -345,12 +345,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                   decoration: BoxDecoration(
                                     color: isDarkMode
                                         ? Colors.grey.shade800
-                                        : notification.backgroundColor,
+                                        : Colors.white,
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
                                       color: isDarkMode
                                           ? Colors.grey.shade700
-                                          : Colors.grey.shade200,
+                                          : const Color(0xFFB6D1C2),
                                       width: 1,
                                     ),
                                   ),
@@ -361,12 +361,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                         decoration: BoxDecoration(
                                           color: isDarkMode
                                               ? notification.iconColor.withOpacity(0.18)
-                                              : notification.iconColor.withOpacity(0.08),
+                                              : const Color(0xFF205C3B).withOpacity(0.08),
                                           borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: Icon(
                                           notification.icon,
-                                          color: notification.iconColor,
+                                          color: isDarkMode ? notification.iconColor : const Color(0xFF205C3B),
                                           size: 20,
                                         ),
                                       ),
@@ -382,7 +382,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                               style: TextStyle(
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.w600,
-                                                color: isDarkMode ? Colors.white : Colors.black,
+                                                color: isDarkMode ? Colors.white : const Color(0xFF2D1B69),
                                               ),
                                             ),
                                             const SizedBox(height: 2),
@@ -394,7 +394,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                                 fontSize: 12,
                                                 color: isDarkMode
                                                     ? Colors.grey.shade400
-                                                    : Colors.grey.shade700,
+                                                    : const Color(0xFF2D1B69).withOpacity(0.7),
                                               ),
                                             ),
                                           ],
@@ -406,7 +406,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                           height: 8,
                                           margin: const EdgeInsets.only(right: 8),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFF2E7D32),
+                                            color: const Color(0xFF205C3B),
                                             borderRadius: BorderRadius.circular(4),
                                           ),
                                         ),

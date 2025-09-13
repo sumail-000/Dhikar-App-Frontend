@@ -286,18 +286,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   const SizedBox(height: 24),
 
                   // Username
-                  Text(app.username, style: TextStyle(color: themeProvider.isDarkMode ? Colors.white70 : const Color(0xFF205C3B), fontSize: 12)),
+                  Text(app.username, style: TextStyle(color: themeProvider.isDarkMode ? Colors.white70 : const Color(0xFF2D1B69), fontSize: 12)),
                   const SizedBox(height: 6),
                   Container(
                     decoration: BoxDecoration(
-                      color: themeProvider.cardBackgroundColor,
+                      color: themeProvider.isDarkMode ? themeProvider.cardBackgroundColor : Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: themeProvider.borderColor),
+                      border: Border.all(color: themeProvider.isDarkMode ? themeProvider.borderColor : const Color(0xFFB6D1C2)),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: TextField(
                       controller: _usernameController,
-                      style: TextStyle(color: themeProvider.primaryTextColor),
+                      style: TextStyle(color: themeProvider.isDarkMode ? themeProvider.primaryTextColor : const Color(0xFF2D1B69)),
                       textInputAction: TextInputAction.done,
                       decoration: const InputDecoration(
                         border: InputBorder.none,
@@ -318,25 +318,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   const SizedBox(height: 8),
                   Text(
                     app.usernameRules,
-                    style: TextStyle(color: themeProvider.isDarkMode ? Colors.white70 : const Color(0xFF205C3B), fontSize: 12),
+                    style: TextStyle(color: themeProvider.isDarkMode ? Colors.white70 : const Color(0xFF2D1B69), fontSize: 12),
                   ),
 
                   const SizedBox(height: 16),
 
                   // Email (read-only)
-                  Text(app.email, style: TextStyle(color: themeProvider.isDarkMode ? Colors.white70 : const Color(0xFF205C3B), fontSize: 12)),
+                  Text(app.email, style: TextStyle(color: themeProvider.isDarkMode ? Colors.white70 : const Color(0xFF2D1B69), fontSize: 12)),
                   const SizedBox(height: 6),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: themeProvider.cardBackgroundColor,
+                      color: themeProvider.isDarkMode ? themeProvider.cardBackgroundColor : Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: themeProvider.borderColor),
+                      border: Border.all(color: themeProvider.isDarkMode ? themeProvider.borderColor : const Color(0xFFB6D1C2)),
                     ),
                     child: Text(
                       widget.email ?? '-',
-                      style: TextStyle(color: themeProvider.primaryTextColor, fontSize: 16, fontWeight: FontWeight.w600),
+                      style: TextStyle(color: themeProvider.isDarkMode ? themeProvider.primaryTextColor : const Color(0xFF2D1B69), fontSize: 16, fontWeight: FontWeight.w600),
                     ),
                   ),
 

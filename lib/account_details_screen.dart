@@ -132,7 +132,7 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
                           displayName,
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: theme.primaryTextColor,
+                            color: theme.isDarkMode ? Colors.white : const Color(0xFF205C3B),
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
                           ),
@@ -192,7 +192,7 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
                       'This information is read-only. Use "${app.editProfile}" to make changes.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: theme.isDarkMode ? Colors.white70 : const Color(0xFF205C3B),
+                        color: theme.isDarkMode ? Colors.white70 : const Color(0xFF2D1B69),
                         fontSize: 12,
                       ),
                     ),
@@ -229,9 +229,9 @@ class _InfoTile extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.cardBackgroundColor,
+        color: isLight ? Colors.white : theme.cardBackgroundColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.borderColor),
+        border: Border.all(color: isLight ? const Color(0xFFB6D1C2) : theme.borderColor),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -244,7 +244,7 @@ class _InfoTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: theme.borderColor),
             ),
-            child: Icon(icon, color: theme.primaryTextColor, size: 22),
+            child: Icon(icon, color: isLight ? const Color(0xFF205C3B) : theme.primaryTextColor, size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -254,7 +254,7 @@ class _InfoTile extends StatelessWidget {
                 Text(
                   label,
                   style: TextStyle(
-                    color: theme.isDarkMode ? Colors.white70 : const Color(0xFF205C3B),
+                    color: theme.isDarkMode ? Colors.white70 : const Color(0xFF2D1B69),
                     fontSize: 12,
                   ),
                 ),
@@ -264,7 +264,7 @@ class _InfoTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: theme.primaryTextColor,
+                    color: isLight ? const Color(0xFF2D1B69) : theme.primaryTextColor,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),

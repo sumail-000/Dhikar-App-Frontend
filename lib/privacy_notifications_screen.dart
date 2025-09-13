@@ -72,19 +72,19 @@ class _PrivacyNotificationsScreenState extends State<PrivacyNotificationsScreen>
           margin: const EdgeInsets.symmetric(vertical: 6),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: themeProvider.cardBackgroundColor,
+            color: themeProvider.isDarkMode ? themeProvider.cardBackgroundColor : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: themeProvider.borderColor),
+            border: Border.all(color: themeProvider.isDarkMode ? themeProvider.borderColor : const Color(0xFFB6D1C2)),
           ),
           child: Row(
             children: [
-              Icon(icon, color: themeProvider.primaryTextColor),
+              Icon(icon, color: themeProvider.isDarkMode ? themeProvider.primaryTextColor : const Color(0xFF205C3B)),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   title,
                   style: TextStyle(
-                    color: themeProvider.primaryTextColor,
+                    color: themeProvider.isDarkMode ? themeProvider.primaryTextColor : const Color(0xFF2D1B69),
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
@@ -201,8 +201,8 @@ class _PrivacyNotificationsScreenState extends State<PrivacyNotificationsScreen>
                               app.showInAppNotifications,
                               style: TextStyle(
                                 color: themeProvider.isDarkMode ? Colors.white : const Color(0xFF205C3B),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -240,7 +240,7 @@ class _PrivacyNotificationsScreenState extends State<PrivacyNotificationsScreen>
                             Text(
                               'Note: These toggles hide or show items in the app\'s Notifications screen. The master Push toggle controls whether your device receives any push notifications.',
                               style: TextStyle(
-                                color: themeProvider.primaryTextColor.withOpacity(0.8),
+                                color: themeProvider.isDarkMode ? themeProvider.primaryTextColor.withOpacity(0.8) : const Color(0xFF2D1B69),
                                 fontSize: 12,
                               ),
                             ),
