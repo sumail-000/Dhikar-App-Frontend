@@ -62,6 +62,16 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  // Helper method to create consistent TextThemes for smooth animation
+  TextTheme _buildTextTheme(bool isArabic, bool isDark) {
+    // Use consistent base theme for both light and dark modes
+    final baseTheme = ThemeData(brightness: isDark ? Brightness.dark : Brightness.light).textTheme;
+    
+    return isArabic
+        ? GoogleFonts.amiriTextTheme(baseTheme)
+        : GoogleFonts.manropeTextTheme(baseTheme);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer2<ThemeProvider, LanguageProvider>(
@@ -85,9 +95,7 @@ class MyApp extends StatelessWidget {
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
             useMaterial3: true,
             fontFamily: null, // Remove default fontFamily
-            textTheme: languageProvider.isArabic
-                ? GoogleFonts.amiriTextTheme(Theme.of(context).textTheme)
-                : GoogleFonts.manropeTextTheme(Theme.of(context).textTheme),
+            textTheme: _buildTextTheme(languageProvider.isArabic, false),
             brightness: Brightness.light,
           ),
           darkTheme: ThemeData(
@@ -97,9 +105,7 @@ class MyApp extends StatelessWidget {
             ),
             useMaterial3: true,
             fontFamily: null, // Remove default fontFamily
-            textTheme: languageProvider.isArabic
-                ? GoogleFonts.amiriTextTheme(ThemeData.dark().textTheme)
-                : GoogleFonts.manropeTextTheme(ThemeData.dark().textTheme),
+            textTheme: _buildTextTheme(languageProvider.isArabic, true),
             brightness: Brightness.dark,
           ),
           themeMode: themeProvider.isDarkMode
