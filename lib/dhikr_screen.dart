@@ -211,7 +211,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
                             style: TextStyle(
                               fontSize: 12,
                               color: isLightMode
-                                  ? fadedTextColor
+                                  ? const Color(0xFF2D1B69).withOpacity(0.8)
                                   : creamColor.withOpacity(0.7),
                               fontFamily: amiriFont,
                             ),
@@ -430,7 +430,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
                                   : 'Enter your target',
                               hintStyle: TextStyle(
                                 color: isLightMode
-                                    ? fadedTextColor
+                                    ? const Color(0xFF2D1B69).withOpacity(0.6)
                                     : creamColor,
                                 fontFamily: amiriFont,
                               ),
