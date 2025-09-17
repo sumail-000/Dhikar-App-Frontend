@@ -16,9 +16,6 @@ import 'profile_provider.dart';
 import 'wered_reading_screen.dart';
 import 'services/api_client.dart';
 
-
-
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -28,14 +25,15 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  final GlobalKey<_ProgressSectionState> _progressKey = GlobalKey<_ProgressSectionState>();
-  final GlobalKey<_PersonalKhitmaSectionState> _personalKey = GlobalKey<_PersonalKhitmaSectionState>();
+  final GlobalKey<_ProgressSectionState> _progressKey =
+      GlobalKey<_ProgressSectionState>();
+  final GlobalKey<_PersonalKhitmaSectionState> _personalKey =
+      GlobalKey<_PersonalKhitmaSectionState>();
 
   @override
   void initState() {
     super.initState();
   }
-
 
   void _onItemTapped(int index) {
     if (_selectedIndex != index) {
@@ -109,7 +107,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         // Light mode tint for SVG background on Home screen only
                         colorFilter: themeProvider.isDarkMode
                             ? null
-                            : const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn),
+                            : const ColorFilter.mode(
+                                Color(0xFF8EB69B),
+                                BlendMode.srcIn,
+                              ),
                       ),
                     ),
                   ),
@@ -125,14 +126,19 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: RefreshIndicator(
                         onRefresh: () async {
                           await Future.wait([
-                            _progressKey.currentState?.refresh() ?? Future.value(),
-                            _personalKey.currentState?.refresh() ?? Future.value(),
+                            _progressKey.currentState?.refresh() ??
+                                Future.value(),
+                            _personalKey.currentState?.refresh() ??
+                                Future.value(),
                             // Optionally refresh profile in place
-                            context.read<ProfileProvider?>()?.refresh() ?? Future.value(),
+                            context.read<ProfileProvider?>()?.refresh() ??
+                                Future.value(),
                           ]);
                         },
                         child: SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                          physics: const AlwaysScrollableScrollPhysics(
+                            parent: BouncingScrollPhysics(),
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -221,28 +227,32 @@ class _ProfileSection extends StatelessWidget {
                             ),
                           )
                         : (name.isNotEmpty
-                            ? Center(
-                                child: Text(
-                                  name[0].toUpperCase(),
-                                  style: TextStyle(
-                                    color: themeProvider.primaryTextColor,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w600,
+                              ? Center(
+                                  child: Text(
+                                    name[0].toUpperCase(),
+                                    style: TextStyle(
+                                      color: themeProvider.primaryTextColor,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                ),
-                              )
-                            : Icon(
-                                Icons.person,
-                                color: themeProvider.primaryTextColor,
-                                size: 24,
-                              )),
+                                )
+                              : Icon(
+                                  Icons.person,
+                                  color: themeProvider.primaryTextColor,
+                                  size: 24,
+                                )),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   name.isNotEmpty
-                      ? ((Localizations.localeOf(context).languageCode == 'ar' ? 'سلام، ' : 'Salaam, ') +
-                          ((name.contains(' ')) ? name.split(' ').first : name))
+                      ? ((Localizations.localeOf(context).languageCode == 'ar'
+                                ? 'سلام، '
+                                : 'Salaam, ') +
+                            ((name.contains(' '))
+                                ? name.split(' ').first
+                                : name))
                       : appLocalizations.salaamAli,
                   style: TextStyle(
                     color: themeProvider.homeUsernameColor,
@@ -304,27 +314,62 @@ class _ProgressSectionState extends State<_ProgressSection> {
 
   int _pagesInJuz(int j) {
     const Map<int, int> sizes = {
-      1: 21, 2: 20, 3: 21, 4: 20, 5: 20, 6: 20, 7: 20, 8: 20, 9: 20, 10: 20,
-      11: 20, 12: 20, 13: 20, 14: 20, 15: 20, 16: 20, 17: 20, 18: 20, 19: 20,
-      20: 20, 21: 20, 22: 20, 23: 20, 24: 20, 25: 20, 26: 20, 27: 20, 28: 20,
-      29: 20, 30: 22,
+      1: 21,
+      2: 20,
+      3: 21,
+      4: 20,
+      5: 20,
+      6: 20,
+      7: 20,
+      8: 20,
+      9: 20,
+      10: 20,
+      11: 20,
+      12: 20,
+      13: 20,
+      14: 20,
+      15: 20,
+      16: 20,
+      17: 20,
+      18: 20,
+      19: 20,
+      20: 20,
+      21: 20,
+      22: 20,
+      23: 20,
+      24: 20,
+      25: 20,
+      26: 20,
+      27: 20,
+      28: 20,
+      29: 20,
+      30: 22,
     };
     return sizes[j] ?? 20;
   }
 
   String _shortNum(int n) {
-    if (n >= 1000000000) return '${(n / 1000000000).toStringAsFixed(n % 1000000000 == 0 ? 0 : 1)}B';
-    if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(n % 1000000 == 0 ? 0 : 1)}M';
-    if (n >= 1000) return '${(n / 1000).toStringAsFixed(n % 1000 == 0 ? 0 : 1)}k';
+    if (n >= 1000000000)
+      return '${(n / 1000000000).toStringAsFixed(n % 1000000000 == 0 ? 0 : 1)}B';
+    if (n >= 1000000)
+      return '${(n / 1000000).toStringAsFixed(n % 1000000 == 0 ? 0 : 1)}M';
+    if (n >= 1000)
+      return '${(n / 1000).toStringAsFixed(n % 1000 == 0 ? 0 : 1)}k';
     return n.toString();
   }
 
   Future<void> _loadDhikrAggregate() async {
-    setState(() { isLoadingDhikr = true; dhikrError = null; });
+    setState(() {
+      isLoadingDhikr = true;
+      dhikrError = null;
+    });
     try {
       final resp = await ApiClient.instance.getDhikrGroups();
       if (!resp.ok || resp.data is! Map) {
-        setState(() { dhikrError = resp.error ?? 'Failed to load dhikr groups'; isLoadingDhikr = false; });
+        setState(() {
+          dhikrError = resp.error ?? 'Failed to load dhikr groups';
+          isLoadingDhikr = false;
+        });
         return;
       }
       final List<dynamic> list = (resp.data['groups'] as List?) ?? const [];
@@ -343,12 +388,18 @@ class _ProgressSectionState extends State<_ProgressSection> {
         isLoadingDhikr = false;
       });
     } catch (e) {
-      setState(() { dhikrError = 'Network error loading dhikr'; isLoadingDhikr = false; });
+      setState(() {
+        dhikrError = 'Network error loading dhikr';
+        isLoadingDhikr = false;
+      });
     }
   }
 
   Future<void> _loadGroupKhitmaStats() async {
-    setState(() { isLoadingGroupStats = true; groupStatsError = null; });
+    setState(() {
+      isLoadingGroupStats = true;
+      groupStatsError = null;
+    });
     try {
       // 1) Fetch user's joined groups
       final resp = await ApiClient.instance.getGroups();
@@ -375,22 +426,30 @@ class _ProgressSectionState extends State<_ProgressSection> {
       // 2) For each khitma group, load assignments and compute my contribution status
       for (final g in groups) {
         final gidRaw = g['id'];
-        final int? gid = (gidRaw is int) ? gidRaw : int.tryParse('${gidRaw ?? ''}');
+        final int? gid = (gidRaw is int)
+            ? gidRaw
+            : int.tryParse('${gidRaw ?? ''}');
         if (gid == null) continue;
 
         final assigns = await ApiClient.instance.khitmaAssignments(gid);
         if (!assigns.ok || assigns.data is! Map) continue;
-        final List<dynamic> a = (assigns.data['assignments'] as List?) ?? const [];
+        final List<dynamic> a =
+            (assigns.data['assignments'] as List?) ?? const [];
 
         // Filter assignments for me
-        final myAsn = a.where((e) {
-          final m = (e as Map).cast<String, dynamic>();
-          final u = (m['user'] as Map?)?.cast<String, dynamic>();
-          final uid = (u != null)
-              ? ((u['id'] is int) ? u['id'] as int : int.tryParse('${u['id'] ?? ''}'))
-              : null;
-          return myId != null && uid == myId;
-        }).map((e) => (e as Map).cast<String, dynamic>()).toList();
+        final myAsn = a
+            .where((e) {
+              final m = (e as Map).cast<String, dynamic>();
+              final u = (m['user'] as Map?)?.cast<String, dynamic>();
+              final uid = (u != null)
+                  ? ((u['id'] is int)
+                        ? u['id'] as int
+                        : int.tryParse('${u['id'] ?? ''}'))
+                  : null;
+              return myId != null && uid == myId;
+            })
+            .map((e) => (e as Map).cast<String, dynamic>())
+            .toList();
 
         if (myAsn.isEmpty) {
           // No contribution assigned in this group; skip from denominator
@@ -404,10 +463,15 @@ class _ProgressSectionState extends State<_ProgressSection> {
         for (final m in myAsn) {
           final status = (m['status'] as String?) ?? '';
           final int juz = (m['juz_number'] as int);
-          final int pr = (m['pages_read'] is int) ? (m['pages_read'] as int) : 0;
+          final int pr = (m['pages_read'] is int)
+              ? (m['pages_read'] as int)
+              : 0;
           final int required = _pagesInJuz(juz);
           final bool done = (status == 'completed') || (pr >= required);
-          if (!done) { allDone = false; break; }
+          if (!done) {
+            allDone = false;
+            break;
+          }
         }
         if (allDone) completedContributions++;
       }
@@ -435,10 +499,7 @@ class _ProgressSectionState extends State<_ProgressSection> {
   }
 
   Future<void> refresh() async {
-    await Future.wait([
-      _loadGroupKhitmaStats(),
-      _loadDhikrAggregate(),
-    ]);
+    await Future.wait([_loadGroupKhitmaStats(), _loadDhikrAggregate()]);
   }
 
   @override
@@ -451,14 +512,20 @@ class _ProgressSectionState extends State<_ProgressSection> {
         double groupProgress = 0.0;
         String groupSubtitle = '0 ${appLocalizations.outOfWord} 0';
 
-        if (!isLoadingGroupStats && groupStatsError == null && groupKhitmaStats != null) {
+        if (!isLoadingGroupStats &&
+            groupStatsError == null &&
+            groupKhitmaStats != null) {
           final int totalGroups = groupKhitmaStats!['total_groups'] ?? 0;
-          final int completedGroups = groupKhitmaStats!['completed_groups'] ?? 0;
-          final double averageProgress = (groupKhitmaStats!['average_progress'] ?? 0.0).toDouble();
+          final int completedGroups =
+              groupKhitmaStats!['completed_groups'] ?? 0;
+          final double averageProgress =
+              (groupKhitmaStats!['average_progress'] ?? 0.0).toDouble();
 
           if (totalGroups > 0) {
-            groupProgress = averageProgress / 100; // Convert percentage to decimal
-            groupSubtitle = '$completedGroups ${appLocalizations.outOfWord} $totalGroups';
+            groupProgress =
+                averageProgress / 100; // Convert percentage to decimal
+            groupSubtitle =
+                '$completedGroups ${appLocalizations.outOfWord} $totalGroups';
           }
         } else if (isLoadingGroupStats) {
           groupSubtitle = appLocalizations.loading;
@@ -489,12 +556,14 @@ class _ProgressSectionState extends State<_ProgressSection> {
                     },
                     child: _ProgressCard(
                       title: appLocalizations.dhikrGoal,
-                      progress: (dhikrTotalTarget > 0) ? (dhikrTotalCount / dhikrTotalTarget).clamp(0.0, 1.0) : 0.0,
+                      progress: (dhikrTotalTarget > 0)
+                          ? (dhikrTotalCount / dhikrTotalTarget).clamp(0.0, 1.0)
+                          : 0.0,
                       subtitle: isLoadingDhikr
                           ? appLocalizations.loading
                           : (dhikrError != null)
-                              ? appLocalizations.errorLoadingDhikr
-                              : '${_shortNum(dhikrTotalCount)} ${appLocalizations.outOfWord} ${_shortNum(dhikrTotalTarget)}',
+                          ? appLocalizations.errorLoadingDhikr
+                          : '${_shortNum(dhikrTotalCount)} ${appLocalizations.outOfWord} ${_shortNum(dhikrTotalTarget)}',
                     ),
                   ),
                 ),
@@ -584,11 +653,16 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
         context,
         MaterialPageRoute(
           builder: (context) => WeredReadingScreen(
-            selectedSurahs: ['Al-Fatihah'], // Start from beginning (will be corrected by currentPage)
-            pages: '604', // Total Quran pages
-            isPersonalKhitma: true, // Personal Khitma mode
-            khitmaDays: totalDays, // Selected days
-            personalKhitmaId: khitmaId, // Pass the khitma ID
+            selectedSurahs: ['Al-Fatihah'],
+            // Start from beginning (will be corrected by currentPage)
+            pages: '604',
+            // Total Quran pages
+            isPersonalKhitma: true,
+            // Personal Khitma mode
+            khitmaDays: totalDays,
+            // Selected days
+            personalKhitmaId: khitmaId,
+            // Pass the khitma ID
             startFromPage: currentPage, // Continue from current page
           ),
         ),
@@ -602,9 +676,7 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to continue reading: $e'),
-          ),
+          SnackBar(content: Text('Failed to continue reading: $e')),
         );
       }
     }
@@ -651,7 +723,10 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
     );
   }
 
-  Widget _buildKhitmaContent(ThemeProvider themeProvider, LanguageProvider languageProvider) {
+  Widget _buildKhitmaContent(
+    ThemeProvider themeProvider,
+    LanguageProvider languageProvider,
+  ) {
     if (isLoading) {
       return const Center(
         child: Padding(
@@ -683,9 +758,7 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
               });
               _loadActiveKhitma();
             },
-            child: Text(
-              AppLocalizations.of(context)!.tryAgain,
-            ),
+            child: Text(AppLocalizations.of(context)!.tryAgain),
           ),
         ],
       );
@@ -718,14 +791,17 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
     }
 
     // Active khitma exists - show progress and continue button
-    final double completionPercentage = (activeKhitma!['completion_percentage'] as num?)?.toDouble() ?? 0.0;
+    final double completionPercentage =
+        (activeKhitma!['completion_percentage'] as num?)?.toDouble() ?? 0.0;
     final int currentJuzz = activeKhitma!['current_juzz'] as int;
     final int currentPage = activeKhitma!['current_page'] as int;
     final String khitmaName = activeKhitma!['khitma_name'] as String;
 
     final app = AppLocalizations.of(context)!;
-    final String subtitle = '${app.pageShort} $currentPage - ${app.juzShort} $currentJuzz';
-    final String lastReadLabel = '${app.lastRead}: ${app.pageShort} $currentPage';
+    final String subtitle =
+        '${app.pageShort} $currentPage - ${app.juzShort} $currentJuzz';
+    final String lastReadLabel =
+        '${app.lastRead}: ${app.pageShort} $currentPage';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -771,17 +847,16 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
             value: (completionPercentage / 100).clamp(0.0, 1.0),
             minHeight: 10,
             backgroundColor: themeProvider.progressBackgroundColor,
-            valueColor: AlwaysStoppedAnimation<Color>(themeProvider.homeProgressColor),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              themeProvider.homeProgressColor,
+            ),
           ),
         ),
         const SizedBox(height: 10),
         // Last read label
         Text(
           lastReadLabel,
-          style: TextStyle(
-            color: themeProvider.homeBoxTextColor,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: themeProvider.homeBoxTextColor, fontSize: 12),
         ),
         const SizedBox(height: 10),
         // Continue button
@@ -791,10 +866,10 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
             onPressed: _continueReading,
             style: ElevatedButton.styleFrom(
               backgroundColor: themeProvider.isDarkMode
-                  ? Colors.white.withOpacity(0.15)
+                  ? Color(0xFFF2EDE0).withOpacity(0.15)
                   : const Color(0xFF2D5A27),
               foregroundColor: themeProvider.isDarkMode
-                  ? Colors.white
+                  ? Color(0xFFF2EDE0)
                   : Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -803,10 +878,7 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
             ),
             child: Text(
               AppLocalizations.of(context)!.continueReading,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-              ),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
             ),
           ),
         ),
@@ -923,7 +995,7 @@ class _StreakSection extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: themeProvider.homeBoxBorderColor,
-                  width: 2,
+                  width: 1,
                 ),
               ),
               child: Row(
@@ -939,7 +1011,7 @@ class _StreakSection extends StatelessWidget {
                         ),
                         child: const Icon(
                           Icons.local_fire_department,
-                          color: Colors.orange,
+
                           size: 22,
                         ),
                       ),
@@ -960,10 +1032,36 @@ class _StreakSection extends StatelessWidget {
                             builder: (context, snapshot) {
                               String value = '0';
                               if (snapshot.hasData && snapshot.data!.ok) {
-                                final s = (snapshot.data!.data['streak'] ?? 0).toString();
-                                if (Localizations.localeOf(context).languageCode == 'ar') {
-                                  const western = ['0','1','2','3','4','5','6','7','8','9'];
-                                  const eastern = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+                                final s = (snapshot.data!.data['streak'] ?? 0)
+                                    .toString();
+                                if (Localizations.localeOf(
+                                      context,
+                                    ).languageCode ==
+                                    'ar') {
+                                  const western = [
+                                    '0',
+                                    '1',
+                                    '2',
+                                    '3',
+                                    '4',
+                                    '5',
+                                    '6',
+                                    '7',
+                                    '8',
+                                    '9',
+                                  ];
+                                  const eastern = [
+                                    '٠',
+                                    '١',
+                                    '٢',
+                                    '٣',
+                                    '٤',
+                                    '٥',
+                                    '٦',
+                                    '٧',
+                                    '٨',
+                                    '٩',
+                                  ];
                                   final buf = StringBuffer();
                                   for (final ch in s.split('')) {
                                     final idx = western.indexOf(ch);
@@ -1010,7 +1108,8 @@ class _MotivationalVerseSection extends StatefulWidget {
   const _MotivationalVerseSection();
 
   @override
-  State<_MotivationalVerseSection> createState() => _MotivationalVerseSectionState();
+  State<_MotivationalVerseSection> createState() =>
+      _MotivationalVerseSectionState();
 }
 
 class _MotivationalVerseSectionState extends State<_MotivationalVerseSection> {
@@ -1025,22 +1124,33 @@ class _MotivationalVerseSectionState extends State<_MotivationalVerseSection> {
   }
 
   Future<void> _loadMotivation() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final resp = ApiClient.instance.getMotivation();
       final r = await resp;
       if (!mounted) return;
-      if (r.ok && r.data is Map && (r.data['verse'] == null || r.data['verse'] is Map)) {
+      if (r.ok &&
+          r.data is Map &&
+          (r.data['verse'] == null || r.data['verse'] is Map)) {
         setState(() {
           _verse = r.data['verse'] as Map<String, dynamic>?;
           _loading = false;
         });
       } else {
-        setState(() { _error = r.error ?? 'Failed to load'; _loading = false; });
+        setState(() {
+          _error = r.error ?? 'Failed to load';
+          _loading = false;
+        });
       }
     } catch (_) {
       if (!mounted) return;
-      setState(() { _error = 'Network error'; _loading = false; });
+      setState(() {
+        _error = 'Network error';
+        _loading = false;
+      });
     }
   }
 
@@ -1049,7 +1159,8 @@ class _MotivationalVerseSectionState extends State<_MotivationalVerseSection> {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         final appLocalizations = AppLocalizations.of(context)!;
-        final isArabicLocale = Localizations.localeOf(context).languageCode == 'ar';
+        final isArabicLocale =
+            Localizations.localeOf(context).languageCode == 'ar';
         final String verseText = (() {
           final ar = (_verse?['arabic_text'] as String?)?.trim();
           final en = (_verse?['translation'] as String?)?.trim();
@@ -1083,14 +1194,14 @@ class _MotivationalVerseSectionState extends State<_MotivationalVerseSection> {
               width: double.infinity,
               decoration: BoxDecoration(
                 color: themeProvider.isDarkMode
-                    ? Colors.white
+                    ? Color(0xFFF2EDE0)
                     : const Color(0xFFE8F5E8),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: themeProvider.isDarkMode
-                      ? Colors.white
+                      ? Color(0xFF251629)
                       : const Color(0xFF051F20),
-                  width: 2,
+                  width: 1,
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -1104,25 +1215,52 @@ class _MotivationalVerseSectionState extends State<_MotivationalVerseSection> {
                 children: [
                   // Corner decorations (match group cards style)
                   Positioned(
-                    top: -8,
-                    left: -8,
-                    child: Image.asset(
-                      'assets/background_elements/9.png',
-                      width: 45,
-                      height: 45,
-                      opacity: const AlwaysStoppedAnimation(0.6),
+                    top: 0,
+                    left: 0,
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(
+                          20,
+                        ), // 👈 only top-left clipped
+                      ),
+                      child: themeProvider.isDarkMode ?Image.asset(
+                        'assets/background_elements/purpleFlower.png',
+                        width: 45,
+                        height: 45,
+                        fit: BoxFit.cover,
+
+                      ): Image.asset(
+                        'assets/background_elements/Flower.png',
+                        width: 45,
+                        height: 45,
+                        fit: BoxFit.cover,
+
+                      ),
                     ),
                   ),
                   Positioned(
-                    bottom: -8,
-                    right: -8,
+                    bottom: 0,
+                    right: 0,
                     child: Transform.rotate(
-                      angle: math.pi, // 180 degrees to mirror for bottom-right corner
-                      child: Image.asset(
-                        'assets/background_elements/9.png',
-                        width: 45,
-                        height: 45,
-                        opacity: const AlwaysStoppedAnimation(0.6),
+                      angle: math.pi,
+                      // 180 degrees to mirror for bottom-right corner
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(
+                            20,
+                          ), // 👈 only top-left clipped
+                        ),
+                        child: themeProvider.isDarkMode ?Image.asset(
+                          'assets/background_elements/purpleFlower.png',
+                          width: 45,
+                          height: 45,
+                          fit: BoxFit.cover,
+                        ): Image.asset(
+                          'assets/background_elements/Flower.png',
+                          width: 45,
+                          height: 45,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),
@@ -1130,98 +1268,148 @@ class _MotivationalVerseSectionState extends State<_MotivationalVerseSection> {
                   Padding(
                     padding: const EdgeInsets.all(24),
                     child: _loading
-                        ? const Center(child: SizedBox(height: 40, width: 40, child: CircularProgressIndicator()))
+                        ? const Center(
+                            child: SizedBox(
+                              height: 40,
+                              width: 40,
+                              child: CircularProgressIndicator(),
+                            ),
+                          )
                         : (_error != null)
                         ? Column(
-                      children: [
-                        Text(
-                          appLocalizations.verseText,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontStyle: FontStyle.italic,
-                            color: themeProvider.isDarkMode ? const Color(0xFF251629) : const Color(0xFF051F20),
-                            fontSize: 16,
-                            height: 1.4,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 12)),
-                      ],
-                    )
+                            children: [
+                              Text(
+                                appLocalizations.verseText,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontStyle: FontStyle.italic,
+                                  color: themeProvider.isDarkMode
+                                      ? const Color(0xFF251629)
+                                      : const Color(0xFF051F20),
+                                  fontSize: 16,
+                                  height: 1.4,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                _error!,
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          )
                         : Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          verseText,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontStyle: FontStyle.italic,
-                            color: themeProvider.isDarkMode ? const Color(0xFF251629) : const Color(0xFF051F20),
-                            fontSize: 16,
-                            height: 1.4,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        // Decorative line with diamond
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                height: 1,
-                                color: themeProvider.isDarkMode ? const Color(0xFF251629) : const Color(0xFF051F20),
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                verseText,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontStyle: FontStyle.italic,
+                                  color: themeProvider.isDarkMode
+                                      ? const Color(0xFF251629)
+                                      : const Color(0xFF051F20),
+                                  fontSize: 16,
+                                  height: 1.4,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
-                            ),
-                            Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 12),
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: themeProvider.isDarkMode ? const Color(0xFF251629) : const Color(0xFF051F20),
-                                shape: BoxShape.circle,
+                              const SizedBox(height: 16),
+                              // Decorative line with diamond
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      height: 1,
+                                      color: themeProvider.isDarkMode
+                                          ? const Color(0xFF251629)
+                                          : const Color(0xFF051F20),
+                                    ),
+                                  ),
+                                  Container(
+                                    margin: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                    ),
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: themeProvider.isDarkMode
+                                          ? const Color(0xFF251629)
+                                          : const Color(0xFF051F20),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Container(
+                                      height: 1,
+                                      color: themeProvider.isDarkMode
+                                          ? const Color(0xFF251629)
+                                          : Colors.white,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                            Expanded(
-                              child: Container(
-                                height: 1,
-                                color: themeProvider.isDarkMode ? const Color(0xFF251629) : Colors.white,
+                              const SizedBox(height: 12),
+                              Text(
+                                surahName,
+                                style: TextStyle(
+                                  color: themeProvider.isDarkMode
+                                      ? const Color(0xFF251629)
+                                      : const Color(0xFF051F20),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          surahName,
-                          style: TextStyle(
-                            color: themeProvider.isDarkMode ? const Color(0xFF251629) : const Color(0xFF051F20),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                              const SizedBox(height: 4),
+                              Text(
+                                (() {
+                                  String a = '$surahNum:$ayahNum';
+                                  if (isArabicLocale) {
+                                    const western = [
+                                      '0',
+                                      '1',
+                                      '2',
+                                      '3',
+                                      '4',
+                                      '5',
+                                      '6',
+                                      '7',
+                                      '8',
+                                      '9',
+                                    ];
+                                    const eastern = [
+                                      '٠',
+                                      '١',
+                                      '٢',
+                                      '٣',
+                                      '٤',
+                                      '٥',
+                                      '٦',
+                                      '٧',
+                                      '٨',
+                                      '٩',
+                                    ];
+                                    final buf = StringBuffer();
+                                    for (final ch in a.split('')) {
+                                      final idx = western.indexOf(ch);
+                                      buf.write(idx >= 0 ? eastern[idx] : ch);
+                                    }
+                                    a = buf.toString();
+                                  }
+                                  return '($a)';
+                                })(),
+                                style: TextStyle(
+                                  color: themeProvider.isDarkMode
+                                      ? const Color(0xFF251629)
+                                      : const Color(0xFF051F20),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          (() {
-                            String a = '$surahNum:$ayahNum';
-                            if (isArabicLocale) {
-                              const western = ['0','1','2','3','4','5','6','7','8','9'];
-                              const eastern = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
-                              final buf = StringBuffer();
-                              for (final ch in a.split('')) {
-                                final idx = western.indexOf(ch);
-                                buf.write(idx >= 0 ? eastern[idx] : ch);
-                              }
-                              a = buf.toString();
-                            }
-                            return '($a)';
-                          })(),
-                          style: TextStyle(
-                            color: themeProvider.isDarkMode ? const Color(0xFF251629) : const Color(0xFF051F20),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
                 ],
               ),
