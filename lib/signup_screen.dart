@@ -285,7 +285,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                       fontSize: MediaQuery.of(context).size.width * 0.04,
                                     ),
                                     decoration: InputDecoration(
-                                      labelText: appLocalizations.password,
+                                      labelText: appLocalizations.email,
                                       labelStyle: TextStyle(
                                         color: themeProvider.secondaryTextColor,
                                         fontSize: MediaQuery.of(context).size.width * 0.04,
