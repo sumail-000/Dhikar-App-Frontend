@@ -132,11 +132,18 @@ class _GroupDhikrAdminScreenState extends State<GroupDhikrAdminScreen> {
                 children: [
                   Positioned.fill(
                     child: Opacity(
-                      opacity: isDark ? 0.03 : 0.12,
+                      // In light mode, optionally boost opacity for debugging visibility
+                      opacity: themeProvider.isDarkMode ? 0.03 : 0.12,
                       child: SvgPicture.asset(
                         'assets/background_elements/3_background.svg',
                         fit: BoxFit.cover,
-                        colorFilter: isDark ? null : const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn),
+                        // Light mode tint for SVG background on Home screen only
+                        colorFilter: themeProvider.isDarkMode
+                            ? null
+                            : const ColorFilter.mode(
+                          Color(0xFF8EB69B),
+                          BlendMode.srcIn,
+                        ),
                       ),
                     ),
                   ),

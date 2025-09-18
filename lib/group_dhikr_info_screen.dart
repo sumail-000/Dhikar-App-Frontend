@@ -5,7 +5,7 @@ import 'language_provider.dart';
 import 'profile_provider.dart';
 import 'services/api_client.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
+import 'theme_provider.dart';
 class GroupDhikrInfoScreen extends StatefulWidget {
   const GroupDhikrInfoScreen({super.key, required this.groupId, this.groupName});
   final int groupId;
@@ -81,8 +81,10 @@ class _GroupDhikrInfoScreenState extends State<GroupDhikrInfoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
     final isArabic = context.watch<LanguageProvider>().isArabic;
+
 
     return Scaffold(
       body: Container(
@@ -101,11 +103,18 @@ class _GroupDhikrInfoScreenState extends State<GroupDhikrInfoScreen> {
           children: [
             Positioned.fill(
               child: Opacity(
-                opacity: isDark ? 0.03 : 0.12,
+                // In light mode, optionally boost opacity for debugging visibility
+                opacity: themeProvider.isDarkMode ? 0.03 : 0.12,
                 child: SvgPicture.asset(
                   'assets/background_elements/3_background.svg',
                   fit: BoxFit.cover,
-                  colorFilter: isDark ? null : const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn),
+                  // Light mode tint for SVG background on Home screen only
+                  colorFilter: themeProvider.isDarkMode
+                      ? null
+                      : const ColorFilter.mode(
+                    Color(0xFF8EB69B),
+                    BlendMode.srcIn,
+                  ),
                 ),
               ),
             ),

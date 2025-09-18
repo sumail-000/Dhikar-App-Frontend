@@ -94,8 +94,8 @@ class GroupCard extends StatelessWidget {
         ? const Color(0xFFB6D1C2)        // Light green border (consistent with app)
         : const Color(0xFF251629);       // Keep original dark border
     final titleColor = isLightMode 
-        ? const Color(0xFF2D1B69)        // Dark purple (consistent app text color)
-        : const Color(0xFF051F20);       // Keep original for dark mode
+        ? const Color(0xFF235347)        // Dark purple (consistent app text color)
+        : const Color(0xFF392852);       // Keep original for dark mode
     final chipBg = isLightMode 
         ? const Color(0xFF235347)        // Islamic green (consistent with theme)
         : const Color(0xFF392852);       // Keep original purple for dark mode
@@ -129,23 +129,24 @@ class GroupCard extends StatelessWidget {
                 children: [
                   // Corner decorations - edge-aligned positioning (top-left and bottom-right only)
                   Positioned(
-                    top: -8 * s,
-                    left: -8 * s,
+                    top:0 * s,
+                    left: 0* s,
                     child: _CornerDecoration(
                       angleDeg: 0,
-                      assetPath: 'assets/background_elements/9.png',
+                      assetPath: isLightMode?'assets/background_elements/Flower.png':"assets/background_elements/purpleFlower.png",
                       size: 45 * s,
                     ),
                   ),
                   Positioned(
-                    bottom: -8 * s,
-                    right: -8 * s,
+                    bottom: 0* s,
+                    right: 0* s,
                     child: _CornerDecoration(
                       angleDeg: 180,
-                      assetPath: 'assets/background_elements/9.png',
+                      assetPath: isLightMode?'assets/background_elements/Flower.png':"assets/background_elements/purpleFlower.png",
                       size: 45 * s,
                     ),
                   ),
+
 
                   // Helpers for localization and script detection
                 ...(() {
@@ -174,7 +175,7 @@ class GroupCard extends StatelessWidget {
                     if (!isArabicName)
                       // LTR name on left
                       Positioned(
-                        left: 16 * s,
+                        left: 30 * s,
                         top: 34 * s,
                         width: 250 * s,
                         child: Text(
@@ -487,12 +488,12 @@ class _CornerDecoration extends StatelessWidget {
         angle: angleDeg * math.pi / 180,
         child: Consumer<ThemeProvider>(
           builder: (context, themeProvider, child) {
-            return SvgPicture.asset(
+            return Image.asset(
               assetPath,
               width: size,
               height: size,
               fit: BoxFit.contain,
-              colorFilter: themeProvider.isDarkMode ? const ColorFilter.mode(Color(0xFF1F1F1F), BlendMode.srcIn) : null,
+
             );
           },
         ),

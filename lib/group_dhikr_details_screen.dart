@@ -229,8 +229,13 @@ class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
   Widget build(BuildContext context) {
     return Consumer2<ThemeProvider, LanguageProvider>(
       builder: (context, themeProvider, languageProvider, child) {
+
         final isArabic = languageProvider.isArabic;
         final isDarkMode = themeProvider.isDarkMode;
+        final isLightMode = !themeProvider.isDarkMode;
+        final flowerAsset = isDarkMode
+            ? 'assets/background_elements/purpleFlower.png'
+            : 'assets/background_elements/Flower.png';
         return Directionality(
           textDirection: languageProvider.textDirection,
           child: Scaffold(
@@ -254,11 +259,18 @@ class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
                   // Background SVG overlay (match Home): 3% dark, 12% light, tint in light
                   Positioned.fill(
                     child: Opacity(
-                      opacity: isDarkMode ? 0.03 : 0.12,
+                      // In light mode, optionally boost opacity for debugging visibility
+                      opacity: themeProvider.isDarkMode ? 0.03 : 0.12,
                       child: SvgPicture.asset(
                         'assets/background_elements/3_background.svg',
                         fit: BoxFit.cover,
-                        colorFilter: !isDarkMode ? const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn) : null,
+                        // Light mode tint for SVG background on Home screen only
+                        colorFilter: themeProvider.isDarkMode
+                            ? null
+                            : const ColorFilter.mode(
+                          Color(0xFF8EB69B),
+                          BlendMode.srcIn,
+                        ),
                       ),
                     ),
                   ),
@@ -323,7 +335,7 @@ class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
                                     width: double.infinity,
                                     padding: EdgeInsets.zero,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFF7F3E8),
+                                        color: isLightMode ? const Color(0xFFDAF1DE) : const Color(0xFFF7F3E8),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
                                         color: const Color(0xFFE5E7EB),
@@ -334,7 +346,7 @@ class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
                                       builder: (context, constraints) {
                                         final s = constraints.maxWidth / 408.0; // scale similar to GroupCard
                                         final corner = 45 * s;
-                                        final offset = -8 * s;
+                                        final offset = 0 * s;
                                         return ClipRRect(
                                           borderRadius: BorderRadius.circular(12),
                                           child: Stack(
@@ -345,7 +357,7 @@ class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
                                                 top: offset,
                                                 left: offset,
                                                 child: Image.asset(
-                                                  'assets/background_elements/9.png',
+                                                  flowerAsset,
                                                   width: corner,
                                                   height: corner,
                                                   fit: BoxFit.contain,
@@ -358,7 +370,7 @@ class _GroupDhikrDetailsScreenState extends State<GroupDhikrDetailsScreen> {
                                                 child: Transform.rotate(
                                                   angle: pi,
                                                   child: Image.asset(
-                                                    'assets/background_elements/9.png',
+                                                    flowerAsset,
                                                     width: corner,
                                                     height: corner,
                                                     fit: BoxFit.contain,
