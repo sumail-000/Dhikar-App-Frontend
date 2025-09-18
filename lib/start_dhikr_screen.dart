@@ -130,6 +130,11 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
         final creamColor = const Color(0xFFF5F5DC);
         final textColor = isLightMode ? greenColor : creamColor;
 
+        // 🌸 Select correct flower asset
+        final flowerAsset = isLightMode
+            ? 'assets/background_elements/Flower.png'
+            : 'assets/background_elements/purpleFlower.png';
+
         return Directionality(
           textDirection: languageProvider.textDirection,
           child: Scaffold(
@@ -222,35 +227,47 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
                                 LayoutBuilder(
                                   builder: (context, constraints) {
                                     final s = constraints.maxWidth / 408.0;
-                                    final corner = 45 * s;
-                                    final offset = -8 * s;
+                                    final corner = 50 * s;
+                                    final offset = 0 * s;
                                     return Container(
                                       width: double.infinity,
                                       padding: EdgeInsets.zero,
-                      decoration: BoxDecoration(
-                        color: isLightMode ? const Color(0xFFDAF1DE) : const Color(0xFFF7F3E8),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isLightMode ? const Color(0xFFB6D1C2) : const Color(0xFFE5E7EB), 
-                          width: 1
-                        ),
-                      ),
-                                      child: ClipRRect(
+                                      decoration: BoxDecoration(
+                                        color: isLightMode ? const Color(0xFFDAF1DE) : const Color(0xFFF7F3E8),
                                         borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: isLightMode ? const Color(0xFFB6D1C2) : const Color(0xFFE5E7EB),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(15),
                                         child: Stack(
                                           clipBehavior: Clip.none,
                                           children: [
                                             Positioned(
                                               top: offset,
                                               left: offset,
-                                              child: Image.asset('assets/background_elements/9.png', width: corner, height: corner, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
+                                              child: Image.asset(
+                                                flowerAsset,
+                                                width: corner,
+                                                height: corner,
+                                                fit: BoxFit.contain,
+                                                filterQuality: FilterQuality.medium,
+                                              ),
                                             ),
                                             Positioned(
                                               top: offset,
                                               right: offset,
                                               child: Transform.rotate(
                                                 angle: pi / 2,
-                                                child: Image.asset('assets/background_elements/9.png', width: corner, height: corner, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
+                                                child: Image.asset(
+                                                  flowerAsset,
+                                                  width: corner,
+                                                  height: corner,
+                                                  fit: BoxFit.contain,
+                                                  filterQuality: FilterQuality.medium,
+                                                ),
                                               ),
                                             ),
                                             Positioned(
@@ -258,7 +275,13 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
                                               left: offset,
                                               child: Transform.rotate(
                                                 angle: -pi / 2,
-                                                child: Image.asset('assets/background_elements/9.png', width: corner, height: corner, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
+                                                child: Image.asset(
+                                                  flowerAsset,
+                                                  width: corner,
+                                                  height: corner,
+                                                  fit: BoxFit.contain,
+                                                  filterQuality: FilterQuality.medium,
+                                                ),
                                               ),
                                             ),
                                             Positioned(
@@ -266,7 +289,13 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
                                               right: offset,
                                               child: Transform.rotate(
                                                 angle: pi,
-                                                child: Image.asset('assets/background_elements/9.png', width: corner, height: corner, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
+                                                child: Image.asset(
+                                                  flowerAsset,
+                                                  width: corner,
+                                                  height: corner,
+                                                  fit: BoxFit.contain,
+                                                  filterQuality: FilterQuality.medium,
+                                                ),
                                               ),
                                             ),
                                             // Center the card content both vertically and horizontally
@@ -325,15 +354,59 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Container(
-                                      decoration: BoxDecoration(color: isLightMode ? const Color(0xFF235347) : Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: Offset(0, 2))]),
-                                      child: IconButton(onPressed: _decrementCounter, icon: Icon(Icons.remove, color: isLightMode ? Colors.white : const Color(0xFF392852), size: 24), padding: const EdgeInsets.all(16)),
+                                      decoration: BoxDecoration(
+                                        color: isLightMode ? const Color(0xFF235347) : Color(0xFFF2EDE0),
+                                        borderRadius: BorderRadius.circular(12),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.1),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: IconButton(
+                                        onPressed: _decrementCounter,
+                                        icon: Icon(
+                                          Icons.remove,
+                                          color: isLightMode ? Colors.white : const Color(0xFF392852),
+                                          size: 24,
+                                        ),
+                                        padding: const EdgeInsets.all(16),
+                                      ),
                                     ),
                                     const SizedBox(width: 40),
-                                    Text(_currentCount.toString(), style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: isLightMode ? const Color(0xFF1F1F1F) : Colors.white, fontFamily: amiriFont)),
+                                    Text(
+                                      _currentCount.toString(),
+                                      style: TextStyle(
+                                        fontSize: 48,
+                                        fontWeight: FontWeight.bold,
+                                        color: isLightMode ? const Color(0xFF1F1F1F) : Color(0xFFF2EDE0),
+                                        fontFamily: amiriFont,
+                                      ),
+                                    ),
                                     const SizedBox(width: 40),
                                     Container(
-                                      decoration: BoxDecoration(color: isLightMode ? const Color(0xFF235347) : Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: Offset(0, 2))]),
-                                      child: IconButton(onPressed: _incrementCounter, icon: Icon(Icons.add, color: isLightMode ? Colors.white : const Color(0xFF392852), size: 24), padding: const EdgeInsets.all(16)),
+                                      decoration: BoxDecoration(
+                                        color: isLightMode ? const Color(0xFF235347) : Color(0xFFF2EDE0),
+                                        borderRadius: BorderRadius.circular(12),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.1),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: IconButton(
+                                        onPressed: _incrementCounter,
+                                        icon: Icon(
+                                          Icons.add,
+                                          color: isLightMode ? Colors.white : const Color(0xFF392852),
+                                          size: 24,
+                                        ),
+                                        padding: const EdgeInsets.all(16),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -342,55 +415,51 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
                                 Column(
                                   children: [
                                     // Save Dhikr button
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isLightMode ? const Color(0xFF235347) : Colors.white,
-                        foregroundColor: isLightMode ? Colors.white : const Color(0xFF392852),
-                        minimumSize: const Size.fromHeight(48),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            24,
-                          ),
-                        ),
-                      ),
-                      onPressed: _saveDhikr,
-                      child: Text(
-                        isArabic ? 'احفظ الذكر' : 'Save Dhikr',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: amiriFont,
-                        ),
-                      ),
-                    ),
-                                    const SizedBox(height: 12),
-                                    // Reset button (hide in group mode)
-                                    if (!widget.isGroupMode)
-                                      OutlinedButton(
-                                      style: OutlinedButton.styleFrom(
-                                        side: BorderSide(
-                                          color: isLightMode ? const Color(0xFF235347) : Colors.white,
-                                          width: 1.5,
-                                        ),
-                                        foregroundColor: isLightMode ? const Color(0xFF235347) : Colors.white,
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: isLightMode ? const Color(0xFF235347) : Color(0xFFF2EDE0),
+                                        foregroundColor: isLightMode ? Colors.white : const Color(0xFF392852),
                                         minimumSize: const Size.fromHeight(48),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            24,
-                                          ),
+                                          borderRadius: BorderRadius.circular(24),
                                         ),
                                       ),
-                                      onPressed: _resetCounter,
+                                      onPressed: _saveDhikr,
                                       child: Text(
-                                        isArabic ? 'إعادة تعيين' : 'Reset',
+                                        isArabic ? 'احفظ الذكر' : 'Save Dhikr',
                                         style: TextStyle(
                                           fontSize: 18,
-                                          color: isLightMode ? const Color(0xFF235347) : Colors.white,
                                           fontWeight: FontWeight.bold,
                                           fontFamily: amiriFont,
                                         ),
                                       ),
                                     ),
+                                    const SizedBox(height: 12),
+                                    // Reset button (hide in group mode)
+                                    if (!widget.isGroupMode)
+                                      OutlinedButton(
+                                        style: OutlinedButton.styleFrom(
+                                          side: BorderSide(
+                                            color: isLightMode ? const Color(0xFF235347) : Color(0xFFF2EDE0),
+                                            width: 1.5,
+                                          ),
+                                          foregroundColor: isLightMode ? const Color(0xFF235347) : Color(0xFFF2EDE0),
+                                          minimumSize: const Size.fromHeight(48),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(24),
+                                          ),
+                                        ),
+                                        onPressed: _resetCounter,
+                                        child: Text(
+                                          isArabic ? 'إعادة تعيين' : 'Reset',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            color: isLightMode ? const Color(0xFF235347) : Color(0xFFF2EDE0),
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: amiriFont,
+                                          ),
+                                        ),
+                                      ),
                                   ],
                                 ),
                               ],

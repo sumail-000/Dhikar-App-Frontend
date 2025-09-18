@@ -226,7 +226,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                               decoration: BoxDecoration(
-                                color: isLightMode ? Colors.white : const Color(0xFFE8E8F0),
+                                color: isLightMode ? Colors.white : const Color(0xFFE3D9F6),
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
                                   color: isLightMode ? const Color(0xFFB6D1C2) : Colors.transparent,
@@ -241,8 +241,8 @@ class _DhikrScreenState extends State<DhikrScreen> {
                                       style: TextStyle(
                                         fontSize: 16,
                                         color: _selectedDhikr != null 
-                                            ? (isLightMode ? const Color(0xFF2D1B69) : Colors.black)
-                                            : (isLightMode ? const Color(0xFF2D1B69).withOpacity(0.6) : Colors.grey[600]),
+                                            ? (isLightMode ? const Color(0xFF2D1B69) : Color(0xFF392852))
+                                            : (isLightMode ? const Color(0xFF2D1B69).withOpacity(0.6) : Color(0xFF392852)),
                                         fontFamily: amiriFont,
                                       ),
                                       overflow: TextOverflow.ellipsis,
@@ -278,7 +278,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
                                     child: Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: isLightMode ? Colors.white : const Color(0xFFE8E8F0),
+                                        color: isLightMode ? Colors.white : const Color(0xFFE3D9F6),
                                         borderRadius: BorderRadius.circular(10),
                                         border: Border.all(
                                           color: isLightMode ? const Color(0xFFB6D1C2) : Colors.transparent,
@@ -296,7 +296,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
                                                   style: TextStyle(
                                                     fontSize: 14,
                                                     fontWeight: FontWeight.w600,
-                                                    color: isLightMode ? const Color(0xFF2D1B69) : Colors.black,
+                                                    color: isLightMode ? const Color(0xFF2D1B69) : Color(0xFF392852),
                                                   ),
                                                   overflow: TextOverflow.ellipsis,
                                                 ),
@@ -305,7 +305,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
                                                   dhikr['subtitle'] ?? '',
                                                   style: TextStyle(
                                                     fontSize: 12,
-                                                    color: isLightMode ? const Color(0xFF2D1B69).withOpacity(0.7) : Colors.grey[600],
+                                                    color: isLightMode ? const Color(0xFF2D1B69).withOpacity(0.7) : Color(0xFF392852),
                                                   ),
                                                   overflow: TextOverflow.ellipsis,
                                                 ),
@@ -317,7 +317,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
                                             style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
-                                              color: isLightMode ? const Color(0xFF2D1B69) : Colors.black,
+                                              color: isLightMode ? const Color(0xFF2D1B69) : Color(0xFF392852),
                                               fontFamily: 'Amiri',
                                             ),
                                           ),
@@ -330,7 +330,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
                             ),
                           ],
                           Card(
-                            color: Colors.white,
+                            color: isLightMode ? Colors.white : const Color(0xFFE3D9F6),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                               side: BorderSide(color: borderColor, width: 1.0),

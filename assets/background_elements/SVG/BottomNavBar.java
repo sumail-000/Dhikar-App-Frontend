@@ -23,9 +23,9 @@ class BottomNavBar extends StatelessWidget {
     const greenColor = Color(0xFF205C3B);
     const creamColor = Color(0xFFF7F3E8);
     final cardColor =
-    isLightMode ? const Color(0xFFE6F2E8) : const Color(0xFFB9A9D0).withOpacity(0.18);
+        isLightMode ? const Color(0xFFE6F2E8) : const Color(0xFFB9A9D0).withOpacity(0.18);
     final borderColor =
-    isLightMode ? const Color(0xFFB6D1C2) : const Color(0xFFB9A9D0).withOpacity(0.35);
+        isLightMode ? const Color(0xFFB6D1C2) : const Color(0xFFB9A9D0).withOpacity(0.35);
     final textColor = isLightMode ? const Color(0xFF2D1B69) : creamColor;
 
     showDialog(
@@ -264,13 +264,13 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
+        // Colors based on light/dark theme and selection
         final bool isDark = themeProvider.isDarkMode;
 
-        // Selected and default colors
         final Color selectedColor =
-        isDark ? const Color(0xFFF2EDE0) : const Color(0xFF235347);
+            isDark ? const Color(0xFFF2EDE0) : const Color(0xFF235347);
         final Color unselectedColor =
-        isDark ? const Color(0xFFF2EDE0) : const Color(0xFFCCCCCC);
+            isDark ? const Color(0xFFF2EDE0) : Colors.black;
 
         return GestureDetector(
           onTap: onTap,
