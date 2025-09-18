@@ -758,31 +758,6 @@ class _ContentSections extends StatelessWidget {
               dividerColor: dividerColor,
             ),
             const SizedBox(height: 20),
-            // Reminder Preference Section
-            _SectionCard(
-              title: appLocalizations.reminderPreference,
-              items: [
-                _SectionItem(
-                  icon: Icons.notifications,
-                  title: appLocalizations.dhikrReminder,
-                  onTap: () {},
-                  textColor: sectionTextColor,
-                  iconColor: sectionIconColor,
-                ),
-                _SectionItem(
-                  icon: Icons.settings,
-                  title: appLocalizations.reminderSettings,
-                  onTap: () {},
-                  textColor: sectionTextColor,
-                  iconColor: sectionIconColor,
-                ),
-              ],
-              headerColor: sectionHeaderColor,
-              cardColor: sectionCardColor,
-              borderColor: cardBorderColor,
-              dividerColor: dividerColor,
-            ),
-            const SizedBox(height: 20),
             // Notification Settings Section
             _SectionCard(
               title: appLocalizations.notificationSettings, // Localized title
