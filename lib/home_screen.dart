@@ -676,15 +676,14 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to continue reading: $e')),
+
         );
       }
     }
   }
-
   Future<void> refresh() async {
     await _loadActiveKhitma();
   }
-
   @override
   Widget build(BuildContext context) {
     return Consumer2<ThemeProvider, LanguageProvider>(
@@ -721,20 +720,20 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
       },
     );
   }
-
   Widget _buildKhitmaContent(
     ThemeProvider themeProvider,
     LanguageProvider languageProvider,
   ) {
     if (isLoading) {
-      return const Center(
+      return  Center(
         child: Padding(
           padding: EdgeInsets.all(20),
-          child: CircularProgressIndicator(),
+          child: CircularProgressIndicator(color:  themeProvider.isDarkMode
+              ? const Color(0xFFF2EDE0)
+              : const Color(0xFF235347) ,),
         ),
       );
     }
-
     if (errorMessage != null) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -762,7 +761,6 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
         ],
       );
     }
-
     if (activeKhitma == null) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -788,20 +786,17 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
         ],
       );
     }
-
     // Active khitma exists - show progress and continue button
     final double completionPercentage =
         (activeKhitma!['completion_percentage'] as num?)?.toDouble() ?? 0.0;
     final int currentJuzz = activeKhitma!['current_juzz'] as int;
     final int currentPage = activeKhitma!['current_page'] as int;
     final String khitmaName = activeKhitma!['khitma_name'] as String;
-
     final app = AppLocalizations.of(context)!;
     final String subtitle =
         '${app.pageShort} $currentPage - ${app.juzShort} $currentJuzz';
     final String lastReadLabel =
         '${app.lastRead}: ${app.pageShort} $currentPage';
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -864,13 +859,13 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
             onPressed: _continueReading,
             style: ElevatedButton.styleFrom(
               backgroundColor: themeProvider.isDarkMode
-                  ? Color(0xFFF2EDE0).withOpacity(0.15)
-                  : const Color(0xFF2D5A27),
-              foregroundColor: themeProvider.isDarkMode
                   ? Color(0xFFF2EDE0)
+                  : const Color(0xFF235347),
+              foregroundColor: themeProvider.isDarkMode
+                  ? Color(0xFF392852)
                   : Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(100),
               ),
               elevation: 0,
             ),
@@ -884,12 +879,10 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
     );
   }
 }
-
 class _ProgressCard extends StatelessWidget {
   final String title;
   final double progress;
   final String subtitle;
-
   const _ProgressCard({
     required this.title,
     required this.progress,
@@ -927,13 +920,20 @@ class _ProgressCard extends StatelessWidget {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    CircularProgressIndicator(
-                      value: progress,
-                      strokeWidth: 5,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        themeProvider.homeProgressColor,
+                    SizedBox(
+                      height:50,
+                      width: 50,
+                      child: CircularProgressIndicator(
+                        value: progress,
+                        strokeWidth: 6,
+                                       color:  themeProvider.isDarkMode
+                        ? const Color(0xFFF2EDE0)
+                        : const Color(0xFF235347),
+                        backgroundColor: themeProvider.isDarkMode
+                            ? const Color(0xFFFFFFFF).withAlpha(50)
+                            : const Color(0xFF8EB69B),
+
                       ),
-                      backgroundColor: themeProvider.progressBackgroundColor,
                     ),
                     Text(
                       "${(progress * 100).toInt()}%",

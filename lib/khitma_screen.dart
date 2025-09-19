@@ -125,9 +125,10 @@ class _KhitmaScreenState extends State<KhitmaScreen> {
                 Positioned(
                   left: 0,
                   right: 0,
+
                   top: themeProvider.isDarkMode
-                      ? mediaQuery.size.height * 0.40
-                      : mediaQuery.size.height * 0.4,
+                      ? mediaQuery.size.height * 0.52
+                      : mediaQuery.size.height * 0.52,
                   child: Container(
                     padding: const EdgeInsets.fromLTRB(24, 32, 24, 60),
                     decoration: BoxDecoration(

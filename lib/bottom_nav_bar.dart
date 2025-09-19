@@ -23,11 +23,11 @@ class BottomNavBar extends StatelessWidget {
     const greenColor = Color(0xFF205C3B);
     const creamColor = Color(0xFFF7F3E8);
     final cardColor =
-    isLightMode ? const Color(0xFFE6F2E8) : const Color(0xFFB9A9D0).withOpacity(0.18);
+    isLightMode ? const Color(0xFF235347) : const Color(0xFFE3D9F6);
     final borderColor =
     isLightMode ? const Color(0xFFB6D1C2) : const Color(0xFFB9A9D0).withOpacity(0.35);
-    final textColor = isLightMode ? const Color(0xFF2D1B69) : creamColor;
-
+    final textColor = isLightMode ? const Color(0xFFFFFFFF) : Color(0xFF392852);
+    final headerColor = isLightMode ? const Color(0xFF235347) : Color(0xFFE3D9F6);
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -36,7 +36,7 @@ class BottomNavBar extends StatelessWidget {
           textDirection: Directionality.of(context),
           child: Dialog(
             insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-            backgroundColor: isLightMode ? Colors.white : const Color(0xFF2A2A2A),
+            backgroundColor: isLightMode ? Colors.white : const Color(0xFF392852),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
               side: BorderSide(color: borderColor, width: 1.5),
@@ -71,7 +71,7 @@ class BottomNavBar extends StatelessWidget {
                             appLocalizations.groups,
                             textAlign: TextAlign.start,
                             style: TextStyle(
-                              color: textColor,
+                              color: headerColor,
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
@@ -79,7 +79,7 @@ class BottomNavBar extends StatelessWidget {
                         ),
                         IconButton(
                           icon: Icon(Icons.close,
-                              size: 20, color: textColor.withOpacity(0.8)),
+                              size: 20, color: headerColor.withOpacity(0.8)),
                           onPressed: () => Navigator.of(context).pop(),
                         )
                       ],

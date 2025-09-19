@@ -166,7 +166,7 @@ class _KhitmaNewgroupScreenState extends State<KhitmaNewgroupScreen> {
                                 Switch(
                                   value: _isPublic,
                                   onChanged: (v) => setState(() => _isPublic = v),
-                                  activeColor: isLightMode ? greenColor : creamColor,
+                                  activeColor: isLightMode ? Color(0xFF235347) : creamColor,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
@@ -186,8 +186,8 @@ class _KhitmaNewgroupScreenState extends State<KhitmaNewgroupScreen> {
                             ...khitmaOptions.map((option) {
                               final int days = option['days'] as int;
                               final isSelected = selectedDays == days;
-                              final baseBg = themeProvider.isDarkMode ? Colors.white : const Color(0xFFE8F5E8);
-                              final selectedBg = themeProvider.isDarkMode ? const Color(0xFF8B5CF6) : const Color(0xFF2D5A27);
+                              final baseBg = themeProvider.isDarkMode ? Color(0xFFF2EDE0) : const Color(0xFFE8F5E8);
+                              final selectedBg = themeProvider.isDarkMode ? const Color(0xFF8B5CF6) : const Color(0xFF235347);
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 8),
                                 child: InkWell(
@@ -215,7 +215,7 @@ class _KhitmaNewgroupScreenState extends State<KhitmaNewgroupScreen> {
                                               ? (languageProvider.isArabic ? 'يوم واحد' : '1 Day')
                                               : (languageProvider.isArabic ? '$days أيام' : '$days Days'),
                                           style: TextStyle(
-                                            color: isSelected ? Colors.white : const Color(0xFF2D1B69),
+                                            color: isSelected ? themeProvider.selectedBarText: themeProvider.barText,
                                             fontSize: 16,
                                             fontWeight: FontWeight.w500,
                                           ),
@@ -225,7 +225,7 @@ class _KhitmaNewgroupScreenState extends State<KhitmaNewgroupScreen> {
                                               ? '${option['juzzDaily']} جزء يومياً'
                                               : '${option['juzzDaily']} Juzz Daily',
                                           style: TextStyle(
-                                            color: isSelected ? Colors.white.withOpacity(0.9) : const Color(0xFF2D1B69).withOpacity(0.7),
+                                            color: isSelected ? themeProvider.selectedBarText: themeProvider.barText,
                                             fontSize: 14,
                                           ),
                                         ),
@@ -289,9 +289,9 @@ class _KhitmaNewgroupScreenState extends State<KhitmaNewgroupScreen> {
                                     });
                                   },
                                   activeColor: themeProvider.isDarkMode
-                                      ? const Color(0xFF8B5CF6)
+                                      ? const Color(0xFFF2EDE0)
                                       : const Color(0xFF2D5A27),
-                                  checkColor: Colors.white,
+                                  checkColor: Color(0xFF392852),
                                   side: BorderSide(
                                     color: themeProvider.isDarkMode
                                         ? Colors.white.withOpacity(0.5)
@@ -329,19 +329,19 @@ class _KhitmaNewgroupScreenState extends State<KhitmaNewgroupScreen> {
                                         : null,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: themeProvider.isDarkMode
-                                      ? Colors.white
-                                      : const Color(0xFF2D5A27),
+                                      ? Color(0xFFF2EDE0)
+                                      : const Color(0xFF235347),
                                   foregroundColor: themeProvider.isDarkMode
                                       ? const Color(0xFF2D1B69)
-                                      : Colors.white,
+                                      : Color(0xFFF2EDE0),
                                   elevation: 0,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(24),
                                   ),
                                   disabledBackgroundColor:
                                       themeProvider.isDarkMode
-                                      ? Colors.white
-                                      : const Color.fromARGB(255, 16, 34, 13),
+                                      ? Color(0xFFF2EDE0)
+                                      : const Color(0xFF8EB69B),
                                 ),
                                 child: _creating
                                     ? const SizedBox(
