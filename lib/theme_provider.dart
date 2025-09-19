@@ -64,7 +64,10 @@ class ThemeProvider extends ChangeNotifier {
       _isDarkMode ? Colors.white : const Color(0xFFFAFAFA);
   Color get accentTextColor =>
       _isDarkMode ? Colors.white : const Color(0xFFFAFAFA);
-
+  Color get barText =>
+      _isDarkMode ? Color(0xFF392852) : const Color(0xFF235347);
+  Color get selectedBarText =>
+      _isDarkMode ? Colors.white : const Color(0xFFF2EDE0);
   // Background colors
   Color get backgroundColor =>
       _isDarkMode ? const Color(0xFF251629) : Colors.white;
@@ -74,9 +77,9 @@ class ThemeProvider extends ChangeNotifier {
 
   // Progress colors
   Color get progressColor =>
-      _isDarkMode ? Color(0xFFF2EDE0) : const Color(0xFF4CAF50);
+      _isDarkMode ? Color(0xFFF2EDE0) : const Color(0xFF163832);
   Color get progressBackgroundColor =>
-      _isDarkMode ? Colors.white.withOpacity(0.2) : const Color(0xFFE0E0E0);
+      _isDarkMode ? Colors.white.withOpacity(0.2) : const Color(0xFF8EB69B);
 
   // Gradient colors
   List<Color> get gradientColors => _isDarkMode

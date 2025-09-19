@@ -117,7 +117,7 @@ class _NewKhitmaScreenState extends State<NewKhitmaScreen> {
               decoration: BoxDecoration(
                 color: themeProvider.isDarkMode
                     ? Colors.white.withOpacity(0.1)
-                    : Colors.grey.withOpacity(0.1),
+                    : Colors.black.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(

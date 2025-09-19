@@ -483,7 +483,7 @@ class _KhitmaGroupScreenState extends State<KhitmaGroupScreen> {
                       : const Icon(Icons.vpn_key_rounded, size: 18, color: Colors.white),
                   label: Text(isArabic ? 'انضم' : 'Join', style: const TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isDark ? const Color(0xFF8B5CF6) : const Color(0xFF205C3B),
+                    backgroundColor: isDark ? const Color(0xFFE3D9F6) : const Color(0xFF235347),
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     minimumSize: const Size(0, 40),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
