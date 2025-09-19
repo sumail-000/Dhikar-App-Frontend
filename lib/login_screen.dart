@@ -368,10 +368,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                       elevation: 0,
                                     ),
                                     child: _loading
-                                        ? const SizedBox(
+                                        ?  SizedBox(
                                             width: 20,
                                             height: 20,
-                                            child: CircularProgressIndicator(strokeWidth: 2),
+                                            child: CircularProgressIndicator(strokeWidth: 2,color: themeProvider.isDarkMode
+                                                ? const Color(0xFF251629)
+                                                : const Color(0xFF163832),),
                                           )
                                         : Text(
                                             languageProvider.isArabic

@@ -175,12 +175,13 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
 
   Widget _buildHeader(ThemeProvider themeProvider, LanguageProvider lang) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         IconButton(
           onPressed: () => Navigator.pop(context),
           icon: Icon(
             Icons.arrow_back_ios,
-            color: themeProvider.isDarkMode ? Colors.white : const Color(0xFF205C3B),
+            color: themeProvider.isDarkMode ? const Color(0xFFF2EDE0) : const Color(0xFFFFFFFF),
             size: 20,
           ),
         ),
@@ -191,7 +192,7 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: themeProvider.isDarkMode ? const Color(0xFFF7F3E8) : const Color(0xFF205C3B),
+              color: themeProvider.isDarkMode ? const Color(0xFFF2EDE0) : const Color(0xFFFFFFFF),
             ),
           ),
         ),
@@ -201,7 +202,7 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
   }
 
   Widget _buildSubtitle(ThemeProvider themeProvider, LanguageProvider lang) {
-    final color = themeProvider.isDarkMode ? const Color(0xFFF7F3E8).withOpacity(0.8) : const Color(0xFF205C3B).withOpacity(0.8);
+    final color = themeProvider.isDarkMode ? const Color(0xFFF2EDE0) .withOpacity(0.8) : const Color(0xFFFFFFFF).withOpacity(0.8);
     String text;
     if (_step == 0) {
       text = lang.isArabic
@@ -241,13 +242,13 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             style: TextStyle(
-              color: themeProvider.isDarkMode ? const Color(0xFFF7F3E8) : const Color(0xFF205C3B),
+              color: themeProvider.isDarkMode ? const Color(0xFFF2EDE0) : const Color(0xFFFFFFFF),
               fontSize: 16,
             ),
             decoration: InputDecoration(
               hintText: lang.isArabic ? 'البريد الإلكتروني' : 'Email',
               hintStyle: TextStyle(
-                color: themeProvider.isDarkMode ? const Color(0xFFF7F3E8).withOpacity(0.7) : const Color(0xFF205C3B).withOpacity(0.7),
+                color: themeProvider.isDarkMode ? const Color(0xFFF2EDE0).withOpacity(0.7) : const Color(0xFFFFFFFF).withOpacity(0.7),
                 fontSize: 16,
               ),
               border: InputBorder.none,

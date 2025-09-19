@@ -1,26 +1,52 @@
 import 'package:flutter/material.dart';
 
 Future<Map<String, String>?> showAddCustomDhikrDialog(
-  BuildContext context, {
-  required bool isArabic,
-}) async {
+    BuildContext context, {
+      required bool isArabic,
+    }) async {
   final enTitle = TextEditingController();
   final arTitle = TextEditingController();
   final enSubtitle = TextEditingController();
   final arSubtitle = TextEditingController();
-  final arText = TextEditingController();
 
   Map<String, String>? result;
+
+  // Helpers for theme colors
+  final isLight = Theme.of(context).brightness == Brightness.light;
+  final bgColor = isLight ? const Color(0xFFDAF1DE) : const Color(0xFFE3D9F6);
+  final textColor = isLight ? const Color(0xFF235347) : const Color(0xFF392852);
+  final outlineColor = isLight ? const Color(0xFF051F20) : const Color(0xFF392852);
+
+  InputDecoration _inputDecoration({
+    required String label,
+    String? hint,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(fontSize: 12.5, color: textColor),
+      hintText: hint,
+      hintStyle: TextStyle(color: textColor.withOpacity(0.6)),
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      filled: true,
+      fillColor: Colors.white,
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: outlineColor),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: outlineColor, width: 2),
+      ),
+    );
+  }
 
   await showDialog(
     context: context,
     barrierDismissible: true,
     builder: (ctx) {
-      final textStyleLabel = TextStyle(fontSize: 12.5, color: Theme.of(context).textTheme.bodySmall?.color);
-      final textStyleField = const TextStyle(fontSize: 14);
-      final densePadding = const EdgeInsets.symmetric(horizontal: 10, vertical: 8);
-
       return AlertDialog(
+        backgroundColor: bgColor,
         insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         contentPadding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
         actionsPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
@@ -28,7 +54,11 @@ Future<Map<String, String>?> showAddCustomDhikrDialog(
         titlePadding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
         title: Text(
           isArabic ? 'إضافة ذكر مخصص' : 'Add Custom Dhikr',
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 16,
+            color: textColor,
+          ),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -36,75 +66,53 @@ Future<Map<String, String>?> showAddCustomDhikrDialog(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (!isArabic) ...[
-                // English UI: Name (EN) required, Name (AR) optional, Subtitle (EN) optional
                 TextField(
                   controller: enTitle,
                   textDirection: TextDirection.ltr,
-                  style: textStyleField,
-                  decoration: InputDecoration(
-                    labelText: 'Name (English) *',
-                    labelStyle: textStyleLabel,
-                    hintText: 'SubhanAllah',
-                    isDense: true,
-                    contentPadding: densePadding,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  style: TextStyle(fontSize: 14, color: textColor),
+                  decoration: _inputDecoration(
+                    label: 'Name (English) *',
+                    hint: 'SubhanAllah',
                   ),
                 ),
                 const SizedBox(height: 6),
                 TextField(
                   controller: arTitle,
                   textDirection: TextDirection.rtl,
-                  style: textStyleField,
-                  decoration: InputDecoration(
-                    labelText: 'Name (Arabic)',
-                    labelStyle: textStyleLabel,
-                    hintText: 'سُبْحَانَ اللّٰهِ',
-                    isDense: true,
-                    contentPadding: densePadding,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  style: TextStyle(fontSize: 14, color: textColor),
+                  decoration: _inputDecoration(
+                    label: 'Name (Arabic)',
+                    hint: 'سُبْحَانَ اللّٰهِ',
                   ),
                 ),
                 const SizedBox(height: 6),
                 TextField(
                   controller: enSubtitle,
                   textDirection: TextDirection.ltr,
-                  style: textStyleField,
-                  decoration: InputDecoration(
-                    labelText: 'Subtitle (English)',
-                    labelStyle: textStyleLabel,
-                    hintText: 'Glory be to Allah.',
-                    isDense: true,
-                    contentPadding: densePadding,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  style: TextStyle(fontSize: 14, color: textColor),
+                  decoration: _inputDecoration(
+                    label: 'Subtitle (English)',
+                    hint: 'Glory be to Allah.',
                   ),
                 ),
               ] else ...[
-                // Arabic UI: Name (AR) required, Subtitle (AR) optional
                 TextField(
                   controller: arTitle,
                   textDirection: TextDirection.rtl,
-                  style: textStyleField,
-                  decoration: InputDecoration(
-                    labelText: 'الاسم (عربي) *',
-                    labelStyle: textStyleLabel,
-                    hintText: 'سُبْحَانَ اللّٰهِ',
-                    isDense: true,
-                    contentPadding: densePadding,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  style: TextStyle(fontSize: 14, color: textColor),
+                  decoration: _inputDecoration(
+                    label: 'الاسم (عربي) *',
+                    hint: 'سُبْحَانَ اللّٰهِ',
                   ),
                 ),
                 const SizedBox(height: 6),
                 TextField(
                   controller: arSubtitle,
                   textDirection: TextDirection.rtl,
-                  style: textStyleField,
-                  decoration: InputDecoration(
-                    labelText: 'الوصف (عربي)',
-                    labelStyle: textStyleLabel,
-                    hintText: 'تنزيه الله عن كل نقص',
-                    isDense: true,
-                    contentPadding: densePadding,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  style: TextStyle(fontSize: 14, color: textColor),
+                  decoration: _inputDecoration(
+                    label: 'الوصف (عربي)',
+                    hint: 'تنزيه الله عن كل نقص',
                   ),
                 ),
               ],
@@ -119,16 +127,20 @@ Future<Map<String, String>?> showAddCustomDhikrDialog(
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(isArabic ? 'إلغاء' : 'Cancel', style: const TextStyle(fontSize: 14)),
+            child: Text(
+              isArabic ? 'إلغاء' : 'Cancel',
+              style: TextStyle(fontSize: 14, color: textColor),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
+              backgroundColor: textColor,
+              foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               minimumSize: const Size(0, 0),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             onPressed: () {
-              // Conditional validation and mapping based on locale
               if (!isArabic) {
                 final titleEn = enTitle.text.trim();
                 final titleAr = arTitle.text.trim();
@@ -144,7 +156,7 @@ Future<Map<String, String>?> showAddCustomDhikrDialog(
                   'title': titleEn,
                   'titleArabic': titleAr.isNotEmpty ? titleAr : titleEn,
                   'subtitle': subEn,
-                  'subtitleArabic': subEn, // mirror if no Arabic subtitle provided
+                  'subtitleArabic': subEn,
                   'arabic': computedArabicText,
                 };
               } else {
@@ -156,18 +168,20 @@ Future<Map<String, String>?> showAddCustomDhikrDialog(
                   );
                   return;
                 }
-                // Mirror Arabic into English fields where needed
                 result = {
-                  'title': titleAr, // fallback english name to arabic
+                  'title': titleAr,
                   'titleArabic': titleAr,
-                  'subtitle': subAr, // mirror arabic subtitle to english field
+                  'subtitle': subAr,
                   'subtitleArabic': subAr,
-                  'arabic': titleAr, // display text defaults to arabic name
+                  'arabic': titleAr,
                 };
               }
               Navigator.of(ctx).pop();
             },
-            child: Text(isArabic ? 'إضافة' : 'Add', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            child: Text(
+              isArabic ? 'إضافة' : 'Add',
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       );
@@ -176,4 +190,3 @@ Future<Map<String, String>?> showAddCustomDhikrDialog(
 
   return result;
 }
-

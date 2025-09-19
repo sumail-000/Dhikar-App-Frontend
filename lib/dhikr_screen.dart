@@ -15,7 +15,6 @@ import 'services/api_client.dart';
 import 'widgets/add_custom_dhikr_dialog.dart';
 import 'dhikr_provider.dart';
 
-
 class DhikrScreen extends StatefulWidget {
   const DhikrScreen({super.key});
 
@@ -31,7 +30,9 @@ class _DhikrScreenState extends State<DhikrScreen> {
   final TextEditingController _targetController = TextEditingController();
 
   // Use shared presets for dhikr list
-  final List<Map<String, String>> _dhikrList = List<Map<String, String>>.from(DhikrPresets.presets);
+  final List<Map<String, String>> _dhikrList = List<Map<String, String>>.from(
+    DhikrPresets.presets,
+  );
 
   @override
   void initState() {
@@ -49,16 +50,20 @@ class _DhikrScreenState extends State<DhikrScreen> {
     if (!mounted) return;
     if (resp.ok && resp.data is Map && resp.data['custom_dhikr'] is List) {
       final List list = resp.data['custom_dhikr'] as List;
-      final mapped = list.map<Map<String, String>>((e) {
-        final m = Map<String, dynamic>.from(e as Map);
-        return {
-          'title': (m['title'] ?? '').toString(),
-          'titleArabic': (m['title_arabic'] ?? m['title'] ?? '').toString(),
-          'subtitle': (m['subtitle'] ?? '').toString(),
-          'subtitleArabic': (m['subtitle_arabic'] ?? m['subtitle'] ?? '').toString(),
-          'arabic': (m['arabic_text'] ?? '').toString(),
-        };
-      }).where((m) => m['title']!.isNotEmpty && m['arabic']!.isNotEmpty).toList();
+      final mapped = list
+          .map<Map<String, String>>((e) {
+            final m = Map<String, dynamic>.from(e as Map);
+            return {
+              'title': (m['title'] ?? '').toString(),
+              'titleArabic': (m['title_arabic'] ?? m['title'] ?? '').toString(),
+              'subtitle': (m['subtitle'] ?? '').toString(),
+              'subtitleArabic': (m['subtitle_arabic'] ?? m['subtitle'] ?? '')
+                  .toString(),
+              'arabic': (m['arabic_text'] ?? '').toString(),
+            };
+          })
+          .where((m) => m['title']!.isNotEmpty && m['arabic']!.isNotEmpty)
+          .toList();
       setState(() {
         _dhikrList.addAll(mapped);
       });
@@ -136,483 +141,386 @@ class _DhikrScreenState extends State<DhikrScreen> {
               ),
               child: Stack(
                 children: [
-                // Background SVG (subtle): 3% (dark), 4% (light). Light mode tinted to #8EB69B
-                Positioned.fill(
-                  child: Opacity(
-                    // In light mode, optionally boost opacity for debugging visibility (same as Home)
-                    opacity: themeProvider.isDarkMode ? 0.03 : 0.12,
-                    child: SvgPicture.asset(
-                      'assets/background_elements/3_background.svg',
-                      fit: BoxFit.cover,
-                      colorFilter: isLightMode
-                          ? const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn)
-                          : null,
+                  // Background SVG (subtle): 3% (dark), 4% (light). Light mode tinted to #8EB69B
+                  Positioned.fill(
+                    child: Opacity(
+                      // In light mode, optionally boost opacity for debugging visibility (same as Home)
+                      opacity: themeProvider.isDarkMode ? 0.03 : 0.12,
+                      child: SvgPicture.asset(
+                        'assets/background_elements/3_background.svg',
+                        fit: BoxFit.cover,
+                        colorFilter: isLightMode
+                            ? const ColorFilter.mode(
+                                Color(0xFF8EB69B),
+                                BlendMode.srcIn,
+                              )
+                            : null,
+                      ),
                     ),
                   ),
-                ),
-                // Color overlay for dark mode only
-                if (themeProvider.isDarkMode)
-                  Positioned.fill(
-                    child: Container(color: Colors.black.withOpacity(0.2)),
-                  ),
-                // Main content with SafeArea
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              IconButton(
-                                icon: Icon(
-                                  Icons.arrow_back_ios,
-                                  color: isLightMode ? greenColor : creamColor,
+                  // Color overlay for dark mode only
+                  if (themeProvider.isDarkMode)
+                    Positioned.fill(
+                      child: Container(color: Colors.black.withOpacity(0.2)),
+                    ),
+                  // Main content with SafeArea
+                  SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.arrow_back_ios,
+                                    color: isLightMode
+                                        ? greenColor
+                                        : creamColor,
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const HomeScreen(),
+                                      ),
+                                    );
+                                  },
                                 ),
-                                onPressed: () {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const HomeScreen(),
-                                    ),
-                                  );
-                                },
+                                const SizedBox(width: 88),
+                                Text(
+                                  appLocalizations.dhikr,
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: isLightMode
+                                        ? greenColor
+                                        : creamColor,
+                                    fontFamily: amiriFont,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              isArabic ? 'نوع الذكر' : 'Dhikr Type',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: isLightMode ? greenColor : creamColor,
+                                fontFamily: amiriFont,
                               ),
-                              const SizedBox(width: 88),
-                              Text(
-                                appLocalizations.dhikr,
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: isLightMode ? greenColor : creamColor,
-                                  fontFamily: amiriFont,
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              isArabic
+                                  ? 'اشغل قلبك بذكر الله. اختر ذكرًا لبدء اتصالك الروحي وسلامك.'
+                                  : 'Engage your heart in the remembrance of Allah. Select a Dhikr to begin your spiritual connection and peace.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isLightMode
+                                    ? const Color(0xFF235347).withOpacity(0.8)
+                                    : creamColor.withOpacity(0.7),
+                                fontFamily: amiriFont,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _showDhikrCards = !_showDhikrCards;
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isLightMode
+                                      ? Color(0xFFDAF1DE)
+                                      : const Color(0xFFE3D9F6),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: isLightMode
+                                        ? const Color(0xFFB6D1C2)
+                                        : Colors.transparent,
+                                    width: 1.0,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        _selectedDhikr ??
+                                            (isArabic
+                                                ? 'اختر الذكر'
+                                                : 'Choose Dhikr'),
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: _selectedDhikr != null
+                                              ? (isLightMode
+                                              ? const Color(
+                                            0xFF235347,
+                                          )
+                                              : Color(0xFF392852))
+                                              : (isLightMode
+                                                    ? const Color(
+                                                        0xFF235347,
+                                                      ).withOpacity(0.6)
+                                                    : Color(0xFF392852)),
+                                          fontFamily: amiriFont,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    Icon(
+                                      _showDhikrCards
+                                          ? Icons.keyboard_arrow_up
+                                          : Icons.keyboard_arrow_down,
+                                      color: isLightMode
+                                          ? const Color(
+                                        0xFF235347,
+                                      ).withOpacity(0.6)
+                                          : Color(0xFF392852),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            if (_showDhikrCards) ...[
+                              const SizedBox(height: 8),
+                              SizedBox(
+                                height: 240,
+                                child: ListView.separated(
+                                  padding: EdgeInsets.zero,
+                                  physics: const BouncingScrollPhysics(),
+                                  itemCount: _dhikrList.length,
+                                  separatorBuilder: (_, __) =>
+                                      const SizedBox(height: 8),
+                                  itemBuilder: (context, index) {
+                                    final dhikr = _dhikrList[index];
+                                    return GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedDhikr = dhikr['title'];
+                                          _showDhikrCards = false;
+                                        });
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: isLightMode
+                                              ? Color(0xFFDAF1DE)
+                                              : const Color(0xFFE3D9F6),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                          border: Border.all(
+                                            color: isLightMode
+                                                ? const Color(0xFFB6D1C2)
+                                                : Colors.transparent,
+                                            width: 1.0,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    dhikr['title'] ?? '',
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: isLightMode
+                                                          ? const Color(
+                                                        0xFF235347,
+                                                      )
+                                                          : Color(0xFF392852),
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                  const SizedBox(height: 2),
+                                                  Text(
+                                                    dhikr['subtitle'] ?? '',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: isLightMode
+                                                          ? const Color(
+                                                        0xFF235347,
+                                                      ).withOpacity(0.6)
+                                                          : Color(0xFF392852),
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Text(
+                                              dhikr['titleArabic'] ?? '',
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: isLightMode
+                                                    ? const Color(
+                                                  0xFF235347,
+                                                )
+                                                    : Color(0xFF392852),
+                                                fontFamily: 'Amiri',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                             ],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            isArabic ? 'نوع الذكر' : 'Dhikr Type',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: isLightMode ? greenColor : creamColor,
-                              fontFamily: amiriFont,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            isArabic
-                                ? 'اشغل قلبك بذكر الله. اختر ذكرًا لبدء اتصالك الروحي وسلامك.'
-                                : 'Engage your heart in the remembrance of Allah. Select a Dhikr to begin your spiritual connection and peace.',
-                            style: TextStyle(
-                              fontSize: 12,
+                            Card(
+
                               color: isLightMode
-                                  ? const Color(0xFF2D1B69).withOpacity(0.8)
-                                  : creamColor.withOpacity(0.7),
-                              fontFamily: amiriFont,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _showDhikrCards = !_showDhikrCards;
-                              });
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: isLightMode ? Colors.white : const Color(0xFFE3D9F6),
+                                  ? Color(0xFFDAF1DE)
+                                  : const Color(0xFFE3D9F6),
+                              shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: isLightMode ? const Color(0xFFB6D1C2) : Colors.transparent,
+                                side: BorderSide(
+                                  color: borderColor,
                                   width: 1.0,
                                 ),
                               ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      _selectedDhikr ?? (isArabic ? 'اختر الذكر' : 'Choose Dhikr'),
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: _selectedDhikr != null 
-                                            ? (isLightMode ? const Color(0xFF2D1B69) : Color(0xFF392852))
-                                            : (isLightMode ? const Color(0xFF2D1B69).withOpacity(0.6) : Color(0xFF392852)),
-                                        fontFamily: amiriFont,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  Icon(
-                                    _showDhikrCards ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                                    color: isLightMode ? const Color(0xFF2D1B69).withOpacity(0.6) : Colors.grey[600],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          if (_showDhikrCards) ...[
-                            const SizedBox(height: 8),
-                            SizedBox(
-                              height: 240,
-                              child: ListView.separated(
-                                padding: EdgeInsets.zero,
-                                physics: const BouncingScrollPhysics(),
-                                itemCount: _dhikrList.length,
-                                separatorBuilder: (_, __) => const SizedBox(height: 8),
-                                itemBuilder: (context, index) {
-                                  final dhikr = _dhikrList[index];
-                                  return GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        _selectedDhikr = dhikr['title'];
-                                        _showDhikrCards = false;
-                                      });
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: isLightMode ? Colors.white : const Color(0xFFE3D9F6),
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(
-                                          color: isLightMode ? const Color(0xFFB6D1C2) : Colors.transparent,
-                                          width: 1.0,
-                                        ),
-                                      ),
-                                      child: Row(
+                              child: ListTile(
+                                title: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  dhikr['title'] ?? '',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: isLightMode ? const Color(0xFF2D1B69) : Color(0xFF392852),
-                                                  ),
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                                const SizedBox(height: 2),
-                                                Text(
-                                                  dhikr['subtitle'] ?? '',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: isLightMode ? const Color(0xFF2D1B69).withOpacity(0.7) : Color(0xFF392852),
-                                                  ),
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ],
+                                          Text(
+                                            isArabic
+                                                ? 'أضف ذكر مخصص'
+                                                : 'Add Custom Dhikr',
+                                            style: TextStyle(
+                                              color: isLightMode
+                                                  ? const Color(
+                                                      0xFF235347,
+                                                    ).withOpacity(0.6)
+                                                  : Color(0xFF392852),
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
                                             ),
+                                            overflow: TextOverflow.ellipsis,
+                                            locale: const Locale('en'),
                                           ),
                                           Text(
-                                            dhikr['titleArabic'] ?? '',
+                                            isArabic
+                                                ? 'انقر لإضافة ذكر جديد'
+                                                : 'Tap to add new dhikr',
                                             style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: isLightMode ? const Color(0xFF2D1B69) : Color(0xFF392852),
-                                              fontFamily: 'Amiri',
+                                              color: isLightMode
+                                                  ? const Color(
+                                                      0xFF235347,
+                                                    ).withOpacity(0.6)
+                                                  : Color(0xFF392852),
+
+                                              fontSize: 11,
                                             ),
+                                            overflow: TextOverflow.ellipsis,
+                                            locale: const Locale('en'),
                                           ),
                                         ],
                                       ),
                                     ),
+                                    const SizedBox(width: 8),
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: Icon(
+                                        Icons.add,
+                                        color: isLightMode
+                                            ? const Color(
+                                          0xFF235347,
+                                        ).withOpacity(0.6)
+                                            : Color(0xFF392852),
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                onTap: () async {
+                                  final result = await showAddCustomDhikrDialog(
+                                    context,
+                                    isArabic: isArabic,
                                   );
+                                  if (result != null) {
+                                    final resp = await ApiClient.instance
+                                        .createCustomDhikr(
+                                          title: result['title']!,
+                                          titleArabic: result['titleArabic']!,
+                                          subtitle: result['subtitle'],
+                                          subtitleArabic:
+                                              result['subtitleArabic'],
+                                          arabic: result['arabic']!,
+                                        );
+                                    if (!mounted) return;
+                                    if (resp.ok) {
+                                      setState(() {
+                                        _dhikrList.add({
+                                          'title': result['title']!,
+                                          'titleArabic': result['titleArabic']!,
+                                          'subtitle': result['subtitle'] ?? '',
+                                          'subtitleArabic':
+                                              result['subtitleArabic'] ??
+                                              (result['subtitle'] ?? ''),
+                                          'arabic': result['arabic']!,
+                                        });
+                                        _selectedDhikr = result['title'];
+                                        _showDhikrCards = false;
+                                      });
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            isArabic
+                                                ? 'تم إضافة الذكر'
+                                                : 'Dhikr added',
+                                          ),
+                                        ),
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            resp.error ??
+                                                (isArabic
+                                                    ? 'فشل الإضافة'
+                                                    : 'Failed to add'),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  }
                                 },
                               ),
                             ),
-                          ],
-                          Card(
-                            color: isLightMode ? Colors.white : const Color(0xFFE3D9F6),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              side: BorderSide(color: borderColor, width: 1.0),
-                            ),
-                            child: ListTile(
-                              title: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          isArabic
-                                              ? 'أضف ذكر مخصص'
-                                              : 'Add Custom Dhikr',
-                                          style: TextStyle(
-                                            color: dhikrCardTextColor,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 14,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                          locale: const Locale('en'),
-                                        ),
-                                        Text(
-                                          isArabic
-                                              ? 'انقر لإضافة ذكر جديد'
-                                              : 'Tap to add new dhikr',
-                                          style: TextStyle(
-                                            color: dhikrCardTextColor
-                                                .withOpacity(0.7),
-                                            fontSize: 11,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                          locale: const Locale('en'),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: Icon(
-                                      Icons.add,
-                                      color: dhikrCardTextColor,
-                                      size: 20,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              onTap: () async {
-                                final result = await showAddCustomDhikrDialog(context, isArabic: isArabic);
-                                if (result != null) {
-                                  final resp = await ApiClient.instance.createCustomDhikr(
-                                    title: result['title']!,
-                                    titleArabic: result['titleArabic']!,
-                                    subtitle: result['subtitle'],
-                                    subtitleArabic: result['subtitleArabic'],
-                                    arabic: result['arabic']!,
-                                  );
-                                  if (!mounted) return;
-                                  if (resp.ok) {
-                                    setState(() {
-                                      _dhikrList.add({
-                                        'title': result['title']!,
-                                        'titleArabic': result['titleArabic']!,
-                                        'subtitle': result['subtitle'] ?? '',
-                                        'subtitleArabic': result['subtitleArabic'] ?? (result['subtitle'] ?? ''),
-                                        'arabic': result['arabic']!,
-                                      });
-                                      _selectedDhikr = result['title'];
-                                      _showDhikrCards = false;
-                                    });
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(isArabic ? 'تم إضافة الذكر' : 'Dhikr added')),
-                                    );
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(resp.error ?? (isArabic ? 'فشل الإضافة' : 'Failed to add'))),
-                                    );
-                                  }
-                                }
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            isArabic ? 'الهدف' : 'Target',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: isLightMode ? greenColor : creamColor,
-                              fontFamily: amiriFont,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          TextField(
-                            controller: _targetController,
-                            keyboardType: TextInputType.number,
-                            style: TextStyle(
-                              color: isLightMode ? greenColor : creamColor,
-                              fontFamily: amiriFont,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: isArabic
-                                  ? 'أدخل هدفك'
-                                  : 'Enter your target',
-                              hintStyle: TextStyle(
-                                color: isLightMode
-                                    ? const Color(0xFF2D1B69).withOpacity(0.6)
-                                    : creamColor,
-                                fontFamily: amiriFont,
-                              ),
-                              filled: true,
-                              fillColor: cardColor,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(
-                                  color: borderColor,
-                                  width: 1.0,
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(
-                                  color: borderColor,
-                                  width: 1.0,
-                                ),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 10,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Consumer<DhikrProvider>(
-                            builder: (context, dhikrProvider, _) {
-                              final hasActive = dhikrProvider.hasSavedDhikr &&
-                                  dhikrProvider.currentDhikr!.currentCount < dhikrProvider.currentDhikr!.target;
-                              final btnText = hasActive
-                                  ? (isArabic ? 'تابع الذكر' : 'Continue Dhikr')
-                                  : (isArabic ? 'ابدأ الذكر' : 'Start Dhikr');
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: isLightMode ? greenColor : creamColor,
-                                      foregroundColor: isLightMode ? Colors.white : themeProvider.primaryColor,
-                                      minimumSize: const Size.fromHeight(44),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                    ),
-                                    onPressed: () async {
-                                      if (hasActive) {
-                                        final d = dhikrProvider.currentDhikr!;
-                                        final res = await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => StartDhikrScreen(
-                                              dhikrTitle: d.title,
-                                              dhikrTitleArabic: d.titleArabic,
-                                              dhikrSubtitle: d.subtitle,
-                                              dhikrSubtitleArabic: d.subtitleArabic,
-                                              dhikrArabic: d.arabic,
-                                              target: d.target,
-                                              initialCount: d.currentCount,
-                                            ),
-                                          ),
-                                        );
-                                        if (res == true && mounted) setState(() {});
-                                      } else {
-                                        if (_selectedDhikr != null && _targetController.text.isNotEmpty) {
-                                          final selectedDhikrData = _dhikrList.firstWhere(
-                                            (dhikr) => dhikr['title'] == _selectedDhikr,
-                                            orElse: () => {
-                                              'title': _selectedDhikr!,
-                                              'titleArabic': _selectedDhikr!,
-                                              'subtitle': '',
-                                              'subtitleArabic': '',
-                                              'arabic': _selectedDhikr!,
-                                            },
-                                          );
-                                          final res = await Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => StartDhikrScreen(
-                                                dhikrTitle: selectedDhikrData['title']!,
-                                                dhikrTitleArabic: selectedDhikrData['titleArabic'] ?? selectedDhikrData['title']!,
-                                                dhikrSubtitle: selectedDhikrData['subtitle']!,
-                                                dhikrSubtitleArabic: selectedDhikrData['subtitleArabic'] ?? selectedDhikrData['subtitle']!,
-                                                dhikrArabic: selectedDhikrData['arabic']!,
-                                                target: int.parse(_targetController.text),
-                                              ),
-                                            ),
-                                          );
-                                          if (res == true && mounted) setState(() {});
-                                        }
-                                      }
-                                    },
-                                    child: Text(
-                                      btnText,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: isLightMode ? Colors.white : themeProvider.primaryColor,
-                                        fontFamily: amiriFont,
-                                      ),
-                                    ),
-                                  ),
-                                  if (hasActive) ...[
-                                    const SizedBox(height: 10),
-                                    OutlinedButton(
-                                      style: OutlinedButton.styleFrom(
-                                        side: BorderSide(
-                                          color: isLightMode ? greenColor : creamColor,
-                                          width: 1.5,
-                                        ),
-                                        foregroundColor: isLightMode ? greenColor : creamColor,
-                                        minimumSize: const Size.fromHeight(44),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(20),
-                                        ),
-                                      ),
-                                      onPressed: () async {
-                                        final confirmed = await showDialog<bool>(
-                                          context: context,
-                                          builder: (ctx) => AlertDialog(
-                                            title: Text(isArabic ? 'تأكيد' : 'Confirm'),
-                                            content: Text(isArabic ? 'هل تريد إعادة تعيين التقدم؟' : 'Do you want to reset progress?'),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () => Navigator.pop(ctx, false),
-                                                child: Text(isArabic ? 'لا' : 'No'),
-                                              ),
-                                              TextButton(
-                                                onPressed: () => Navigator.pop(ctx, true),
-                                                child: Text(isArabic ? 'نعم' : 'Yes'),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                        if (confirmed == true) {
-                                          await dhikrProvider.clearDhikr();
-                                          if (mounted) setState(() {});
-                                        }
-                                      },
-                                      child: Text(isArabic ? 'إعادة تعيين' : 'Reset'),
-                                    ),
-                                  ],
-                                ],
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(
-                                color: isLightMode ? greenColor : creamColor,
-                                width: 1.5,
-                              ),
-                              foregroundColor: isLightMode
-                                  ? greenColor
-                                  : creamColor,
-                              minimumSize: const Size.fromHeight(44),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const DhikrGroupScreen(),
-                                ),
-                              );
-                            },
-                            child: Text(
-                              isArabic ? 'مجموعات الذكر' : 'Dhikr Groups',
+                            const SizedBox(height: 16),
+                            Text(
+                              isArabic ? 'الهدف' : 'Target',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -620,15 +528,273 @@ class _DhikrScreenState extends State<DhikrScreen> {
                                 fontFamily: amiriFont,
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 24),
-                        ],
+                            const SizedBox(height: 6),
+                            TextField(
+                              controller: _targetController,
+                              keyboardType: TextInputType.number,
+                              style: TextStyle(
+                                color: isLightMode
+                                    ? const Color(0xFF235347).withOpacity(0.6)
+                                    : Color(0xFF392852),
+                                fontFamily: amiriFont,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: isArabic ? 'أدخل هدفك' : 'Enter your target',
+                                hintStyle: TextStyle(
+                                  color: isLightMode
+                                      ? const Color(0xFF235347).withOpacity(0.6)
+                                      : Color(0xFF392852).withOpacity(0.6),
+                                  fontFamily: amiriFont,
+                                ),
+                                filled: true,
+                                fillColor: isLightMode
+                                    ? Color(0xFFDAF1DE)               // light mode background
+                                    : const Color(0xFFE3D9F6),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide(
+                                    color: isLightMode ? const Color(0xFF8EB69B) : creamColor,
+                                    width: 1.0,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide(
+                                    color: isLightMode ? const Color(0xFF8EB69B) : creamColor,
+                                    width: 1.0,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(   // 👈 Add this
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide(
+                                    color: isLightMode ? greenColor : creamColor, // your custom color
+                                    width: 2.0,
+                                  ),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              ),
+
+                            ),
+                            const SizedBox(height: 16),
+                            Consumer<DhikrProvider>(
+                              builder: (context, dhikrProvider, _) {
+                                final hasActive =
+                                    dhikrProvider.hasSavedDhikr &&
+                                    dhikrProvider.currentDhikr!.currentCount <
+                                        dhikrProvider.currentDhikr!.target;
+                                final btnText = hasActive
+                                    ? (isArabic
+                                          ? 'تابع الذكر'
+                                          : 'Continue Dhikr')
+                                    : (isArabic ? 'ابدأ الذكر' : 'Start Dhikr');
+                                return Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: isLightMode
+                                            ? greenColor
+                                            : creamColor,
+                                        foregroundColor: isLightMode
+                                            ? Colors.white
+                                            : themeProvider.primaryColor,
+                                        minimumSize: const Size.fromHeight(44),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                        ),
+                                      ),
+                                      onPressed: () async {
+                                        if (hasActive) {
+                                          final d = dhikrProvider.currentDhikr!;
+                                          final res = await Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  StartDhikrScreen(
+                                                    dhikrTitle: d.title,
+                                                    dhikrTitleArabic:
+                                                        d.titleArabic,
+                                                    dhikrSubtitle: d.subtitle,
+                                                    dhikrSubtitleArabic:
+                                                        d.subtitleArabic,
+                                                    dhikrArabic: d.arabic,
+                                                    target: d.target,
+                                                    initialCount:
+                                                        d.currentCount,
+                                                  ),
+                                            ),
+                                          );
+                                          if (res == true && mounted)
+                                            setState(() {});
+                                        } else {
+                                          if (_selectedDhikr != null &&
+                                              _targetController
+                                                  .text
+                                                  .isNotEmpty) {
+                                            final selectedDhikrData = _dhikrList
+                                                .firstWhere(
+                                                  (dhikr) =>
+                                                      dhikr['title'] ==
+                                                      _selectedDhikr,
+                                                  orElse: () => {
+                                                    'title': _selectedDhikr!,
+                                                    'titleArabic':
+                                                        _selectedDhikr!,
+                                                    'subtitle': '',
+                                                    'subtitleArabic': '',
+                                                    'arabic': _selectedDhikr!,
+                                                  },
+                                                );
+                                            final res = await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => StartDhikrScreen(
+                                                  dhikrTitle:
+                                                      selectedDhikrData['title']!,
+                                                  dhikrTitleArabic:
+                                                      selectedDhikrData['titleArabic'] ??
+                                                      selectedDhikrData['title']!,
+                                                  dhikrSubtitle:
+                                                      selectedDhikrData['subtitle']!,
+                                                  dhikrSubtitleArabic:
+                                                      selectedDhikrData['subtitleArabic'] ??
+                                                      selectedDhikrData['subtitle']!,
+                                                  dhikrArabic:
+                                                      selectedDhikrData['arabic']!,
+                                                  target: int.parse(
+                                                    _targetController.text,
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                            if (res == true && mounted)
+                                              setState(() {});
+                                          }
+                                        }
+                                      },
+                                      child: Text(
+                                        btnText,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: isLightMode
+                                              ? Colors.white
+                                              : themeProvider.primaryColor,
+                                          fontFamily: amiriFont,
+                                        ),
+                                      ),
+                                    ),
+                                    if (hasActive) ...[
+                                      const SizedBox(height: 10),
+                                      OutlinedButton(
+                                        style: OutlinedButton.styleFrom(
+                                          side: BorderSide(
+                                            color: isLightMode
+                                                ? greenColor
+                                                : creamColor,
+                                            width: 1.5,
+                                          ),
+                                          foregroundColor: isLightMode
+                                              ? greenColor
+                                              : creamColor,
+                                          minimumSize: const Size.fromHeight(
+                                            44,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                          ),
+                                        ),
+                                        onPressed: () async {
+                                          final confirmed = await showDialog<bool>(
+                                            context: context,
+                                            builder: (ctx) => AlertDialog(
+                                              title: Text(
+                                                isArabic ? 'تأكيد' : 'Confirm',
+                                              ),
+                                              content: Text(
+                                                isArabic
+                                                    ? 'هل تريد إعادة تعيين التقدم؟'
+                                                    : 'Do you want to reset progress?',
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(ctx, false),
+                                                  child: Text(
+                                                    isArabic ? 'لا' : 'No',
+                                                  ),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(ctx, true),
+                                                  child: Text(
+                                                    isArabic ? 'نعم' : 'Yes',
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                          if (confirmed == true) {
+                                            await dhikrProvider.clearDhikr();
+                                            if (mounted) setState(() {});
+                                          }
+                                        },
+                                        child: Text(
+                                          isArabic ? 'إعادة تعيين' : 'Reset',
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(
+                                  color: isLightMode ? greenColor : creamColor,
+                                  width: 1.5,
+                                ),
+                                foregroundColor: isLightMode
+                                    ? greenColor
+                                    : creamColor,
+                                minimumSize: const Size.fromHeight(44),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const DhikrGroupScreen(),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                isArabic ? 'مجموعات الذكر' : 'Dhikr Groups',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: isLightMode ? greenColor : creamColor,
+                                  fontFamily: amiriFont,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
             ),
             bottomNavigationBar: BottomNavBar(
               selectedIndex: _selectedIndex,

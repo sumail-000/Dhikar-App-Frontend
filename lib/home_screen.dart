@@ -14,7 +14,7 @@ import 'dhikr_screen.dart';
 import 'notification_screen.dart';
 import 'profile_provider.dart';
 import 'wered_reading_screen.dart';
-import 'services/api_client.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -219,40 +219,40 @@ class _ProfileSection extends StatelessWidget {
                     ),
                     child: (avatarUrl != null && avatarUrl.isNotEmpty)
                         ? ClipOval(
-                            child: Image.network(
-                              avatarUrl,
-                              fit: BoxFit.cover,
-                              width: 48,
-                              height: 48,
-                            ),
-                          )
+                      child: Image.network(
+                        avatarUrl,
+                        fit: BoxFit.cover,
+                        width: 48,
+                        height: 48,
+                      ),
+                    )
                         : (name.isNotEmpty
-                              ? Center(
-                                  child: Text(
-                                    name[0].toUpperCase(),
-                                    style: TextStyle(
-                                      color: themeProvider.primaryTextColor,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                )
-                              : Icon(
-                                  Icons.person,
-                                  color: themeProvider.primaryTextColor,
-                                  size: 24,
-                                )),
+                        ? Center(
+                      child: Text(
+                        name[0].toUpperCase(),
+                        style: TextStyle(
+                          color: themeProvider.primaryTextColor,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    )
+                        : Icon(
+                      Icons.person,
+                      color: themeProvider.primaryTextColor,
+                      size: 24,
+                    )),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   name.isNotEmpty
                       ? ((Localizations.localeOf(context).languageCode == 'ar'
-                                ? 'سلام، '
-                                : 'Salaam, ') +
-                            ((name.contains(' '))
-                                ? name.split(' ').first
-                                : name))
+                      ? 'سلام، '
+                      : 'Salaam, ') +
+                      ((name.contains(' '))
+                          ? name.split(' ').first
+                          : name))
                       : appLocalizations.salaamAli,
                   style: TextStyle(
                     color: themeProvider.homeUsernameColor,
@@ -274,8 +274,8 @@ class _ProfileSection extends StatelessWidget {
               child: Icon(
                 Icons.notifications_none,
                 color: themeProvider.isDarkMode
-                    ? Color(0xFFFFFFFF) // White in dark mode
-                    : Color(0xFF051F20), // Dark teal in light mode
+                    ? const Color(0xFFF2EDE0) // Replaced white with beige
+                    : const Color(0xFF051F20), // Dark teal in light mode
                 size: 24,
               ),
             ),
@@ -284,6 +284,7 @@ class _ProfileSection extends StatelessWidget {
       },
     );
   }
+
 }
 
 // Optimized Progress Section with Group Khitma Data
@@ -507,8 +508,6 @@ class _ProgressSectionState extends State<_ProgressSection> {
     return Consumer2<ThemeProvider, DhikrProvider>(
       builder: (context, themeProvider, dhikrProvider, child) {
         final appLocalizations = AppLocalizations.of(context)!;
-
-        // Calculate group khitma progress
         double groupProgress = 0.0;
         String groupSubtitle = '0 ${appLocalizations.outOfWord} 0';
 
@@ -806,7 +805,6 @@ class _PersonalKhitmaSectionState extends State<_PersonalKhitmaSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Khitma name
         Text(
           khitmaName,
           style: TextStyle(
@@ -1266,13 +1264,15 @@ class _MotivationalVerseSectionState extends State<_MotivationalVerseSection> {
                   ),
                   // Main content
                   Padding(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(35),
                     child: _loading
-                        ? const Center(
+                        ?  Center(
                             child: SizedBox(
                               height: 40,
                               width: 40,
-                              child: CircularProgressIndicator(),
+                              child: CircularProgressIndicator( color: themeProvider.isDarkMode
+        ? const Color(0xFF251629)
+            : const Color(0xFF163832),),
                             ),
                           )
                         : (_error != null)
@@ -1330,24 +1330,27 @@ class _MotivationalVerseSectionState extends State<_MotivationalVerseSection> {
                                     ),
                                   ),
                                   Container(
-                                    margin: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                    ),
-                                    width: 8,
-                                    height: 8,
-                                    decoration: BoxDecoration(
+                                    margin: const EdgeInsets.symmetric(horizontal: 12),
+                                    width: 30,
+                                    height: 30,
+                                    // use SvgPicture to render the diamond svg and tint it based on theme
+                                    child: SvgPicture.asset(
+                                      'assets/background_elements/diamond.svg', // <- ensure this path matches your asset
+                                      width: 12,
+                                      height: 12,
+
                                       color: themeProvider.isDarkMode
                                           ? const Color(0xFF251629)
                                           : const Color(0xFF051F20),
-                                      shape: BoxShape.circle,
                                     ),
                                   ),
+
                                   Expanded(
                                     child: Container(
                                       height: 1,
                                       color: themeProvider.isDarkMode
                                           ? const Color(0xFF251629)
-                                          : Colors.white,
+                                          : const Color(0xFF051F20),
                                     ),
                                   ),
                                 ],

@@ -74,7 +74,7 @@ class ThemeProvider extends ChangeNotifier {
 
   // Progress colors
   Color get progressColor =>
-      _isDarkMode ? Colors.white : const Color(0xFF4CAF50);
+      _isDarkMode ? Color(0xFFF2EDE0) : const Color(0xFF4CAF50);
   Color get progressBackgroundColor =>
       _isDarkMode ? Colors.white.withOpacity(0.2) : const Color(0xFFE0E0E0);
 
@@ -110,31 +110,31 @@ class ThemeProvider extends ChangeNotifier {
 
   // Home screen specific colors for light theme
   Color get homeUsernameColor =>
-      _isDarkMode ? Colors.white : const Color(0xFF235347);
+      _isDarkMode ? Color(0xFFF2EDE0) : const Color(0xFF235347);
   Color get homeSectionTitleColor =>
-      _isDarkMode ? Colors.white : const Color(0xFF235347);
+      _isDarkMode ? Color(0xFFF2EDE0) : const Color(0xFF235347);
   Color get homeBoxTextColor =>
-      _isDarkMode ? Colors.white : const Color(0xFF1F1F1F);
+      _isDarkMode ? Color(0xFFF2EDE0) : const Color(0xFF1F1F1F);
   Color get homeBoxBorderColor =>
-      _isDarkMode ? Colors.white : const Color(0xFF051F20);
+      _isDarkMode ? Color(0xFFF2EDE0) : const Color(0xFF051F20);
   Color get homeProgressColor =>
-      _isDarkMode ? Colors.white : const Color(0xFF051F20);
+      _isDarkMode ? Color(0xFFF2EDE0) : const Color(0xFF051F20);
 
   // Bottom navigation bar colors
   Color get bottomNavSelectedColor =>
-      _isDarkMode ? Colors.white : const Color(0xFF235347);
+      _isDarkMode ? Color(0xFFF2EDE0) : const Color(0xFF235347);
   Color get bottomNavUnselectedColor =>
-      _isDarkMode ? Colors.white : const Color(0xFFCCCCCC);
+      _isDarkMode ? Color(0xFFF2EDE0) : const Color(0xFFCCCCCC);
 
   // Switch colors
   Color get switchActiveColor =>
-      _isDarkMode ? Colors.white : const Color(0xFF251629);
+      _isDarkMode ? Color(0xFFF2EDE0) : const Color(0xFF251629);
   Color get switchActiveTrackColor => _isDarkMode
-      ? Colors.white.withOpacity(0.3)
+      ? Color(0xFFF2EDE0).withOpacity(0.3)
       : const Color(0xFF251629).withOpacity(0.3);
   Color get switchInactiveThumbColor =>
-      _isDarkMode ? Colors.white : const Color(0xFF251629);
+      _isDarkMode ? Color(0xFFF2EDE0) : const Color(0xFF251629);
   Color get switchInactiveTrackColor => _isDarkMode
-      ? Colors.white.withOpacity(0.2)
+      ? Color(0xFFF2EDE0).withOpacity(0.2)
       : const Color(0xFF251629).withOpacity(0.2);
 }
