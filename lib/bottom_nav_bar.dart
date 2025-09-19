@@ -36,7 +36,7 @@ class BottomNavBar extends StatelessWidget {
           textDirection: Directionality.of(context),
           child: Dialog(
             insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-            backgroundColor: isLightMode ? Colors.white : const Color(0xFF392852),
+            backgroundColor: isLightMode ? Colors.white : const Color(0xFF251629),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
               side: BorderSide(color: borderColor, width: 1.5),

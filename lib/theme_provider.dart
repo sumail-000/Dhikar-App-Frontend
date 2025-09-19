@@ -99,6 +99,9 @@ class ThemeProvider extends ChangeNotifier {
   String get backgroundImage2 => _isDarkMode
       ? 'assets/background_elements/2.png'
       : 'assets/background_elements/2_LE.png';
+  String get flower => _isDarkMode
+      ? 'assets/background_elements/purpleFlower.png'
+      : 'assets/background_elements/Flower.png';
   String get backgroundImage3 =>
       'assets/background_elements/3_background.png'; // Same for both themes
   // Button colors

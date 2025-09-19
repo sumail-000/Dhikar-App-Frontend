@@ -10,7 +10,6 @@ import 'app_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class WeredReadingScreen extends StatefulWidget {
-
   final List<String> selectedSurahs;
   final String pages;
   final bool isPersonalKhitma;
@@ -20,7 +19,8 @@ class WeredReadingScreen extends StatefulWidget {
   // Group reading mode properties
   final bool isGroupKhitma; // Flag for group reading mode
   final int? groupId; // ID of the group
-  final List<int>? assignedJuz; // List of assigned Juz numbers for group reading
+  final List<int>?
+  assignedJuz; // List of assigned Juz numbers for group reading
 
   const WeredReadingScreen({
     super.key,
@@ -50,7 +50,11 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
   static const List<Map<String, String>> _surahs = [
     {'name': 'Al-Fatihah', 'arabic': 'الفاتحة', 'subtitle': 'The Opening'},
     {'name': 'Al-Baqarah', 'arabic': 'البقرة', 'subtitle': 'The Cow'},
-    {'name': 'Al Imran', 'arabic': 'آل عمران', 'subtitle': 'The Family of Imran'},
+    {
+      'name': 'Al Imran',
+      'arabic': 'آل عمران',
+      'subtitle': 'The Family of Imran',
+    },
     {'name': 'An-Nisa', 'arabic': 'النساء', 'subtitle': 'The Women'},
     {'name': 'Al-Maidah', 'arabic': 'المائدة', 'subtitle': 'The Table Spread'},
     {'name': 'Al-Anam', 'arabic': 'الأنعام', 'subtitle': 'The Cattle'},
@@ -84,58 +88,126 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
     {'name': 'Saba', 'arabic': 'سبأ', 'subtitle': 'Sheba'},
     {'name': 'Fatir', 'arabic': 'فاطر', 'subtitle': 'Originator'},
     {'name': 'Ya-Sin', 'arabic': 'يس', 'subtitle': 'Ya Sin'},
-    {'name': 'As-Saffat', 'arabic': 'الصافات', 'subtitle': 'Those who set the Ranks'},
+    {
+      'name': 'As-Saffat',
+      'arabic': 'الصافات',
+      'subtitle': 'Those who set the Ranks',
+    },
     {'name': 'Sad', 'arabic': 'ص', 'subtitle': 'The Letter "Saad"'},
     {'name': 'Az-Zumar', 'arabic': 'الزمر', 'subtitle': 'The Troops'},
     {'name': 'Ghafir', 'arabic': 'غافر', 'subtitle': 'The Forgiver'},
     {'name': 'Fussilat', 'arabic': 'فصلت', 'subtitle': 'Explained in Detail'},
     {'name': 'Ash-Shuraa', 'arabic': 'الشورى', 'subtitle': 'The Consultation'},
-    {'name': 'Az-Zukhruf', 'arabic': 'الزخرف', 'subtitle': 'The Ornaments of Gold'},
+    {
+      'name': 'Az-Zukhruf',
+      'arabic': 'الزخرف',
+      'subtitle': 'The Ornaments of Gold',
+    },
     {'name': 'Ad-Dukhan', 'arabic': 'الدخان', 'subtitle': 'The Smoke'},
     {'name': 'Al-Jathiyah', 'arabic': 'الجاثية', 'subtitle': 'The Crouching'},
-    {'name': 'Al-Ahqaf', 'arabic': 'الأحقاف', 'subtitle': 'The Wind-Curved Sandhills'},
+    {
+      'name': 'Al-Ahqaf',
+      'arabic': 'الأحقاف',
+      'subtitle': 'The Wind-Curved Sandhills',
+    },
     {'name': 'Muhammad', 'arabic': 'محمد', 'subtitle': 'Muhammad'},
     {'name': 'Al-Fath', 'arabic': 'الفتح', 'subtitle': 'The Victory'},
     {'name': 'Al-Hujurat', 'arabic': 'الحجرات', 'subtitle': 'The Rooms'},
     {'name': 'Qaf', 'arabic': 'ق', 'subtitle': 'The Letter "Qaf"'},
-    {'name': 'Adh-Dhariyat', 'arabic': 'الذاريات', 'subtitle': 'The Winnowing Winds'},
+    {
+      'name': 'Adh-Dhariyat',
+      'arabic': 'الذاريات',
+      'subtitle': 'The Winnowing Winds',
+    },
     {'name': 'At-Tur', 'arabic': 'الطور', 'subtitle': 'The Mount'},
     {'name': 'An-Najm', 'arabic': 'النجم', 'subtitle': 'The Star'},
     {'name': 'Al-Qamar', 'arabic': 'القمر', 'subtitle': 'The Moon'},
     {'name': 'Ar-Rahman', 'arabic': 'الرحمن', 'subtitle': 'The Beneficent'},
     {'name': 'Al-Waqiah', 'arabic': 'الواقعة', 'subtitle': 'The Inevitable'},
     {'name': 'Al-Hadid', 'arabic': 'الحديد', 'subtitle': 'The Iron'},
-    {'name': 'Al-Mujadila', 'arabic': 'المجادلة', 'subtitle': 'The Pleading Woman'},
+    {
+      'name': 'Al-Mujadila',
+      'arabic': 'المجادلة',
+      'subtitle': 'The Pleading Woman',
+    },
     {'name': 'Al-Hashr', 'arabic': 'الحشر', 'subtitle': 'The Exile'},
-    {'name': 'Al-Mumtahanah', 'arabic': 'الممتحنة', 'subtitle': 'She that is to be examined'},
+    {
+      'name': 'Al-Mumtahanah',
+      'arabic': 'الممتحنة',
+      'subtitle': 'She that is to be examined',
+    },
     {'name': 'As-Saff', 'arabic': 'الصف', 'subtitle': 'The Ranks'},
-    {'name': 'Al-Jumuah', 'arabic': 'الجمعة', 'subtitle': 'The Congregation, Friday'},
-    {'name': 'Al-Munafiqun', 'arabic': 'المنافقون', 'subtitle': 'The Hypocrites'},
-    {'name': 'At-Taghabun', 'arabic': 'التغابن', 'subtitle': 'The Mutual Disillusion'},
+    {
+      'name': 'Al-Jumuah',
+      'arabic': 'الجمعة',
+      'subtitle': 'The Congregation, Friday',
+    },
+    {
+      'name': 'Al-Munafiqun',
+      'arabic': 'المنافقون',
+      'subtitle': 'The Hypocrites',
+    },
+    {
+      'name': 'At-Taghabun',
+      'arabic': 'التغابن',
+      'subtitle': 'The Mutual Disillusion',
+    },
     {'name': 'At-Talaq', 'arabic': 'الطلاق', 'subtitle': 'The Divorce'},
     {'name': 'At-Tahrim', 'arabic': 'التحريم', 'subtitle': 'The Prohibition'},
     {'name': 'Al-Mulk', 'arabic': 'الملك', 'subtitle': 'The Sovereignty'},
     {'name': 'Al-Qalam', 'arabic': 'القلم', 'subtitle': 'The Pen'},
     {'name': 'Al-Haqqah', 'arabic': 'الحاقة', 'subtitle': 'The Reality'},
-    {'name': 'Al-Maarij', 'arabic': 'المعارج', 'subtitle': 'The Ascending Stairways'},
+    {
+      'name': 'Al-Maarij',
+      'arabic': 'المعارج',
+      'subtitle': 'The Ascending Stairways',
+    },
     {'name': 'Nuh', 'arabic': 'نوح', 'subtitle': 'Noah'},
     {'name': 'Al-Jinn', 'arabic': 'الجن', 'subtitle': 'The Jinn'},
-    {'name': 'Al-Muzzammil', 'arabic': 'المزمل', 'subtitle': 'The Enshrouded One'},
-    {'name': 'Al-Muddaththir', 'arabic': 'المدثر', 'subtitle': 'The Cloaked One'},
+    {
+      'name': 'Al-Muzzammil',
+      'arabic': 'المزمل',
+      'subtitle': 'The Enshrouded One',
+    },
+    {
+      'name': 'Al-Muddaththir',
+      'arabic': 'المدثر',
+      'subtitle': 'The Cloaked One',
+    },
     {'name': 'Al-Qiyamah', 'arabic': 'القيامة', 'subtitle': 'The Resurrection'},
     {'name': 'Al-Insan', 'arabic': 'الإنسان', 'subtitle': 'The Man'},
     {'name': 'Al-Mursalat', 'arabic': 'المرسلات', 'subtitle': 'The Emissaries'},
     {'name': 'An-Naba', 'arabic': 'النبأ', 'subtitle': 'The Tidings'},
-    {'name': 'An-Naziat', 'arabic': 'النازعات', 'subtitle': 'Those who drag forth'},
+    {
+      'name': 'An-Naziat',
+      'arabic': 'النازعات',
+      'subtitle': 'Those who drag forth',
+    },
     {'name': 'Abasa', 'arabic': 'عبس', 'subtitle': 'He Frowned'},
     {'name': 'At-Takwir', 'arabic': 'التكوير', 'subtitle': 'The Overthrowing'},
     {'name': 'Al-Infitar', 'arabic': 'الانفطار', 'subtitle': 'The Cleaving'},
-    {'name': 'Al-Mutaffifin', 'arabic': 'المطففين', 'subtitle': 'The Defrauding'},
-    {'name': 'Al-Inshiqaq', 'arabic': 'الانشقاق', 'subtitle': 'The Splitting Open'},
-    {'name': 'Al-Buruj', 'arabic': 'البروج', 'subtitle': 'The Mansions of the Stars'},
+    {
+      'name': 'Al-Mutaffifin',
+      'arabic': 'المطففين',
+      'subtitle': 'The Defrauding',
+    },
+    {
+      'name': 'Al-Inshiqaq',
+      'arabic': 'الانشقاق',
+      'subtitle': 'The Splitting Open',
+    },
+    {
+      'name': 'Al-Buruj',
+      'arabic': 'البروج',
+      'subtitle': 'The Mansions of the Stars',
+    },
     {'name': 'At-Tariq', 'arabic': 'الطارق', 'subtitle': 'The Morning Star'},
     {'name': 'Al-Ala', 'arabic': 'الأعلى', 'subtitle': 'The Most High'},
-    {'name': 'Al-Ghashiyah', 'arabic': 'الغاشية', 'subtitle': 'The Overwhelming'},
+    {
+      'name': 'Al-Ghashiyah',
+      'arabic': 'الغاشية',
+      'subtitle': 'The Overwhelming',
+    },
     {'name': 'Al-Fajr', 'arabic': 'الفجر', 'subtitle': 'The Dawn'},
     {'name': 'Al-Balad', 'arabic': 'البلد', 'subtitle': 'The City'},
     {'name': 'Ash-Shams', 'arabic': 'الشمس', 'subtitle': 'The Sun'},
@@ -149,14 +221,30 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
     {'name': 'Az-Zalzalah', 'arabic': 'الزلزلة', 'subtitle': 'The Earthquake'},
     {'name': 'Al-Adiyat', 'arabic': 'العاديات', 'subtitle': 'The Chargers'},
     {'name': 'Al-Qariah', 'arabic': 'القارعة', 'subtitle': 'The Calamity'},
-    {'name': 'At-Takathur', 'arabic': 'التكاثر', 'subtitle': 'The Rivalry in world increase'},
-    {'name': 'Al-Asr', 'arabic': 'العصر', 'subtitle': 'The Declining Day, Epoch'},
+    {
+      'name': 'At-Takathur',
+      'arabic': 'التكاثر',
+      'subtitle': 'The Rivalry in world increase',
+    },
+    {
+      'name': 'Al-Asr',
+      'arabic': 'العصر',
+      'subtitle': 'The Declining Day, Epoch',
+    },
     {'name': 'Al-Humazah', 'arabic': 'الهمزة', 'subtitle': 'The Traducer'},
     {'name': 'Al-Fil', 'arabic': 'الفيل', 'subtitle': 'The Elephant'},
     {'name': 'Quraysh', 'arabic': 'قريش', 'subtitle': 'Quraysh'},
-    {'name': 'Al-Maun', 'arabic': 'الماعون', 'subtitle': 'The Small kindnesses'},
+    {
+      'name': 'Al-Maun',
+      'arabic': 'الماعون',
+      'subtitle': 'The Small kindnesses',
+    },
     {'name': 'Al-Kawthar', 'arabic': 'الكوثر', 'subtitle': 'The Abundance'},
-    {'name': 'Al-Kafirun', 'arabic': 'الكافرون', 'subtitle': 'The Disbelievers'},
+    {
+      'name': 'Al-Kafirun',
+      'arabic': 'الكافرون',
+      'subtitle': 'The Disbelievers',
+    },
     {'name': 'An-Nasr', 'arabic': 'النصر', 'subtitle': 'The Divine Support'},
     {'name': 'Al-Masad', 'arabic': 'المسد', 'subtitle': 'The Palm Fibre'},
     {'name': 'Al-Ikhlas', 'arabic': 'الإخلاص', 'subtitle': 'The Sincerity'},
@@ -313,11 +401,14 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
       final String jsonString;
       try {
         jsonString = await rootBundle.loadString('assets/hafsData_v2-0.json');
-        print('📁 DEBUG: Asset loaded successfully, string length: ${jsonString.length}');
+        print(
+          '📁 DEBUG: Asset loaded successfully, string length: ${jsonString.length}',
+        );
       } catch (assetError) {
         print('❌ DEBUG: Asset loading failed: $assetError');
         setState(() {
-          errorMessage = 'Failed to load Quran data file. Please ensure the app is properly installed and try restarting the app.';
+          errorMessage =
+              'Failed to load Quran data file. Please ensure the app is properly installed and try restarting the app.';
           isLoading = false;
         });
         return;
@@ -336,11 +427,14 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
       final List<dynamic> jsonData;
       try {
         jsonData = json.decode(jsonString) as List<dynamic>;
-        print('📊 DEBUG: JSON data parsed successfully, total entries: ${jsonData.length}');
+        print(
+          '📊 DEBUG: JSON data parsed successfully, total entries: ${jsonData.length}',
+        );
       } catch (parseError) {
         print('❌ DEBUG: JSON parsing failed: $parseError');
         setState(() {
-          errorMessage = 'Failed to parse Quran data. The data file may be corrupted.';
+          errorMessage =
+              'Failed to parse Quran data. The data file may be corrupted.';
           isLoading = false;
         });
         return;
@@ -367,7 +461,9 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
 
         // Filter verses for assigned Juz pages
         final assignedPages = _getPagesForJuz(widget.assignedJuz!);
-        print('🤝 DEBUG: Assigned pages: ${assignedPages.take(10).toList()}${assignedPages.length > 10 ? '...' : ''}');
+        print(
+          '🤝 DEBUG: Assigned pages: ${assignedPages.take(10).toList()}${assignedPages.length > 10 ? '...' : ''}',
+        );
 
         relevantVerses = jsonData.where((verse) {
           final Map<String, dynamic> v = verse as Map<String, dynamic>;
@@ -384,7 +480,8 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
 
         if (surahNumber == null) {
           setState(() {
-            errorMessage = 'Could not find surah number for "$selectedSurahName". Please check the surah name.';
+            errorMessage =
+                'Could not find surah number for "$selectedSurahName". Please check the surah name.';
             isLoading = false;
           });
           return;
@@ -439,19 +536,27 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
       if (widget.isPersonalKhitma) {
         // Personal Khitma: Load all pages sequentially (1-604)
         requestedPages = sortedPages;
-        print('📖 DEBUG: Personal Khitma - Loading all ${requestedPages.length} pages');
+        print(
+          '📖 DEBUG: Personal Khitma - Loading all ${requestedPages.length} pages',
+        );
       } else if (widget.isGroupKhitma) {
         // Group Khitma: Load all assigned pages
         requestedPages = sortedPages;
-        print('🤝 DEBUG: Group Khitma - Loading all assigned ${requestedPages.length} pages');
+        print(
+          '🤝 DEBUG: Group Khitma - Loading all assigned ${requestedPages.length} pages',
+        );
       } else {
         // Daily Wered: Load requested number of pages from selected surah
         final requestedPageCount = int.tryParse(widget.pages) ?? 1;
         requestedPages = sortedPages.take(requestedPageCount).toList();
-        print('📄 DEBUG: Daily Wered - Loading $requestedPageCount pages from selected surah');
+        print(
+          '📄 DEBUG: Daily Wered - Loading $requestedPageCount pages from selected surah',
+        );
       }
 
-      print('🚀 DEBUG: Selected pages: ${requestedPages.take(10).toList()}${requestedPages.length > 10 ? '...' : ''}');
+      print(
+        '🚀 DEBUG: Selected pages: ${requestedPages.take(10).toList()}${requestedPages.length > 10 ? '...' : ''}',
+      );
 
       if (requestedPages.isEmpty) {
         setState(() {
@@ -465,7 +570,9 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
       final List<Map<String, dynamic>> pagesData = [];
       for (final pageNum in requestedPages) {
         final verses = versesByPage[pageNum]!;
-        verses.sort((a, b) => (a['aya_no'] as int).compareTo(b['aya_no'] as int));
+        verses.sort(
+          (a, b) => (a['aya_no'] as int).compareTo(b['aya_no'] as int),
+        );
 
         // Get the main surah for this page (first verse's surah)
         final mainSurah = verses.first;
@@ -479,7 +586,9 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
       }
 
       print('✅ DEBUG: Successfully loaded ${pagesData.length} pages of data');
-      print('📊 DEBUG: Page range: ${pagesData.first['pageNumber']} to ${pagesData.last['pageNumber']}');
+      print(
+        '📊 DEBUG: Page range: ${pagesData.first['pageNumber']} to ${pagesData.last['pageNumber']}',
+      );
 
       setState(() {
         surahData = pagesData;
@@ -541,7 +650,8 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
 
     // If target page not found, try to find the closest page
     int closestIndex = 0;
-    int minDiff = ((surahData[0]['pageNumber'] as int) - targetPageNumber).abs();
+    int minDiff = ((surahData[0]['pageNumber'] as int) - targetPageNumber)
+        .abs();
 
     for (int i = 1; i < surahData.length; i++) {
       final pageData = surahData[i];
@@ -554,7 +664,9 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
       }
     }
 
-    print('🎯 DEBUG: Target page $targetPageNumber not found exactly, using closest page at index $closestIndex (page ${surahData[closestIndex]['pageNumber']})');
+    print(
+      '🎯 DEBUG: Target page $targetPageNumber not found exactly, using closest page at index $closestIndex (page ${surahData[closestIndex]['pageNumber']})',
+    );
     setState(() {
       currentPageIndex = closestIndex;
     });
@@ -568,9 +680,36 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
     // Simple and effective approach: Remove the specific verse ending markers
     // that we see in the JSON data: ﰀ ﰁ ﰂ ﰃ ﰄ ﰅ ﰆ ﰇ
     final List<String> verseEndingMarkers = [
-      'ﰀ', 'ﰁ', 'ﰂ', 'ﰃ', 'ﰄ', 'ﰅ', 'ﰆ', 'ﰇ', 'ﰈ', 'ﰉ',
-      'ﰊ', 'ﰋ', 'ﰌ', 'ﰍ', 'ﰎ', 'ﰏ', 'ﰐ', 'ﰑ', 'ﰒ', 'ﰓ',
-      'ﰔ', 'ﰕ', 'ﰖ', 'ﰗ', 'ﰘ', 'ﰙ', 'ﰚ', 'ﰛ', 'ﰜ', 'ﰝ'
+      'ﰀ',
+      'ﰁ',
+      'ﰂ',
+      'ﰃ',
+      'ﰄ',
+      'ﰅ',
+      'ﰆ',
+      'ﰇ',
+      'ﰈ',
+      'ﰉ',
+      'ﰊ',
+      'ﰋ',
+      'ﰌ',
+      'ﰍ',
+      'ﰎ',
+      'ﰏ',
+      'ﰐ',
+      'ﰑ',
+      'ﰒ',
+      'ﰓ',
+      'ﰔ',
+      'ﰕ',
+      'ﰖ',
+      'ﰗ',
+      'ﰘ',
+      'ﰙ',
+      'ﰚ',
+      'ﰛ',
+      'ﰜ',
+      'ﰝ',
     ];
 
     // Remove each marker
@@ -598,7 +737,8 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
     List<TextSpan> spans = [];
 
     // Check if this is Al-Fatihah (surah 1)
-    final isAlFatihah = verses.isNotEmpty && (verses.first['sura_no'] as int) == 1;
+    final isAlFatihah =
+        verses.isNotEmpty && (verses.first['sura_no'] as int) == 1;
 
     int displayVerseNumber = 1; // Counter for display numbering
 
@@ -626,9 +766,11 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
           style: TextStyle(
             fontFamily: 'Amiri',
             fontSize: 18,
-            height: 1.0, // 100% line height
+            height: 1.5,
+            // 100% line height
             letterSpacing: 0,
-            color: Color(0xFF392852), // #392852
+            color: Color(0xFF1F1F1F),
+            // #392852
             fontWeight: FontWeight.w400,
           ),
         ),
@@ -637,16 +779,20 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
       // Add verse number in parentheses
       // For Al-Fatihah, use adjusted numbering (1, 2, 3, etc.)
       // For other surahs, use original numbering
-      final int displayNumber = isAlFatihah ? displayVerseNumber : originalVerseNumber;
+      final int displayNumber = isAlFatihah
+          ? displayVerseNumber
+          : originalVerseNumber;
       spans.add(
         TextSpan(
           text: ' ($displayNumber) ',
           style: const TextStyle(
             fontFamily: 'Amiri',
-            fontSize: 14, // Slightly smaller for verse numbers
+            fontSize: 16,
+            // Slightly smaller for verse numbers
             height: 1.0,
             color: Color(0xFF392852),
-            fontWeight: FontWeight.w400,
+            // add color gpt
+            fontWeight: FontWeight.w600,
           ),
         ),
       );
@@ -661,11 +807,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
         spans.add(
           const TextSpan(
             text: ' ',
-            style: TextStyle(
-              fontFamily: 'Amiri',
-              fontSize: 16,
-              height: 1.0,
-            ),
+            style: TextStyle(fontFamily: 'Amiri', fontSize: 16, height: 1.0),
           ),
         );
       }
@@ -725,12 +867,15 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
 
     // If the first verse on this page is verse 1, it's the start of a surah
     if (firstVerseNumber == 1) {
-      print('📖 DEBUG: Showing Bismillah for start of Surah $currentSurahNumber');
+      print(
+        '📖 DEBUG: Showing Bismillah for start of Surah $currentSurahNumber',
+      );
       return true;
     }
 
     // For continuing khitma: Show Bismillah only if starting from page 1 of first surah
-    if (currentPageIndex == 0 && (widget.startFromPage == null || widget.startFromPage == 1)) {
+    if (currentPageIndex == 0 &&
+        (widget.startFromPage == null || widget.startFromPage == 1)) {
       print('📖 DEBUG: Showing Bismillah for first page of session');
       return true;
     }
@@ -879,11 +1024,16 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
 
         // Immediately update assignment pages_read across ALL assigned Juz up to current page
         try {
-          final List<int> assigned = (widget.assignedJuz ?? const <int>[]).toList()..sort();
+          final List<int> assigned =
+              (widget.assignedJuz ?? const <int>[]).toList()..sort();
           if (assigned.isEmpty) {
-            print('ℹ️ DEBUG: No assigned Juz available on reading screen to update.');
+            print(
+              'ℹ️ DEBUG: No assigned Juz available on reading screen to update.',
+            );
           } else {
-            print('🧮 DEBUG: Reconciling pages_read for assigned Juz: $assigned up to page $currentPage');
+            print(
+              '🧮 DEBUG: Reconciling pages_read for assigned Juz: $assigned up to page $currentPage',
+            );
             for (final j in assigned) {
               final List<int> pagesInJuz = _getPagesForJuz([j]);
               if (pagesInJuz.isEmpty) continue;
@@ -896,14 +1046,18 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
               if (currentPage >= last) {
                 // Fully covered this Juz — set pages_read to full length and mark completed
                 final int pagesRead = pagesInJuz.length;
-                print('🧮 DEBUG: Juz $j fully covered. Setting pages_read=$pagesRead and status=completed');
+                print(
+                  '🧮 DEBUG: Juz $j fully covered. Setting pages_read=$pagesRead and status=completed',
+                );
                 final upd = await ApiClient.instance.khitmaUpdateAssignment(
                   widget.groupId!,
                   juzNumber: j,
                   pagesRead: pagesRead,
                 );
                 if (!upd.ok) {
-                  print('⚠️ DEBUG: khitmaUpdateAssignment (full) failed for Juz $j: ${upd.error}');
+                  print(
+                    '⚠️ DEBUG: khitmaUpdateAssignment (full) failed for Juz $j: ${upd.error}',
+                  );
                 }
                 final comp = await ApiClient.instance.khitmaUpdateAssignment(
                   widget.groupId!,
@@ -911,41 +1065,56 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                   status: 'completed',
                 );
                 if (!comp.ok) {
-                  print('⚠️ DEBUG: Failed to set status completed for Juz $j: ${comp.error}');
+                  print(
+                    '⚠️ DEBUG: Failed to set status completed for Juz $j: ${comp.error}',
+                  );
                 }
               } else {
                 // Within this Juz — set partial pages_read up to current page
                 final int pos = pagesInJuz.indexOf(currentPage);
                 if (pos >= 0) {
                   final int pagesRead = pos + 1; // 1-based
-                  print('🧮 DEBUG: Juz $j partial coverage. Setting pages_read=$pagesRead');
+                  print(
+                    '🧮 DEBUG: Juz $j partial coverage. Setting pages_read=$pagesRead',
+                  );
                   final upd = await ApiClient.instance.khitmaUpdateAssignment(
                     widget.groupId!,
                     juzNumber: j,
                     pagesRead: pagesRead,
                   );
                   if (!upd.ok) {
-                    print('⚠️ DEBUG: khitmaUpdateAssignment (partial) failed for Juz $j: ${upd.error}');
+                    print(
+                      '⚠️ DEBUG: khitmaUpdateAssignment (partial) failed for Juz $j: ${upd.error}',
+                    );
                   }
                   if (pagesRead >= pagesInJuz.length) {
-                    print('✅ DEBUG: Juz $j now complete from partial path. Marking as completed.');
-                    final comp = await ApiClient.instance.khitmaUpdateAssignment(
-                      widget.groupId!,
-                      juzNumber: j,
-                      status: 'completed',
+                    print(
+                      '✅ DEBUG: Juz $j now complete from partial path. Marking as completed.',
                     );
+                    final comp = await ApiClient.instance
+                        .khitmaUpdateAssignment(
+                          widget.groupId!,
+                          juzNumber: j,
+                          status: 'completed',
+                        );
                     if (!comp.ok) {
-                      print('⚠️ DEBUG: Failed to set status completed for Juz $j: ${comp.error}');
+                      print(
+                        '⚠️ DEBUG: Failed to set status completed for Juz $j: ${comp.error}',
+                      );
                     }
                   }
                 } else {
-                  print('⚠️ DEBUG: Current page $currentPage not found in page list for Juz $j');
+                  print(
+                    '⚠️ DEBUG: Current page $currentPage not found in page list for Juz $j',
+                  );
                 }
               }
             }
           }
         } catch (e, st) {
-          print('⚠️ DEBUG: Exception while updating assignments across Juz: $e');
+          print(
+            '⚠️ DEBUG: Exception while updating assignments across Juz: $e',
+          );
           print(st);
         }
 
@@ -955,14 +1124,22 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
       } else {
         print('❌ DEBUG: Failed to save group progress: ${response.error}');
         if (mounted) {
-_showErrorSnackbar(response.error ?? AppLocalizations.of(context)!.failedToSaveGroupProgress);
+          _showErrorSnackbar(
+            response.error ??
+                AppLocalizations.of(context)!.failedToSaveGroupProgress,
+          );
         }
       }
     } catch (e, stackTrace) {
       print('❌ DEBUG: Exception while saving group progress: $e');
       print('❌ DEBUG: Stack trace: $stackTrace');
       if (mounted) {
-_showErrorSnackbar(AppLocalizations.of(context)!.failedToSaveGroupProgress + '. ' + AppLocalizations.of(context)!.tryAgain + '.');
+        _showErrorSnackbar(
+          AppLocalizations.of(context)!.failedToSaveGroupProgress +
+              '. ' +
+              AppLocalizations.of(context)!.tryAgain +
+              '.',
+        );
       }
     }
   }
@@ -1018,7 +1195,8 @@ _showErrorSnackbar(AppLocalizations.of(context)!.failedToSaveGroupProgress + '. 
         endPage: endPage,
         startVerse: startVerse,
         endVerse: endVerse,
-        readingDurationMinutes: null, // We don't track time in this simple implementation
+        readingDurationMinutes: null,
+        // We don't track time in this simple implementation
         notes: null,
       );
 
@@ -1029,7 +1207,8 @@ _showErrorSnackbar(AppLocalizations.of(context)!.failedToSaveGroupProgress + '. 
 
         // Check if khitma was completed
         final bool isCompleted = khitmaData['is_completed'] == true;
-        final double completionPercentage = (khitmaData['completion_percentage'] as num?)?.toDouble() ?? 0.0;
+        final double completionPercentage =
+            (khitmaData['completion_percentage'] as num?)?.toDouble() ?? 0.0;
 
         if (mounted) {
           if (isCompleted) {
@@ -1059,9 +1238,9 @@ _showErrorSnackbar(AppLocalizations.of(context)!.failedToSaveGroupProgress + '. 
       context: context,
       barrierDismissible: false,
       builder: (context) => Consumer<LanguageProvider>(
-builder: (context, languageProvider, child) => AlertDialog(
+        builder: (context, languageProvider, child) => AlertDialog(
           title: Text(
-                languageProvider.isArabic ? '🎉 تهانينا!' : '🎉 Congratulations!',
+            languageProvider.isArabic ? '🎉 تهانينا!' : '🎉 Congratulations!',
             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
@@ -1097,7 +1276,7 @@ builder: (context, languageProvider, child) => AlertDialog(
                 Navigator.of(context).pop(); // Close dialog
                 Navigator.of(context).pop(); // Close reading screen
               },
-child: Text(
+              child: Text(
                 AppLocalizations.of(context)!.backToHome,
                 style: const TextStyle(fontSize: 16),
               ),
@@ -1120,22 +1299,22 @@ child: Text(
 
   /// Show progress saved snackbar
   void _showProgressSavedSnackbar(double completionPercentage) {
-    final text = AppLocalizations.of(context)!.khitmaProgressSaved + ' (' + completionPercentage.toStringAsFixed(1) + '% ' + AppLocalizations.of(context)!.completeWord + ')';
+    final text =
+        AppLocalizations.of(context)!.khitmaProgressSaved +
+        ' (' +
+        completionPercentage.toStringAsFixed(1) +
+        '% ' +
+        AppLocalizations.of(context)!.completeWord +
+        ')';
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(text),
-        duration: const Duration(seconds: 3),
-      ),
+      SnackBar(content: Text(text), duration: const Duration(seconds: 3)),
     );
   }
 
   /// Show error snackbar
   void _showErrorSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 4),
-      ),
+      SnackBar(content: Text(message), duration: const Duration(seconds: 4)),
     );
   }
 
@@ -1143,6 +1322,8 @@ child: Text(
   Widget build(BuildContext context) {
     return Consumer2<ThemeProvider, LanguageProvider>(
       builder: (context, themeProvider, languageProvider, child) {
+        final themeProvider = Provider.of<ThemeProvider>(context);
+
         // Handle loading state
         if (isLoading) {
           return Scaffold(
@@ -1201,7 +1382,7 @@ child: Text(
                       ),
                       const SizedBox(height: 16),
                       Text(
-AppLocalizations.of(context)!.loadingError,
+                        AppLocalizations.of(context)!.loadingError,
                         style: TextStyle(
                           color: Colors.red[700],
                           fontSize: 20,
@@ -1212,10 +1393,7 @@ AppLocalizations.of(context)!.loadingError,
                       const SizedBox(height: 12),
                       Text(
                         errorMessage!,
-                        style: TextStyle(
-                          color: Colors.grey[800],
-                          fontSize: 16,
-                        ),
+                        style: TextStyle(color: Colors.grey[800], fontSize: 16),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 24),
@@ -1231,9 +1409,7 @@ AppLocalizations.of(context)!.loadingError,
                               _loadSurahData();
                             },
                             icon: const Icon(Icons.refresh),
-                            label: Text(
-AppLocalizations.of(context)!.tryAgain,
-                            ),
+                            label: Text(AppLocalizations.of(context)!.tryAgain),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF4A148C),
                               foregroundColor: Colors.white,
@@ -1242,10 +1418,8 @@ AppLocalizations.of(context)!.tryAgain,
                           OutlinedButton(
                             onPressed: () => Navigator.pop(context),
                             child: Text(
-AppLocalizations.of(context)!.goBack,
-                              style: const TextStyle(
-                                color: Color(0xFF4A148C),
-                              ),
+                              AppLocalizations.of(context)!.goBack,
+                              style: const TextStyle(color: Color(0xFF4A148C)),
                             ),
                           ),
                         ],
@@ -1275,19 +1449,24 @@ AppLocalizations.of(context)!.goBack,
                   colors: themeProvider.gradientColors,
                 ),
               ),
-          child: Stack(
-            children: [
-              // Background SVG overlay
-              Positioned.fill(
-                child: Opacity(
-                  opacity: themeProvider.isDarkMode ? 0.03 : 0.12,
-                  child: SvgPicture.asset(
-                    'assets/background_elements/3_background.svg',
-                    fit: BoxFit.cover,
-                    colorFilter: themeProvider.isDarkMode ? null : const ColorFilter.mode(Color(0xFF8EB69B), BlendMode.srcIn),
+              child: Stack(
+                children: [
+                  // Background SVG overlay
+                  Positioned.fill(
+                    child: Opacity(
+                      opacity: themeProvider.isDarkMode ? 0.03 : 0.12,
+                      child: SvgPicture.asset(
+                        'assets/background_elements/3_background.svg',
+                        fit: BoxFit.cover,
+                        colorFilter: themeProvider.isDarkMode
+                            ? null
+                            : const ColorFilter.mode(
+                                Color(0xFF8EB69B),
+                                BlendMode.srcIn,
+                              ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
                   // Color overlay for dark mode only
                   if (themeProvider.isDarkMode)
                     Positioned.fill(
@@ -1299,7 +1478,10 @@ AppLocalizations.of(context)!.goBack,
                       children: [
                         // Header - compact
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12.0,
+                            vertical: 8.0,
+                          ),
                           child: Row(
                             children: [
                               IconButton(
@@ -1316,11 +1498,17 @@ AppLocalizations.of(context)!.goBack,
                               ),
                               Expanded(
                                 child: Text(
-widget.isPersonalKhitma
-                                      ? AppLocalizations.of(context)!.personalKhitma
+                                  widget.isPersonalKhitma
+                                      ? AppLocalizations.of(
+                                          context,
+                                        )!.personalKhitma
                                       : widget.isGroupKhitma
-                                          ? AppLocalizations.of(context)!.groupKhitma
-                                          : AppLocalizations.of(context)!.dailyWered,
+                                      ? AppLocalizations.of(
+                                          context,
+                                        )!.groupKhitma
+                                      : AppLocalizations.of(
+                                          context,
+                                        )!.dailyWered,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: themeProvider.isDarkMode
@@ -1337,26 +1525,31 @@ widget.isPersonalKhitma
                         ),
                         // Page navigation - compact
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12.0,
+                            vertical: 6.0,
+                          ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               // Previous page button
                               IconButton(
-                                onPressed: currentPageIndex > 0 ? _previousPage : null,
+                                onPressed: currentPageIndex > 0
+                                    ? _previousPage
+                                    : null,
                                 icon: Icon(
                                   Icons.arrow_back_ios,
                                   color: currentPageIndex > 0
                                       ? (themeProvider.isDarkMode
-                                          ? const Color(0xFFF7F3E8)
-                                          : const Color(0xFF205C3B))
+                                            ? const Color(0xFFF7F3E8)
+                                            : const Color(0xFF205C3B))
                                       : Colors.grey,
                                   size: 18,
                                 ),
                               ),
                               // Page info
                               Text(
-'${AppLocalizations.of(context)!.pageShort} ${currentPageIndex + 1} ${AppLocalizations.of(context)!.outOfWord} ${surahData.length}',
+                                '${AppLocalizations.of(context)!.pageShort} ${currentPageIndex + 1} ${AppLocalizations.of(context)!.outOfWord} ${surahData.length}',
                                 style: TextStyle(
                                   color: themeProvider.isDarkMode
                                       ? const Color(0xFFF7F3E8)
@@ -1367,13 +1560,16 @@ widget.isPersonalKhitma
                               ),
                               // Next page button
                               IconButton(
-                                onPressed: currentPageIndex < surahData.length - 1 ? _nextPage : null,
+                                onPressed:
+                                    currentPageIndex < surahData.length - 1
+                                    ? _nextPage
+                                    : null,
                                 icon: Icon(
                                   Icons.arrow_forward_ios,
                                   color: currentPageIndex < surahData.length - 1
                                       ? (themeProvider.isDarkMode
-                                          ? const Color(0xFFF7F3E8)
-                                          : const Color(0xFF205C3B))
+                                            ? const Color(0xFFF7F3E8)
+                                            : const Color(0xFF205C3B))
                                       : Colors.grey,
                                   size: 18,
                                 ),
@@ -1385,7 +1581,10 @@ widget.isPersonalKhitma
                         Flexible(
                           child: Container(
                             width: double.infinity,
-                            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(16),
                               child: Stack(
@@ -1394,15 +1593,15 @@ widget.isPersonalKhitma
                                   // Main content container
                                   Container(
                                     width: double.infinity,
-                                    padding: const EdgeInsets.all(20),
+                                    padding: const EdgeInsets.fromLTRB(20,20,20,50),
                                     decoration: BoxDecoration(
-                                      color: themeProvider.isDarkMode 
-                                          ? Colors.white.withOpacity(0.95) 
+                                      color: themeProvider.isDarkMode
+                                          ? Color(0xFFF2EDE0)
                                           : const Color(0xFFDAF1DE),
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(
-                                        color: themeProvider.isDarkMode 
-                                            ? Colors.transparent 
+                                        color: themeProvider.isDarkMode
+                                            ? Colors.transparent
                                             : const Color(0xFFB6D1C2),
                                         width: 1,
                                       ),
@@ -1416,53 +1615,76 @@ widget.isPersonalKhitma
                                     ),
                                     child: SingleChildScrollView(
                                       child: Column(
-                                        mainAxisSize: MainAxisSize.min, // Make column size fit content
+                                        mainAxisSize: MainAxisSize.min,
+                                        // Make column size fit content
                                         children: [
-                                          const SizedBox(height: 6), // Minimal top spacing for maximum content area
+                                          const SizedBox(height: 6),
+                                          // Minimal top spacing for maximum content area
                                           if (currentPageContent != null) ...[
                                             // Surah title - dynamically get from current page content
                                             Text(
-                                              _getArabicSurahName(currentPageContent!['surahName']) ?? currentPageContent!['surahNameAr'],
-                                              style: const TextStyle(
+                                              _getArabicSurahName(
+                                                    currentPageContent!['surahName'],
+                                                  ) ??
+                                                  currentPageContent!['surahNameAr'],
+                                              style:  TextStyle(
                                                 fontFamily: 'Amiri',
                                                 fontSize: 36,
-                                                height: 1.0, // 100% line height
+                                                height: 1.0,
+                                                // 100% line height
                                                 letterSpacing: 0,
-                                                color: Color(0xFF392852), // #392852
-                                                fontWeight: FontWeight.w400, // Regular weight
+                                                color: themeProvider.barText,
+                                                // #392852
+                                                fontWeight: FontWeight
+                                                    .w400, // Regular weight
                                               ),
                                               textAlign: TextAlign.center,
                                               textDirection: TextDirection.rtl,
                                             ),
-                                            const SizedBox(height: 17), // Slightly reduced spacing before Bismillah
-
+                                            const SizedBox(height: 17),
+                                            // Slightly reduced spacing before Bismillah
                                             // Show Bismillah when appropriate
-                                            if (_shouldShowBismillah(currentPageContent!)) const Text(
-                                              'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
-                                              style: TextStyle(
-                                                fontFamily: 'Amiri',
-                                                fontSize: 16,
-                                                height: 1.0, // 100% line height
-                                                letterSpacing: 0,
-                                                color: Color(0xFF392852), // #392852
-                                                fontWeight: FontWeight.w400, // Regular weight
+                                            if (_shouldShowBismillah(
+                                              currentPageContent!,
+                                            ))
+                                              const Text(
+                                                'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+                                                style: TextStyle(
+                                                  fontFamily: 'Amiri',
+                                                  fontSize: 18,
+                                                  height: 1.0,
+                                                  // 100% line height
+                                                  letterSpacing: 0,
+                                                  color: Color(0xFF392852),
+                                                  // #392852
+                                                  fontWeight: FontWeight
+                                                      .w400, // Regular weight
+                                                ),
+                                                textAlign: TextAlign.center,
+                                                textDirection:
+                                                    TextDirection.rtl,
                                               ),
-                                              textAlign: TextAlign.center,
-                                              textDirection: TextDirection.rtl,
-                                            ),
-                                            if (_shouldShowBismillah(currentPageContent!)) const SizedBox(height: 20), // Equal spacing after Bismillah
+                                            if (_shouldShowBismillah(
+                                              currentPageContent!,
+                                            ))
+                                              const SizedBox(height: 20),
+                                            // Equal spacing after Bismillah
 
                                             // Verses - continuous flow with inline numbers and center alignment
                                             RichText(
                                               textAlign: TextAlign.center,
                                               textDirection: TextDirection.rtl,
                                               text: TextSpan(
-                                                children: _buildVerseSpans(currentPageContent!['verses']),
+                                                children: _buildVerseSpans(
+                                                  currentPageContent!['verses'],
+                                                ),
                                               ),
                                             ),
                                           ] else
                                             Text(
-                                              AppLocalizations.of(context)!.noContentToDisplay,
+                                              AppLocalizations.of(
+                                                context,
+                                              )!.noContentToDisplay,
                                               style: const TextStyle(
                                                 fontSize: 18,
                                                 color: Color(0xFF2D1B69),
@@ -1476,74 +1698,88 @@ widget.isPersonalKhitma
 
                                   // Corner decorations - edge-aligned positioning (overlapping with card border)
                                   // Top-left corner (EDGE-ALIGNED)
-                                  const Positioned(
-                                    top: -8,
-                                    left: -8,
+                                   Positioned(
+                                    top: 0,
+                                    left: 0,
                                     child: _CornerDecoration(
                                       angleDeg: 0,
-                                      assetPath: 'assets/background_elements/9.png',
+                                      assetPath:
+                                      themeProvider.flower,
                                       size: 45,
                                     ),
                                   ),
                                   // Top-right corner (EDGE-ALIGNED)
-                                  const Positioned(
-                                    top: -8,
-                                    right: -8,
+                                   Positioned(
+                                    top: 0,
+                                    right: 0,
                                     child: _CornerDecoration(
                                       angleDeg: 90,
-                                      assetPath: 'assets/background_elements/9.png',
+                                      assetPath:
+                                      themeProvider.flower,
                                       size: 45,
                                     ),
                                   ),
                                   // Bottom-left corner (EDGE-ALIGNED)
-                                  const Positioned(
-                                    bottom: -8,
-                                    left: -8,
+                                   Positioned(
+                                    bottom: 0,
+                                    left: 0,
                                     child: _CornerDecoration(
                                       angleDeg: 270,
-                                      assetPath: 'assets/background_elements/9.png',
+                                      assetPath:
+                                      themeProvider.flower,
                                       size: 45,
                                     ),
                                   ),
                                   // Bottom-right corner (EDGE-ALIGNED)
-                                  const Positioned(
-                                    bottom: -8,
-                                    right: -8,
+                                   Positioned(
+                                    bottom: 0,
+                                    right: 0,
                                     child: _CornerDecoration(
                                       angleDeg: 180,
-                                      assetPath: 'assets/background_elements/9.png',
+                                      assetPath:
+                                      themeProvider.flower,
                                       size: 45,
                                     ),
                                   ),
 
                                   // Juz information at bottom center
-                                  if (currentPageContent != null) Positioned(
-                                    bottom: 2,
-                                    left: 0,
-                                    right: 0,
-                                    child: Consumer<LanguageProvider>(
-                                      builder: (context, langProvider, child) {
-                                        final currentPageNumber = currentPageContent!['pageNumber'] as int;
-                                        final currentJuz = _getJuzzForPage(currentPageNumber);
+                                  if (currentPageContent != null)
+                                    Positioned(
+                                      bottom: 2,
+                                      left: 0,
+                                      right: 0,
+                                      child: Consumer<LanguageProvider>(
+                                        builder: (context, langProvider, child) {
+                                          final currentPageNumber =
+                                              currentPageContent!['pageNumber']
+                                                  as int;
+                                          final currentJuz = _getJuzzForPage(
+                                            currentPageNumber,
+                                          );
 
-                                        return Text(
-                                          langProvider.isArabic
-                                              ? 'جُزْءُ $currentJuz'
-                                              : 'Juz $currentJuz',
-                                          style: const TextStyle(
-                                            fontFamily: 'Amiri',
-                                            fontSize: 12,
-                                            height: 1.2,
-                                            letterSpacing: 0,
-                                            color: Color(0xFF999999),
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                          textDirection: langProvider.isArabic ? TextDirection.rtl : TextDirection.ltr,
-                                        );
-                                      },
+                                          return Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                              langProvider.isArabic
+                                                  ? 'جُزْءُ $currentJuz'
+                                                  : 'Juz $currentJuz',
+                                              style: const TextStyle(
+                                                fontFamily: 'Amiri',
+                                                fontSize: 16,
+                                                height: 1.2,
+                                                letterSpacing: 0,
+                                                color: Color(0xFF1F1F1F),
+                                                fontWeight: FontWeight.w400,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                              textDirection: langProvider.isArabic
+                                                  ? TextDirection.rtl
+                                                  : TextDirection.ltr,
+                                            ),
+                                          );
+                                        },
+                                      ),
                                     ),
-                                  ),
                                 ],
                               ),
                             ),
@@ -1551,7 +1787,10 @@ widget.isPersonalKhitma
                         ),
                         // Action buttons - conditional based on mode
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12.0,
+                            vertical: 8.0,
+                          ),
                           child: Row(
                             children: widget.isPersonalKhitma
                                 ? [
@@ -1560,28 +1799,40 @@ widget.isPersonalKhitma
                                       child: SizedBox(
                                         height: 42,
                                         child: ElevatedButton(
-                                          onPressed: _saving ? null : () async {
-                                            if (_saving) return;
-                                            setState(() { _saving = true; });
-                                            try {
-                                              await _savePersonalKhitmaProgress();
-                                            } finally {
-                                              if (mounted) setState(() { _saving = false; });
-                                            }
-                                          },
+                                          onPressed: _saving
+                                              ? null
+                                              : () async {
+                                                  if (_saving) return;
+                                                  setState(() {
+                                                    _saving = true;
+                                                  });
+                                                  try {
+                                                    await _savePersonalKhitmaProgress();
+                                                  } finally {
+                                                    if (mounted)
+                                                      setState(() {
+                                                        _saving = false;
+                                                      });
+                                                  }
+                                                },
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor: themeProvider.isDarkMode 
-                                                ? const Color(0xFFF7F3E8) 
+                                            backgroundColor:
+                                                themeProvider.isDarkMode
+                                                ? const Color(0xFFF7F3E8)
                                                 : const Color(0xFF235347),
-                                            foregroundColor: themeProvider.isDarkMode 
-                                                ? const Color(0xFF2D1B69) 
+                                            foregroundColor:
+                                                themeProvider.isDarkMode
+                                                ? const Color(0xFF2D1B69)
                                                 : Colors.white,
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(10),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
                                             ),
                                           ),
-child: Text(
-                                            AppLocalizations.of(context)!.saveProgress,
+                                          child: Text(
+                                            AppLocalizations.of(
+                                              context,
+                                            )!.saveProgress,
                                             style: const TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w600,
@@ -1592,80 +1843,100 @@ child: Text(
                                     ),
                                   ]
                                 : widget.isGroupKhitma
-                                    ? [
-                                        // Group Khitma: Show Save Progress button only
-                                        Expanded(
-                                          child: SizedBox(
-                                            height: 42,
-                                            child: ElevatedButton(
-                                              onPressed: _saving ? null : () async {
-                                                if (_saving) return;
-                                                setState(() { _saving = true; });
-                                                try {
-                                                  await _saveGroupKhitmaProgress();
-                                                } finally {
-                                                  if (mounted) setState(() { _saving = false; });
-                                                }
-                                              },
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: themeProvider.isDarkMode 
-                                                    ? const Color(0xFFF7F3E8) 
-                                                    : const Color(0xFF235347),
-                                                foregroundColor: themeProvider.isDarkMode 
-                                                    ? const Color(0xFF2D1B69) 
-                                                    : Colors.white,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(10),
-                                                ),
-                                              ),
-                                              child: _saving
-                                                  ? const SizedBox(
-                                                      height: 18,
-                                                      width: 18,
-                                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                                    )
-: Text(
-                                                      AppLocalizations.of(context)!.saveProgress,
-                                                      style: const TextStyle(
-                                                        fontSize: 14,
-                                                        fontWeight: FontWeight.w600,
+                                ? [
+                                    // Group Khitma: Show Save Progress button only
+                                    Expanded(
+                                      child: SizedBox(
+                                        height: 42,
+                                        child: ElevatedButton(
+                                          onPressed: _saving
+                                              ? null
+                                              : () async {
+                                                  if (_saving) return;
+                                                  setState(() {
+                                                    _saving = true;
+                                                  });
+                                                  try {
+                                                    await _saveGroupKhitmaProgress();
+                                                  } finally {
+                                                    if (mounted)
+                                                      setState(() {
+                                                        _saving = false;
+                                                      });
+                                                  }
+                                                },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                themeProvider.isDarkMode
+                                                ? const Color(0xFFF7F3E8)
+                                                : const Color(0xFF235347),
+                                            foregroundColor:
+                                                themeProvider.isDarkMode
+                                                ? const Color(0xFF2D1B69)
+                                                : Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                          ),
+                                          child: _saving
+                                              ? const SizedBox(
+                                                  height: 18,
+                                                  width: 18,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 2,
                                                       ),
-                                                    ),
+                                                )
+                                              : Text(
+                                                  AppLocalizations.of(
+                                                    context,
+                                                  )!.saveProgress,
+                                                  style: const TextStyle(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                        ),
+                                      ),
+                                    ),
+                                  ]
+                                : [
+                                    // Daily Wered: Show Change Surah button only
+                                    Expanded(
+                                      child: SizedBox(
+                                        height: 42,
+                                        child: ElevatedButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                themeProvider.isDarkMode
+                                                ? const Color(0xFFF7F3E8)
+                                                : const Color(0xFF235347),
+                                            foregroundColor:
+                                                themeProvider.isDarkMode
+                                                ? const Color(0xFF2D1B69)
+                                                : Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            AppLocalizations.of(
+                                              context,
+                                            )!.changeSurah,
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
                                             ),
                                           ),
                                         ),
-                                      ]
-                                    : [
-                                        // Daily Wered: Show Change Surah button only
-                                        Expanded(
-                                          child: SizedBox(
-                                            height: 42,
-                                            child: ElevatedButton(
-                                              onPressed: () {
-                                                Navigator.pop(context);
-                                              },
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: themeProvider.isDarkMode 
-                                                    ? const Color(0xFFF7F3E8) 
-                                                    : const Color(0xFF235347),
-                                                foregroundColor: themeProvider.isDarkMode 
-                                                    ? const Color(0xFF2D1B69) 
-                                                    : Colors.white,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(10),
-                                                ),
-                                              ),
-child: Text(
-                                                AppLocalizations.of(context)!.changeSurah,
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                      ),
+                                    ),
+                                  ],
                           ),
                         ),
                       ],
@@ -1702,12 +1973,12 @@ class _CornerDecoration extends StatelessWidget {
         angle: angleDeg * math.pi / 180,
         child: Consumer<ThemeProvider>(
           builder: (context, themeProvider, child) {
-            return SvgPicture.asset(
+            return Image.asset(
               assetPath,
               width: size,
               height: size,
               fit: BoxFit.contain,
-              colorFilter: themeProvider.isDarkMode ? const ColorFilter.mode(Color(0xFF1F1F1F), BlendMode.srcIn) : null,
+
             );
           },
         ),
