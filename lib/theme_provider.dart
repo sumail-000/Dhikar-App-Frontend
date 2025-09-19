@@ -101,27 +101,24 @@ class ThemeProvider extends ChangeNotifier {
       : 'assets/background_elements/2_LE.png';
   String get backgroundImage3 =>
       'assets/background_elements/3_background.png'; // Same for both themes
-
   // Button colors
   Color get buttonBackgroundColor =>
       _isDarkMode ? const Color(0xFF251629) : const Color(0xFF051F20);
   Color get buttonTextColor => Colors.white;
-
   // Screen background colors
   Color get screenBackgroundColor =>
       _isDarkMode ? const Color(0xFF251629) : const Color(0xFFFFFFFF);
-
   // Home screen specific colors for light theme
   Color get homeUsernameColor =>
       _isDarkMode ? Color(0xFFF2EDE0) : const Color(0xFF235347);
   Color get homeSectionTitleColor =>
       _isDarkMode ? Color(0xFFF2EDE0) : const Color(0xFF235347);
   Color get homeBoxTextColor =>
-      _isDarkMode ? Color(0xFFF2EDE0) : const Color(0xFF1F1F1F);
+      _isDarkMode ? Color(0xFFF2EDE0) : const Color(0xFF235347);
   Color get homeBoxBorderColor =>
-      _isDarkMode ? Color(0xFFF2EDE0) : const Color(0xFF051F20);
+      _isDarkMode ? Color(0xFFF2EDE0) : const Color(0xFF235347);
   Color get homeProgressColor =>
-      _isDarkMode ? Color(0xFFF2EDE0) : const Color(0xFF051F20);
+      _isDarkMode ? Color(0xFFF2EDE0) : const Color(0xFF235347);
 
   // Bottom navigation bar colors
   Color get bottomNavSelectedColor =>

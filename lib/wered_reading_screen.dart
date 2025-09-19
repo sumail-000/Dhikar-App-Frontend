@@ -10,6 +10,7 @@ import 'app_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class WeredReadingScreen extends StatefulWidget {
+
   final List<String> selectedSurahs;
   final String pages;
   final bool isPersonalKhitma;
@@ -622,7 +623,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
       spans.add(
         TextSpan(
           text: verseText,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'Amiri',
             fontSize: 18,
             height: 1.0, // 100% line height
