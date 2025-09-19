@@ -14,6 +14,7 @@ import 'dhikr_presets.dart';
 import 'services/api_client.dart';
 import 'widgets/add_custom_dhikr_dialog.dart';
 import 'dhikr_provider.dart';
+import 'app_localizations.dart';
 
 class DhikrScreen extends StatefulWidget {
   const DhikrScreen({super.key});
@@ -208,7 +209,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              isArabic ? 'نوع الذكر' : 'Dhikr Type',
+                              appLocalizations.dhikrType,
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -218,9 +219,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              isArabic
-                                  ? 'اشغل قلبك بذكر الله. اختر ذكرًا لبدء اتصالك الروحي وسلامك.'
-                                  : 'Engage your heart in the remembrance of Allah. Select a Dhikr to begin your spiritual connection and peace.',
+                              appLocalizations.dhikrIntro,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: isLightMode
@@ -257,10 +256,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        _selectedDhikr ??
-                                            (isArabic
-                                                ? 'اختر الذكر'
-                                                : 'Choose Dhikr'),
+                                        _selectedDhikr ?? appLocalizations.chooseDhikr,
                                         style: TextStyle(
                                           fontSize: 16,
                                           color: _selectedDhikr != null
@@ -410,9 +406,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            isArabic
-                                                ? 'أضف ذكر مخصص'
-                                                : 'Add Custom Dhikr',
+                                            appLocalizations.addCustomDhikr,
                                             style: TextStyle(
                                               color: isLightMode
                                                   ? const Color(
@@ -426,9 +420,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
                                             locale: const Locale('en'),
                                           ),
                                           Text(
-                                            isArabic
-                                                ? 'انقر لإضافة ذكر جديد'
-                                                : 'Tap to add new dhikr',
+                                            appLocalizations.tapToAddDhikr,
                                             style: TextStyle(
                                               color: isLightMode
                                                   ? const Color(
@@ -494,9 +486,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
                                       ).showSnackBar(
                                         SnackBar(
                                           content: Text(
-                                            isArabic
-                                                ? 'تم إضافة الذكر'
-                                                : 'Dhikr added',
+                                            appLocalizations.dhikrAdded,
                                           ),
                                         ),
                                       );
@@ -506,10 +496,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
                                       ).showSnackBar(
                                         SnackBar(
                                           content: Text(
-                                            resp.error ??
-                                                (isArabic
-                                                    ? 'فشل الإضافة'
-                                                    : 'Failed to add'),
+                                            resp.error ?? appLocalizations.addFailed,
                                           ),
                                         ),
                                       );
@@ -520,7 +507,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              isArabic ? 'الهدف' : 'Target',
+                              appLocalizations.target,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -539,7 +526,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
                                 fontFamily: amiriFont,
                               ),
                               decoration: InputDecoration(
-                                hintText: isArabic ? 'أدخل هدفك' : 'Enter your target',
+                                hintText: appLocalizations.enterTarget,
                                 hintStyle: TextStyle(
                                   color: isLightMode
                                       ? const Color(0xFF235347).withOpacity(0.6)

@@ -79,6 +79,23 @@ class AppLocalizations {
       'motivationalMessages': 'Motivational messages',
 'personalReminders': 'Personal reminders (daily wered & dhikr)',
 
+      // Dhikr
+      'dhikrType': 'Dhikr Type',
+      'dhikrIntro': 'Engage your heart in the remembrance of Allah. Select a Dhikr to begin your spiritual connection and peace.',
+      'chooseDhikr': 'Choose Dhikr',
+      'addCustomDhikr': 'Add Custom Dhikr',
+      'tapToAddDhikr': 'Tap to add new dhikr',
+      'target': 'Target',
+      'enterTarget': 'Enter your target',
+      'saveDhikr': 'Save Dhikr',
+      'reset': 'Reset',
+      'dhikrAdded': 'Dhikr added',
+      'addFailed': 'Failed to add',
+      'savedToGroup': 'Saved to group',
+      'saveFailed': 'Save failed',
+      'dhikrSaved': 'Dhikr saved successfully',
+      'dhikrCompletedCongrats': "Congratulations! You completed today's dhikr.",
+
       // Generic statuses
       'loading': 'Loading...',
       'errorLoading': 'Error loading',
@@ -198,6 +215,23 @@ class AppLocalizations {
       'accountDeletionRequest': 'طلب حذف الحساب',
       'logout': 'تسجيل الخروج',
       'logoutConfirmMessage': 'هل أنت متأكد أنك تريد تسجيل الخروج؟',
+
+      // Dhikr
+      'dhikrType': 'نوع الذكر',
+      'dhikrIntro': 'اشغل قلبك بذكر الله. اختر ذكراً لتبدأ رحلتك الروحانية والسكينة.',
+      'chooseDhikr': 'اختر الذكر',
+      'addCustomDhikr': 'أضف ذكر مخصص',
+      'tapToAddDhikr': 'انقر لإضافة ذكر جديد',
+      'target': 'الهدف',
+      'enterTarget': 'أدخل هدفك',
+      'saveDhikr': 'احفظ الذكر',
+      'reset': 'إعادة تعيين',
+      'dhikrAdded': 'تم إضافة الذكر',
+      'addFailed': 'فشل الإضافة',
+      'savedToGroup': 'تم الحفظ في المجموعة',
+      'saveFailed': 'فشل الحفظ',
+      'dhikrSaved': 'تم حفظ الذكر بنجاح',
+      'dhikrCompletedCongrats': 'مبارك! أكملت ورد الذكر اليوم.',
       'cancel': 'إلغاء',
       'english': 'English',
       'arabic': 'العربية',
@@ -372,6 +406,23 @@ class AppLocalizations {
   String get avatarRemoved => _localizedValues[locale.languageCode]?['avatarRemoved'] ?? 'Profile photo removed';
   String get profileUpdated => _localizedValues[locale.languageCode]?['profileUpdated'] ?? 'Profile updated';
   String get memberSince => _localizedValues[locale.languageCode]?['memberSince'] ?? 'Member since';
+
+  // Dhikr getters
+  String get dhikrType => _localizedValues[locale.languageCode]?['dhikrType'] ?? 'Dhikr Type';
+  String get dhikrIntro => _localizedValues[locale.languageCode]?['dhikrIntro'] ?? 'Engage your heart in the remembrance of Allah. Select a Dhikr to begin your spiritual connection and peace.';
+  String get chooseDhikr => _localizedValues[locale.languageCode]?['chooseDhikr'] ?? 'Choose Dhikr';
+  String get addCustomDhikr => _localizedValues[locale.languageCode]?['addCustomDhikr'] ?? 'Add Custom Dhikr';
+  String get tapToAddDhikr => _localizedValues[locale.languageCode]?['tapToAddDhikr'] ?? 'Tap to add new dhikr';
+  String get target => _localizedValues[locale.languageCode]?['target'] ?? 'Target';
+  String get enterTarget => _localizedValues[locale.languageCode]?['enterTarget'] ?? 'Enter your target';
+  String get saveDhikr => _localizedValues[locale.languageCode]?['saveDhikr'] ?? 'Save Dhikr';
+  String get reset => _localizedValues[locale.languageCode]?['reset'] ?? 'Reset';
+  String get dhikrAdded => _localizedValues[locale.languageCode]?['dhikrAdded'] ?? 'Dhikr added';
+  String get addFailed => _localizedValues[locale.languageCode]?['addFailed'] ?? 'Failed to add';
+  String get savedToGroup => _localizedValues[locale.languageCode]?['savedToGroup'] ?? 'Saved to group';
+  String get saveFailed => _localizedValues[locale.languageCode]?['saveFailed'] ?? 'Save failed';
+  String get dhikrSaved => _localizedValues[locale.languageCode]?['dhikrSaved'] ?? 'Dhikr saved successfully';
+  String get dhikrCompletedCongrats => _localizedValues[locale.languageCode]?['dhikrCompletedCongrats'] ?? "Congratulations! You completed today's dhikr.";
 
   // Privacy & Notifications additions
   String get pushNotifications => _localizedValues[locale.languageCode]?['pushNotifications'] ?? 'Push notifications';

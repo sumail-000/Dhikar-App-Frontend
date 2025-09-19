@@ -6,6 +6,7 @@ import 'dhikr_provider.dart';
 import 'dart:math';
 import 'services/api_client.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'app_localizations.dart';
 
 class StartDhikrScreen extends StatefulWidget {
   final String dhikrTitle;
@@ -35,14 +36,22 @@ class StartDhikrScreen extends StatefulWidget {
   State<StartDhikrScreen> createState() => _StartDhikrScreenState();
 }
 
-class _StartDhikrScreenState extends State<StartDhikrScreen> {
+class _StartDhikrScreenState extends State<StartDhikrScreen> with WidgetsBindingObserver {
   int _currentCount = 0;
+  int _lastSavedCount = 0;
+  bool _autoCompleted = false;
+  bool _draftSaving = false;
 
   void _incrementCounter() {
     if (_currentCount < widget.target) {
       setState(() {
         _currentCount++;
       });
+      // Auto-complete on reaching target (personal or group)
+      if (!_autoCompleted && _currentCount >= widget.target) {
+        _autoCompleted = true;
+        _autoCompleteAndExit();
+      }
     }
   }
 
@@ -61,27 +70,29 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
   }
 
   Future<void> _saveDhikr() async {
-    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+    final app = AppLocalizations.of(context)!;
 
     if (widget.isGroupMode && widget.groupId != null) {
-      final resp = await ApiClient.instance.saveDhikrGroupProgress(widget.groupId!, _currentCount);
-      if (!mounted) return;
-      if (resp.ok) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.isArabic ? 'تم الحفظ في المجموعة' : 'Saved to group',
-            ),
-          ),
-        );
-        Navigator.pop(context, true);
-        return;
+      // Save only the delta (new taps since last save) to avoid double counting
+      final delta = _currentCount - _lastSavedCount;
+      if (delta > 0) {
+        final resp = await ApiClient.instance.saveDhikrGroupProgress(widget.groupId!, delta);
+        if (!mounted) return;
+        if (resp.ok) {
+          _lastSavedCount = _currentCount;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(app.savedToGroup)),
+          );
+          Navigator.pop(context, true);
+          return;
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(resp.error ?? app.saveFailed)),
+          );
+        }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(resp.error ?? (languageProvider.isArabic ? 'فشل الحفظ' : 'Save failed')),
-          ),
-        );
+        // Nothing new to save; just exit
+        Navigator.pop(context, true);
       }
       return;
     }
@@ -98,28 +109,89 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
     );
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          languageProvider.isArabic
-              ? 'تم حفظ الذكر بنجاح'
-              : 'Dhikr saved successfully',
-        ),
-      ),
+      SnackBar(content: Text(app.dhikrSaved)),
     );
+    Navigator.pop(context, true);
+  }
+
+  // Auto-complete flow upon reaching target
+  Future<void> _autoCompleteAndExit() async {
+    final app = AppLocalizations.of(context)!;
+
+    if (widget.isGroupMode && widget.groupId != null) {
+      final delta = widget.target - _lastSavedCount;
+      if (delta > 0) {
+        final resp = await ApiClient.instance.saveDhikrGroupProgress(widget.groupId!, delta);
+        if (!mounted) return;
+        if (!resp.ok) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(resp.error ?? app.saveFailed)),
+          );
+          Navigator.pop(context, true);
+          return;
+        }
+        _lastSavedCount = widget.target;
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(app.dhikrCompletedCongrats)),
+      );
+      Navigator.pop(context, true);
+      return;
+    }
+
+    final dhikrProvider = Provider.of<DhikrProvider>(context, listen: false);
+
+    // Persist completion at target count
+    await dhikrProvider.saveDhikr(
+      title: widget.dhikrTitle,
+      titleArabic: widget.dhikrTitleArabic,
+      subtitle: widget.dhikrSubtitle,
+      subtitleArabic: widget.dhikrSubtitleArabic,
+      arabic: widget.dhikrArabic,
+      target: widget.target,
+      currentCount: widget.target,
+    );
+
+    if (!mounted) return;
+    // Show localized congratulations
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(app.dhikrCompletedCongrats)),
+    );
+
+    // Navigate back to Dhikr screen
     Navigator.pop(context, true);
   }
 
   @override
   void initState() {
     super.initState();
-    if (!widget.isGroupMode && widget.initialCount != null) {
+    WidgetsBinding.instance.addObserver(this);
+    if (widget.initialCount != null) {
       _currentCount = widget.initialCount!.clamp(0, widget.target);
+      _lastSavedCount = widget.initialCount!.clamp(0, widget.target);
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      // ignore: discarded_futures
+      _autoSaveDraftIfNeeded();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<ThemeProvider, LanguageProvider>(
+    return WillPopScope(
+      onWillPop: () async {
+        await _autoSaveDraftIfNeeded();
+        return true;
+      },
+      child: Consumer2<ThemeProvider, LanguageProvider>(
       builder: (context, themeProvider, languageProvider, child) {
         final isLightMode = !themeProvider.isDarkMode;
         final isArabic = languageProvider.isArabic;
@@ -179,12 +251,15 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
                           child: Row(
                             children: [
                               IconButton(
-                                onPressed: () => Navigator.pop(context),
+                                onPressed: () async {
+                                  await _autoSaveDraftIfNeeded();
+                                  if (mounted) Navigator.pop(context);
+                                },
                                 icon: Icon(Icons.arrow_back, color: textColor),
                               ),
                               Expanded(
                                 child: Text(
-                                  isArabic ? 'الذكر' : 'Dhikr',
+                                  AppLocalizations.of(context)!.dhikr,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 20,
@@ -204,9 +279,7 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20.0),
                           child: Text(
-                            isArabic
-                                ? 'اشغل قلبك بذكر الله. اختر ذكراً لتبدأ رحلتك الروحانية والسكينة.'
-                                : 'Engage your heart in the remembrance of Allah. Select a Dhikr to begin your spiritual connection and peace.',
+                            AppLocalizations.of(context)!.dhikrIntro,
                             style: TextStyle(
                               fontSize: 14,
                               color: textColor.withOpacity(0.8),
@@ -426,7 +499,7 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
                                       ),
                                       onPressed: _saveDhikr,
                                       child: Text(
-                                        isArabic ? 'احفظ الذكر' : 'Save Dhikr',
+                                        AppLocalizations.of(context)!.saveDhikr,
                                         style: TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
@@ -451,7 +524,7 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
                                         ),
                                         onPressed: _resetCounter,
                                         child: Text(
-                                          isArabic ? 'إعادة تعيين' : 'Reset',
+                                          AppLocalizations.of(context)!.reset,
                                           style: TextStyle(
                                             fontSize: 18,
                                             color: isLightMode ? const Color(0xFF235347) : Color(0xFFF2EDE0),
@@ -475,6 +548,51 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> {
           ),
         );
       },
+      ),
     );
+  }
+
+// Best-effort auto-save of personal or group dhikr draft (skips after auto-complete)
+  Future<void> _autoSaveDraftIfNeeded() async {
+    if (_autoCompleted) return;
+    if (_currentCount < 0) return;
+    // Avoid concurrent saves
+    if (_draftSaving) return;
+    _draftSaving = true;
+    try {
+      if (widget.isGroupMode && widget.groupId != null) {
+        final delta = _currentCount - _lastSavedCount;
+        if (delta > 0) {
+          final resp = await ApiClient.instance.saveDhikrGroupProgress(widget.groupId!, delta);
+          if (resp.ok) {
+            _lastSavedCount = _currentCount;
+          }
+        }
+      } else {
+        final dhikrProvider = Provider.of<DhikrProvider>(context, listen: false);
+        await dhikrProvider.saveDhikr(
+          title: widget.dhikrTitle,
+          titleArabic: widget.dhikrTitleArabic,
+          subtitle: widget.dhikrSubtitle,
+          subtitleArabic: widget.dhikrSubtitleArabic,
+          arabic: widget.dhikrArabic,
+          target: widget.target,
+          currentCount: _currentCount,
+        );
+      }
+    } catch (_) {
+      // ignore any errors during background save
+    } finally {
+      _draftSaving = false;
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    // Final safety save on dispose
+    // ignore: discarded_futures
+    _autoSaveDraftIfNeeded();
+    super.dispose();
   }
 }
