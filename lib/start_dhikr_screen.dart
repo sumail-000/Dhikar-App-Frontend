@@ -18,6 +18,7 @@ class StartDhikrScreen extends StatefulWidget {
   final bool isGroupMode;
   final int? groupId;
   final int? initialCount;
+  final String? entryId; // personal dhikr history entry id (for continue)
 
   const StartDhikrScreen({
     super.key,
@@ -30,6 +31,7 @@ class StartDhikrScreen extends StatefulWidget {
     this.isGroupMode = false,
     this.groupId,
     this.initialCount,
+    this.entryId,
   });
 
   @override
@@ -39,6 +41,7 @@ class StartDhikrScreen extends StatefulWidget {
 class _StartDhikrScreenState extends State<StartDhikrScreen> with WidgetsBindingObserver {
   int _currentCount = 0;
   int _lastSavedCount = 0;
+  late final String _sessionEntryId;
   bool _autoCompleted = false;
   bool _draftSaving = false;
 
@@ -98,7 +101,8 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> with WidgetsBinding
     }
 
     final dhikrProvider = Provider.of<DhikrProvider>(context, listen: false);
-    await dhikrProvider.saveDhikr(
+    await dhikrProvider.upsertDhikr(
+      id: _sessionEntryId,
       title: widget.dhikrTitle,
       titleArabic: widget.dhikrTitleArabic,
       subtitle: widget.dhikrSubtitle,
@@ -142,8 +146,9 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> with WidgetsBinding
 
     final dhikrProvider = Provider.of<DhikrProvider>(context, listen: false);
 
-    // Persist completion at target count
-    await dhikrProvider.saveDhikr(
+    // Persist completion at target count in history
+    await dhikrProvider.upsertDhikr(
+      id: _sessionEntryId,
       title: widget.dhikrTitle,
       titleArabic: widget.dhikrTitleArabic,
       subtitle: widget.dhikrSubtitle,
@@ -171,6 +176,8 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> with WidgetsBinding
       _currentCount = widget.initialCount!.clamp(0, widget.target);
       _lastSavedCount = widget.initialCount!.clamp(0, widget.target);
     }
+    // Initialize entry id for personal sessions (new or continue)
+    _sessionEntryId = widget.entryId ?? DateTime.now().millisecondsSinceEpoch.toString();
   }
 
   @override
@@ -570,7 +577,8 @@ class _StartDhikrScreenState extends State<StartDhikrScreen> with WidgetsBinding
         }
       } else {
         final dhikrProvider = Provider.of<DhikrProvider>(context, listen: false);
-        await dhikrProvider.saveDhikr(
+        await dhikrProvider.upsertDhikr(
+          id: _sessionEntryId,
           title: widget.dhikrTitle,
           titleArabic: widget.dhikrTitleArabic,
           subtitle: widget.dhikrSubtitle,

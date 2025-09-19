@@ -87,14 +87,18 @@ class AppLocalizations {
       'tapToAddDhikr': 'Tap to add new dhikr',
       'target': 'Target',
       'enterTarget': 'Enter your target',
-      'saveDhikr': 'Save Dhikr',
+'saveDhikr': 'Save Dhikr',
+      'startDhikr': 'Start Dhikr',
       'reset': 'Reset',
       'dhikrAdded': 'Dhikr added',
       'addFailed': 'Failed to add',
       'savedToGroup': 'Saved to group',
       'saveFailed': 'Save failed',
       'dhikrSaved': 'Dhikr saved successfully',
-      'dhikrCompletedCongrats': "Congratulations! You completed today's dhikr.",
+'dhikrCompletedCongrats': "Congratulations! You completed today's dhikr.",
+'viewHistory': 'View History',
+      'personalDhikr': 'Personal Dhikr',
+      'continueDhikr': 'Continue Dhikr',
 
       // Generic statuses
       'loading': 'Loading...',
@@ -224,14 +228,18 @@ class AppLocalizations {
       'tapToAddDhikr': 'انقر لإضافة ذكر جديد',
       'target': 'الهدف',
       'enterTarget': 'أدخل هدفك',
-      'saveDhikr': 'احفظ الذكر',
+'saveDhikr': 'احفظ الذكر',
+      'startDhikr': 'ابدأ الذكر',
       'reset': 'إعادة تعيين',
       'dhikrAdded': 'تم إضافة الذكر',
       'addFailed': 'فشل الإضافة',
       'savedToGroup': 'تم الحفظ في المجموعة',
       'saveFailed': 'فشل الحفظ',
       'dhikrSaved': 'تم حفظ الذكر بنجاح',
-      'dhikrCompletedCongrats': 'مبارك! أكملت ورد الذكر اليوم.',
+'dhikrCompletedCongrats': 'مبارك! أكملت ورد الذكر اليوم.',
+'viewHistory': 'عرض السجل',
+      'personalDhikr': 'ذكري الشخصي',
+      'continueDhikr': 'تابع الذكر',
       'cancel': 'إلغاء',
       'english': 'English',
       'arabic': 'العربية',
@@ -415,14 +423,18 @@ class AppLocalizations {
   String get tapToAddDhikr => _localizedValues[locale.languageCode]?['tapToAddDhikr'] ?? 'Tap to add new dhikr';
   String get target => _localizedValues[locale.languageCode]?['target'] ?? 'Target';
   String get enterTarget => _localizedValues[locale.languageCode]?['enterTarget'] ?? 'Enter your target';
-  String get saveDhikr => _localizedValues[locale.languageCode]?['saveDhikr'] ?? 'Save Dhikr';
+String get saveDhikr => _localizedValues[locale.languageCode]?['saveDhikr'] ?? 'Save Dhikr';
+  String get startDhikr => _localizedValues[locale.languageCode]?['startDhikr'] ?? 'Start Dhikr';
   String get reset => _localizedValues[locale.languageCode]?['reset'] ?? 'Reset';
   String get dhikrAdded => _localizedValues[locale.languageCode]?['dhikrAdded'] ?? 'Dhikr added';
   String get addFailed => _localizedValues[locale.languageCode]?['addFailed'] ?? 'Failed to add';
   String get savedToGroup => _localizedValues[locale.languageCode]?['savedToGroup'] ?? 'Saved to group';
   String get saveFailed => _localizedValues[locale.languageCode]?['saveFailed'] ?? 'Save failed';
   String get dhikrSaved => _localizedValues[locale.languageCode]?['dhikrSaved'] ?? 'Dhikr saved successfully';
-  String get dhikrCompletedCongrats => _localizedValues[locale.languageCode]?['dhikrCompletedCongrats'] ?? "Congratulations! You completed today's dhikr.";
+String get dhikrCompletedCongrats => _localizedValues[locale.languageCode]?['dhikrCompletedCongrats'] ?? "Congratulations! You completed today's dhikr.";
+String get viewHistory => _localizedValues[locale.languageCode]?['viewHistory'] ?? 'View History';
+String get personalDhikr => _localizedValues[locale.languageCode]?['personalDhikr'] ?? 'Personal Dhikr';
+  String get continueDhikr => _localizedValues[locale.languageCode]?['continueDhikr'] ?? 'Continue Dhikr';
 
   // Privacy & Notifications additions
   String get pushNotifications => _localizedValues[locale.languageCode]?['pushNotifications'] ?? 'Push notifications';

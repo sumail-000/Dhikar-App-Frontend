@@ -11,6 +11,8 @@ import 'services/api_client.dart';
 import 'khitma_screen.dart';
 import 'bottom_nav_bar.dart';
 import 'dhikr_screen.dart';
+import 'personal_dhikr_history_screen.dart';
+import 'dhikr_provider.dart';
 import 'notification_screen.dart';
 import 'profile_provider.dart';
 import 'wered_reading_screen.dart';
@@ -151,6 +153,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               const SizedBox(height: 14),
                               // Personal Khitma (progress + continue button)
                               _PersonalKhitmaSection(key: _personalKey),
+                              const SizedBox(height: 14),
+                              // Personal Dhikr aggregate card and quick link
+                              _PersonalDhikrAggregateSection(),
                               const SizedBox(height: 14),
                               // Current Streak
                               _StreakSection(),
@@ -965,6 +970,115 @@ class _ProgressCard extends StatelessWidget {
 }
 
 // Optimized Streak Section
+class _PersonalDhikrAggregateSection extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer2<ThemeProvider, DhikrProvider>(
+      builder: (context, themeProvider, provider, _) {
+        final current = provider.aggregateCurrent;
+        final target = provider.aggregateTarget;
+        final progress = target > 0 ? current / target : 0.0;
+
+        // Hide the card entirely if no dhikr progress exists
+        if (current == 0 && target == 0) {
+          return const SizedBox.shrink();
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              AppLocalizations.of(context)!.personalDhikr,
+              style: TextStyle(
+                color: themeProvider.homeSectionTitleColor,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: themeProvider.cardBackgroundColor,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: themeProvider.homeBoxBorderColor,
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+              // Target and percentage row (match Personal Khitma styling)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${AppLocalizations.of(context)!.target}: $target',
+                    style: TextStyle(
+                      color: themeProvider.homeBoxTextColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    '${(progress * 100).toStringAsFixed(1)}%',
+                    style: TextStyle(
+                      color: themeProvider.homeBoxTextColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              LinearProgressIndicator(
+                value: progress.clamp(0.0, 1.0),
+                backgroundColor: themeProvider.progressBackgroundColor,
+                color: themeProvider.homeProgressColor,
+                minHeight: 8,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              const SizedBox(height: 10),
+                  // Primary action at bottom (full width), styled same as Personal Khitma continue button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 40,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: themeProvider.isDarkMode
+                            ? const Color(0xFFF2EDE0)
+                            : const Color(0xFF235347),
+                        foregroundColor: themeProvider.isDarkMode
+                            ? const Color(0xFF392852)
+                            : Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        elevation: 0,
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const PersonalDhikrHistoryScreen()),
+                        );
+                      },
+                      child: Text(
+                        AppLocalizations.of(context)!.continueDhikr,
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _StreakSection extends StatelessWidget {
   const _StreakSection();
 

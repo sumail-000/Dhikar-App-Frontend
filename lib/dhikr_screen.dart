@@ -15,6 +15,7 @@ import 'services/api_client.dart';
 import 'widgets/add_custom_dhikr_dialog.dart';
 import 'dhikr_provider.dart';
 import 'app_localizations.dart';
+import 'personal_dhikr_history_screen.dart';
 
 class DhikrScreen extends StatefulWidget {
   const DhikrScreen({super.key});
@@ -565,177 +566,79 @@ class _DhikrScreenState extends State<DhikrScreen> {
                             const SizedBox(height: 16),
                             Consumer<DhikrProvider>(
                               builder: (context, dhikrProvider, _) {
-                                final hasActive =
-                                    dhikrProvider.hasSavedDhikr &&
-                                    dhikrProvider.currentDhikr!.currentCount <
-                                        dhikrProvider.currentDhikr!.target;
-                                final btnText = hasActive
-                                    ? (isArabic
-                                          ? 'تابع الذكر'
-                                          : 'Continue Dhikr')
-                                    : (isArabic ? 'ابدأ الذكر' : 'Start Dhikr');
                                 return Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
+                                    // Start always starts a new session
                                     ElevatedButton(
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: isLightMode
-                                            ? greenColor
-                                            : creamColor,
-                                        foregroundColor: isLightMode
-                                            ? Colors.white
-                                            : themeProvider.primaryColor,
+                                        backgroundColor: isLightMode ? greenColor : creamColor,
+                                        foregroundColor: isLightMode ? Colors.white : themeProvider.primaryColor,
                                         minimumSize: const Size.fromHeight(44),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                        ),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                                       ),
                                       onPressed: () async {
-                                        if (hasActive) {
-                                          final d = dhikrProvider.currentDhikr!;
-                                          final res = await Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  StartDhikrScreen(
-                                                    dhikrTitle: d.title,
-                                                    dhikrTitleArabic:
-                                                        d.titleArabic,
-                                                    dhikrSubtitle: d.subtitle,
-                                                    dhikrSubtitleArabic:
-                                                        d.subtitleArabic,
-                                                    dhikrArabic: d.arabic,
-                                                    target: d.target,
-                                                    initialCount:
-                                                        d.currentCount,
-                                                  ),
+                                        if (_selectedDhikr == null || _targetController.text.trim().isEmpty) return;
+                                        final selectedDhikrData = _dhikrList.firstWhere(
+                                          (dhikr) => dhikr['title'] == _selectedDhikr,
+                                          orElse: () => {
+                                            'title': _selectedDhikr!,
+                                            'titleArabic': _selectedDhikr!,
+                                            'subtitle': '',
+                                            'subtitleArabic': '',
+                                            'arabic': _selectedDhikr!,
+                                          },
+                                        );
+                                        await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => StartDhikrScreen(
+                                              dhikrTitle: selectedDhikrData['title']!,
+                                              dhikrTitleArabic: selectedDhikrData['titleArabic'] ?? selectedDhikrData['title']!,
+                                              dhikrSubtitle: selectedDhikrData['subtitle']!,
+                                              dhikrSubtitleArabic: selectedDhikrData['subtitleArabic'] ?? selectedDhikrData['subtitle']!,
+                                              dhikrArabic: selectedDhikrData['arabic']!,
+                                              target: int.tryParse(_targetController.text.trim()) ?? 0,
+                                              initialCount: 0,
                                             ),
-                                          );
-                                          if (res == true && mounted)
-                                            setState(() {});
-                                        } else {
-                                          if (_selectedDhikr != null &&
-                                              _targetController
-                                                  .text
-                                                  .isNotEmpty) {
-                                            final selectedDhikrData = _dhikrList
-                                                .firstWhere(
-                                                  (dhikr) =>
-                                                      dhikr['title'] ==
-                                                      _selectedDhikr,
-                                                  orElse: () => {
-                                                    'title': _selectedDhikr!,
-                                                    'titleArabic':
-                                                        _selectedDhikr!,
-                                                    'subtitle': '',
-                                                    'subtitleArabic': '',
-                                                    'arabic': _selectedDhikr!,
-                                                  },
-                                                );
-                                            final res = await Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) => StartDhikrScreen(
-                                                  dhikrTitle:
-                                                      selectedDhikrData['title']!,
-                                                  dhikrTitleArabic:
-                                                      selectedDhikrData['titleArabic'] ??
-                                                      selectedDhikrData['title']!,
-                                                  dhikrSubtitle:
-                                                      selectedDhikrData['subtitle']!,
-                                                  dhikrSubtitleArabic:
-                                                      selectedDhikrData['subtitleArabic'] ??
-                                                      selectedDhikrData['subtitle']!,
-                                                  dhikrArabic:
-                                                      selectedDhikrData['arabic']!,
-                                                  target: int.parse(
-                                                    _targetController.text,
-                                                  ),
-                                                ),
-                                              ),
-                                            );
-                                            if (res == true && mounted)
-                                              setState(() {});
-                                          }
-                                        }
+                                          ),
+                                        );
+                                        if (mounted) setState(() {});
                                       },
                                       child: Text(
-                                        btnText,
+AppLocalizations.of(context)!.startDhikr,
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
-                                          color: isLightMode
-                                              ? Colors.white
-                                              : themeProvider.primaryColor,
+                                          color: isLightMode ? Colors.white : themeProvider.primaryColor,
                                           fontFamily: amiriFont,
                                         ),
                                       ),
                                     ),
-                                    if (hasActive) ...[
-                                      const SizedBox(height: 10),
-                                      OutlinedButton(
-                                        style: OutlinedButton.styleFrom(
-                                          side: BorderSide(
-                                            color: isLightMode
-                                                ? greenColor
-                                                : creamColor,
-                                            width: 1.5,
-                                          ),
-                                          foregroundColor: isLightMode
-                                              ? greenColor
-                                              : creamColor,
-                                          minimumSize: const Size.fromHeight(
-                                            44,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              20,
-                                            ),
-                                          ),
-                                        ),
-                                        onPressed: () async {
-                                          final confirmed = await showDialog<bool>(
-                                            context: context,
-                                            builder: (ctx) => AlertDialog(
-                                              title: Text(
-                                                isArabic ? 'تأكيد' : 'Confirm',
-                                              ),
-                                              content: Text(
-                                                isArabic
-                                                    ? 'هل تريد إعادة تعيين التقدم؟'
-                                                    : 'Do you want to reset progress?',
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(ctx, false),
-                                                  child: Text(
-                                                    isArabic ? 'لا' : 'No',
-                                                  ),
-                                                ),
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(ctx, true),
-                                                  child: Text(
-                                                    isArabic ? 'نعم' : 'Yes',
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                          if (confirmed == true) {
-                                            await dhikrProvider.clearDhikr();
-                                            if (mounted) setState(() {});
-                                          }
-                                        },
-                                        child: Text(
-                                          isArabic ? 'إعادة تعيين' : 'Reset',
+                                    const SizedBox(height: 10),
+                                    // View history navigates to history screen to continue any dhikr
+                                    OutlinedButton(
+                                      style: OutlinedButton.styleFrom(
+                                        side: BorderSide(color: isLightMode ? greenColor : creamColor, width: 1.5),
+                                        foregroundColor: isLightMode ? greenColor : creamColor,
+                                        minimumSize: const Size.fromHeight(44),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                      ),
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (_) => const PersonalDhikrHistoryScreen()),
+                                        );
+                                      },
+                                      child: Text(
+                                        AppLocalizations.of(context)!.viewHistory,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          fontFamily: amiriFont,
                                         ),
                                       ),
-                                    ],
+                                    ),
                                   ],
                                 );
                               },
