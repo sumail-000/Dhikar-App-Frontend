@@ -1,10 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../services/api_client.dart';
 import '../app_localizations.dart';
-
+import 'package:wered/theme_provider.dart';
 class ManagementGroupCard extends StatelessWidget {
   final bool isArabic;
   final bool isLightMode;
@@ -38,9 +39,10 @@ class ManagementGroupCard extends StatelessWidget {
 final title = isArabic ? titleArabic : titleEnglish;
     final privacy = isPublic ? AppLocalizations.of(context)!.public : AppLocalizations.of(context)!.private;
     final app = AppLocalizations.of(context)!;
-    
-    // App's theming system integration - Light mode uses green theme, not yellow/cream
-    final primaryColor = isLightMode ? const Color(0xFF235347) : const Color(0xFF6B46C1); // Light mode: green, Dark mode: purple
+final themeProvider = Provider.of<ThemeProvider>(context);
+
+// App's theming system integration - Light mode uses green theme, not yellow/cream
+    final primaryColor = isLightMode ? const Color(0xFFE3D9F6) : const Color(0xFF6B46C1); // Light mode: green, Dark mode: purple
     final secondaryColor = isLightMode ? const Color(0xFF2E7D32) : const Color(0xFF8B5CF6); // Light mode: dark green, Dark mode: purple
     final surfaceColor = isLightMode ? const Color(0xFFE8F5E8) : const Color(0xFF251629); // Light mode: light green, Dark mode: dark
     final textPrimaryColor = isLightMode ? const Color(0xFF2E7D32) : Colors.white; // Light mode: dark green text
@@ -49,23 +51,9 @@ final title = isArabic ? titleArabic : titleEnglish;
     
     return Container(
       decoration: BoxDecoration(
-        gradient: isLightMode 
-            ? LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  surfaceColor, // Light green background
-                  Colors.white, // White instead of cream
-                ],
-              )
-            : LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFF251629), // App's dark primary
-                  const Color(0xFF4C3B6E), // App's gradient secondary
-                ],
-              ),
+        color: themeProvider.isDarkMode
+            ? const Color(0xFF251629)
+            : const Color(0xFF235347),
         borderRadius: BorderRadius.circular(12), // App's standard radius
         border: Border.all(color: borderColor, width: 1), // App's border style
         boxShadow: [
@@ -102,14 +90,12 @@ final title = isArabic ? titleArabic : titleEnglish;
                 ),
               ),
             ),
-            
             // Privacy badge positioned at top-right
             Positioned(
               top: 8, // Reduced from 12
               right: 8, // Reduced from 12
               child: _modernBadge(privacy, isLightMode, isPublic),
             ),
-            
             // Main content - Compact padding
             Padding(
               padding: const EdgeInsets.all(14), // Reduced from 20 to 14
@@ -125,14 +111,9 @@ final title = isArabic ? titleArabic : titleEnglish;
                         width: 36, // Reduced from 48 to 36
                         height: 36, // Reduced from 48 to 36
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              primaryColor,
-                              secondaryColor,
-                            ],
-                          ),
+                          color: themeProvider.isDarkMode
+                              ? const Color(0xFF392852)
+                              : const Color(0xFF235347),
                           borderRadius: BorderRadius.circular(10), // Reduced from 14 to 10
                           boxShadow: [
                             BoxShadow(
@@ -162,7 +143,7 @@ final title = isArabic ? titleArabic : titleEnglish;
                               style: TextStyle(
                                 fontSize: 16, // Reduced from 18 to 16
                                 fontWeight: FontWeight.w700,
-                                color: textPrimaryColor,
+                                color: Colors.white,
                                 height: 1.2, // Reduced height
                                 letterSpacing: -0.3, // Reduced from -0.5
                               ),
@@ -173,7 +154,7 @@ final title = isArabic ? titleArabic : titleEnglish;
                               style: TextStyle(
                                 fontSize: 11, // Reduced from 13 to 11
                                 fontWeight: FontWeight.w500,
-                                color: textSecondaryColor,
+                                color: Colors.white,
                                 letterSpacing: 0.1, // Reduced from 0.2
                               ),
                             ),
@@ -190,7 +171,7 @@ final title = isArabic ? titleArabic : titleEnglish;
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: isLightMode 
-                          ? const Color(0xFFDAF1DE) // App's light accent color
+                          ? const Color(0xFF8EB69B) // App's light accent color
                           : Colors.white.withOpacity(0.05),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
@@ -204,7 +185,7 @@ final title = isArabic ? titleArabic : titleEnglish;
                         Icon(
                           Icons.people_outline,
                           size: 14, // Reduced from 16 to 14
-                          color: textSecondaryColor,
+                          color: Colors.white,
                         ),
                         const SizedBox(width: 4), // Reduced from 6 to 4
                         Text(
@@ -212,7 +193,7 @@ final title = isArabic ? titleArabic : titleEnglish;
                           style: TextStyle(
                             fontSize: 11, // Reduced from 12 to 11
                             fontWeight: FontWeight.w600,
-                            color: textSecondaryColor,
+                            color: Colors.white,
                           ),
                         ),
                         const Spacer(),
@@ -220,7 +201,7 @@ final title = isArabic ? titleArabic : titleEnglish;
                           width: 5,
                           height: 5,
                           decoration: BoxDecoration(
-                            color: isPublic ? const Color(0xFF235347) : const Color(0xFF392852), // App's theme colors
+                            color: isPublic ? const Color(0xFFFFFFFF) : const Color(0xFF392852), // App's theme colors
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -257,7 +238,7 @@ final title = isArabic ? titleArabic : titleEnglish;
                         tooltip: app.invite,
                         onTap: () => _handleInvite(context),
                         isLightMode: isLightMode,
-                        color: const Color(0xFF235347), // App's green for invite
+                        color: const Color(0xFFFFFFFF), // App's green for invite
                       ),
                       
                       const SizedBox(width: 6),
@@ -284,8 +265,8 @@ final title = isArabic ? titleArabic : titleEnglish;
 
   Widget _modernBadge(String label, bool isLightMode, bool isPublic) {
     final color = isPublic 
-        ? const Color(0xFF235347) // App's green for public
-        : const Color(0xFF392852); // App's purple for private
+        ? const Color(0xFFFFFFFF) // App's green for public
+        : const Color(0xFFFFFFFF); // App's purple for private
     
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // Reduced padding
@@ -333,6 +314,8 @@ final title = isArabic ? titleArabic : titleEnglish;
     required Color secondaryColor,
     VoidCallback? onTap,
   }) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -341,14 +324,11 @@ final title = isArabic ? titleArabic : titleEnglish;
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12), // Reduced padding
           decoration: BoxDecoration(
-            gradient: isPrimary
-                ? LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [primaryColor, secondaryColor],
-                  )
-                : null,
-            color: isPrimary ? null : (isLightMode ? const Color(0xFFDAF1DE) : Colors.white.withOpacity(0.1)), // Light mode: light green, Dark mode: white
+
+
+            color: themeProvider.isDarkMode
+                ? const Color(0xFF392852)
+                : const Color(0xFF8EB69B), // Light mode: light green, Dark mode: white
             borderRadius: BorderRadius.circular(8),
             border: !isPrimary
                 ? Border.all(
@@ -374,18 +354,18 @@ final title = isArabic ? titleArabic : titleEnglish;
                 style: TextStyle(
                   fontSize: 12, // Reduced from 14 to 12
                   fontWeight: FontWeight.w600,
-                  color: isPrimary
-                      ? Colors.white
-                      : (isLightMode ? const Color(0xFF2E7D32) : Colors.white), // Light mode: dark green, Dark mode: white
+                  color: themeProvider.isDarkMode
+                      ? const Color(0xFFFFFFFF)
+                      : const Color(0xFFFFFFFF), // Light mode: dark green, Dark mode: white
                 ),
               ),
               const SizedBox(width: 4), // Reduced from 6 to 4
               Icon(
                 icon,
                 size: 14, // Reduced from 16 to 14
-                color: isPrimary
-                    ? Colors.white
-                    : (isLightMode ? const Color(0xFF2E7D32) : Colors.white), // Light mode: dark green, Dark mode: white
+                color: themeProvider.isDarkMode
+                    ? const Color(0xFF392852)
+                    : const Color(0xFF235347), // Light mode: dark green, Dark mode: white
               ),
             ],
           ),

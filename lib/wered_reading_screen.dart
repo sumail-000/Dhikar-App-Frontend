@@ -790,7 +790,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
             fontSize: 16,
             // Slightly smaller for verse numbers
             height: 1.0,
-            color: Color(0xFF392852),
+            color: Color(0xFF000000),
             // add color gpt
             fontWeight: FontWeight.w600,
           ),
@@ -1633,7 +1633,9 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                                                 height: 1.0,
                                                 // 100% line height
                                                 letterSpacing: 0,
-                                                color: themeProvider.barText,
+                                                color: themeProvider.isDarkMode
+                                                    ? const Color(0xFF392852)
+                                                    : const Color(0xFF235347),
                                                 // #392852
                                                 fontWeight: FontWeight
                                                     .w400, // Regular weight
@@ -1647,7 +1649,7 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                                             if (_shouldShowBismillah(
                                               currentPageContent!,
                                             ))
-                                              const Text(
+                                              Text(
                                                 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
                                                 style: TextStyle(
                                                   fontFamily: 'Amiri',
@@ -1655,7 +1657,9 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                                                   height: 1.0,
                                                   // 100% line height
                                                   letterSpacing: 0,
-                                                  color: Color(0xFF392852),
+                                                  color: themeProvider.isDarkMode
+                                                      ? const Color(0xFF392852)
+                                                      : const Color(0xFF235347),
                                                   // #392852
                                                   fontWeight: FontWeight
                                                       .w400, // Regular weight
@@ -1833,9 +1837,12 @@ class _WeredReadingScreenState extends State<WeredReadingScreen> {
                                             AppLocalizations.of(
                                               context,
                                             )!.saveProgress,
-                                            style: const TextStyle(
+                                            style:  TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w600,
+                                              color: themeProvider.isDarkMode
+                                                  ? const Color(0xFF392852)
+                                                  : const Color(0xFF235347),
                                             ),
                                           ),
                                         ),

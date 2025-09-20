@@ -39,3 +39,9 @@ flutter:
     - assets/background_elements/
     - assets/splash/
     - assets/hafsData_v2-0.json
+    - assets/font/
+
+  fonts:
+    - family: MyFlutterApp
+      fonts:
+        - asset: assets/font/MyFlutterApp.ttf
